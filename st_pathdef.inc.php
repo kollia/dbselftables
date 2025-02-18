@@ -40,6 +40,7 @@
     //     itembox.columns       -  show all column content for every row inside STItemBox creation
 	//     STMessageHandling     -  all about message handling
 	//     log                   -  tracing recursive function names passed to calling one or more before defined position 
+	//     easter.date           -  show whether easter date inside STtDate() is calculated right
 	//
 	//--------------------------------------------------------------------------
 	

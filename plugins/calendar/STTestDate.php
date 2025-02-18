@@ -221,12 +221,23 @@ class STtDate
         
         $locale= $global_selftable_dateFormat_struct['locale'];
         $easter_timestamp= $this->getEasterTimestamp($year);
-        if(STCheck::isDebug("easter.date"))
+        if( STCheck::isDebug() &&
+            (   STCheck::isDebug("easter.date") ||
+                (int)date("h") == 0                  )   )
         {
             // by my last tests PHP version 8.3 give me Saturday as easter date
             // PHP version 8.1 does right, maybe there was different settings from ubuntu 22.04 to 24.04
-            echo "easter date for ".$year." is ".date("l Y-m-d H:i:s", $easter_timestamp)."<br>";
-            echo "current time zone is ".date_default_timezone_get()."<br>";
+            echo "<br />";
+            showLine();
+            echo "<table border='0'>";
+            echo "<tr><td width='30'></td><td colspan='2' align='left'><b>PHP version: ".phpversion()."</b></td></tr>";
+            echo "<tr><td></td><td valign='top'><b>WARNING:</b></td><td>";
+            echo "Easter date for ".$year." is ".date("l Y-m-d H:i:s", $easter_timestamp)."<br />";
+            echo "Weekday should Sunday and time 00:00:00, otherwise time zone is not correct<br />";
+            echo "Current time zone is ".date_default_timezone_get()."<br />";
+            echo "date.timezone in '".php_ini_loaded_file()."' should be set to correct time zone<br />";
+            echo "date.timezone currently set to '".ini_get("date.timezone")."'<br />";
+            echo "</td></tr></table>";
         }
         $defined= array();
         foreach($global_selftable_specific_days[$locale] as $day)
