@@ -1543,7 +1543,14 @@ class STBaseTable
 			else
 				STBaseTable::select("count(".$column.")", $alias);
 		}
-		function column($name, $type, $len)
+		/**
+		 * add a new column to table
+		 * 
+		 * @param string $name name of column
+		 * @param string $type type of column
+		 * @param int $len length of column
+		 */
+		public function column($name, $type, $len)
 		{
 		 	Tag::paramCheck($name, 1, "string");
 			Tag::paramCheck($type, 2, "string");
@@ -1613,15 +1620,27 @@ class STBaseTable
 		 	}
 		 	//echo "behind:".$this->columns[$columnKey]["flags"]."<br>";
 		}
-		public function getColumnField(string $column)
+		/**
+		 * get all columns with defined flags
+		 * 
+		 * @return array list of existing columns with flags
+		 */
+		public function getColumnFields() : array|null
+		{
+			return $this->columns;
+		}
+		public function getColumnField(string $column) : array|null
 		{
 		    $key= $this->getColumnKey($column);
 		    if(!isset($key))
 		        return null;
 		    return $this->columns[$key];
 		}
-		function getColumnKey($columnName)
+		function getColumnKey($columnName) : int|null
 		{
+			$field= $this->findColumnOrAlias($columnName);
+			if(!isset($field))
+				return null;
 			foreach($this->columns as $key=>$content)
 			{
 				if($content["name"]==$columnName)

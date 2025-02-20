@@ -559,7 +559,15 @@ class STDbTable extends STBaseTable
 	        $container= &$this->container;
 		return $container->getTable($sTableName);
 	}
-	function column($name, $type, $len= null)
+	/**
+	 * change column from database with other type and maybe length,
+	 * or create an non exist column
+	 * 
+	 * @param string $name name of column
+	 * @param string $type type of column
+	 * @param int $len length of column 
+	 */
+	public function column($name, $type, $len= null)
 	{
 		$res= $this->getDbColumnTypeLen($name, $type, $len= null);
 		STBaseTable::column($name, $res["type"], $res["length"]);
