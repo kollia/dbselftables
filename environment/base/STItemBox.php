@@ -1279,6 +1279,8 @@ class STItemBox extends STBaseBox
 										$value= $columnValue;
 									if(!$value)
 										$value= $this->db->getNullDate();
+									if(STCheck::isDebug('test'))
+										$value= STCheck::getTestFormValue("date", $this->action, $this->asDBTable, $field["name"], $value);
 									$input->value($value);
 							}elseif($field["type"]=="time")
 							{// Datums-Feld
@@ -1289,6 +1291,8 @@ class STItemBox extends STBaseBox
 										$value= $columnValue;
 									if(!$value)
 										$value= $this->db->getNullTime();
+									if(STCheck::isDebug('test'))
+										$value= STCheck::getTestFormValue("date", $this->action, $this->asDBTable, $field["name"], $value);
 									$input->value($value);
 							}else
   							{// normales Eingabe-Feld
@@ -1296,12 +1300,15 @@ class STItemBox extends STBaseBox
 								if(	$field["len"]<3000
 									and
 									!isset($mce)		)
-								{
+								{// InputTag()
   									$input->type("text");
+									// DEBUG allocation: override value with a predefined random text when testing
+									if(STCheck::isDebug('test'))
+										$columnValue= STCheck::getTestFormValue($this->action, $this->asDBTable, $field["name"], $columnValue);
   									if(isset($columnValue))
   										$input->value($columnValue);
 								}else
-								{
+								{// TextareaTag()
 									if(isset($columnValue))
 									{
 										$value= trim($columnValue);
@@ -1311,7 +1318,15 @@ class STItemBox extends STBaseBox
 											$value= " ".$value;
 										if($lastChar==" " || $lastChar=="\t")
 											$value.= " ";
+										if(STCheck::isDebug('test'))
+											$value= STCheck::getTestFormValue($this->action, $this->asDBTable, $field["name"], $value);
 										$input->add($value);
+
+									}elseif(STCheck::isDebug('test'))
+									{
+										$columnValue= STCheck::getTestFormValue($this->action, $this->asDBTable, $field["name"], $columnValue);
+										if(isset($columnValue))
+											$input->add($columnValue);
 									}
 								}
   							}
@@ -1342,6 +1357,7 @@ class STItemBox extends STBaseBox
     							$input->cols($size);
     							if(isset($this->aInputSize[$field["name"]]["height"]))
     								$input->rows($this->aInputSize[$field["name"]]["height"]);
+
     							else
 								{
 									if($field["len"]>3000)
@@ -2249,7 +2265,7 @@ class STItemBox extends STBaseBox
 				return true;
 			//$fields= $this->getFieldArray();//hole Felder aus Datenbank
 			//st_print_r($this->uploadFields,10);
-			$columns= $this->createColumns($this->columns);// erstelle Array aus Spalten-Name und Alias-Name
+			$columns= $this->createColumns();// erstelle Array aus Spalten-Name und Alias-Name
 			$aliases= array_flip($columns);
 			foreach($this->uploadFields as $alias=>$file)
 			{
@@ -2378,7 +2394,7 @@ class STItemBox extends STBaseBox
 			$table= reset($this->asTable);
 		}else
 		    $table= $table->getName();
-        $columns= $this->createColumns($this->columns);// create array from column-Name und alias-Name
+        $columns= $this->createColumns();// create array from column-Name und alias-Name
         $fields= $this->getFieldArray();//take fields from database
         $aJoins= $this->getJoinArray(array(), $post);//create all content from popup-menues
         $bFieldDefineSelection= false;

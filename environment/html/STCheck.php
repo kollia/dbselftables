@@ -899,6 +899,49 @@ class STCheck
 			//if($stop)
 			//	exit();
 		}
+	public function getTestFormValue($action, STBaseTable $table, string $fieldName, $oldValue)
+	{
+		$content= $table->getColumnField($fieldName);
+		if($content === null) // if first ask for column field
+			return $oldValue; // and $content exists, then also $field should be exist
+		$field= $table->findColumnOrAlias($fieldName);
+		$value= null;
+		if($content["type"] == "int")
+		{
+			$value= 063;
+
+		}elseif($content["type"] == "string")
+		{
+			if($action == STUPDATE)
+			{
+				$value= "update text";
+				if($oldValue === $value)
+					$value= "update new text";
+			}else
+				$value= "insert new text";
+
+		}elseif($content["type"] == "date")
+		{
+			if($action == STUPDATE)
+			{
+				$value= "2005-01-01";
+				if($oldValue === $value)
+					$value= "2005-01-02";
+			}else
+				$value= "2005-01-03";
+
+		}elseif($content["type"] == "time")
+		{
+			if($action == STUPDATE)
+			{
+				$value= "02:13:00";
+				if($oldValue === $value)
+					$value= "03:00:01";
+			}else
+				$value= "01:43:55";
+		}
+		return $value;
+	}
 }
 
 /*
