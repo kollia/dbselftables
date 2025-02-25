@@ -750,7 +750,7 @@ class STDbTable extends STBaseTable
 	        $msg[]= $statement;
 	        STCheck::echoDebug("db.statement", $msg);
 	    }
-	    $stats= array(  "select", "from", "where", "order" );
+	    $stats= array(  "select", "from", "where", "order", "group" );
 	    $arr= stTools::getWrappedStatement($stats, $statement);
 	    if( isset($arr) &&
 	        is_array($arr) &&
@@ -814,7 +814,7 @@ class STDbTable extends STBaseTable
 	{
 	    $stats= array(  "show", "select", "update", "delete", "from",
             	        array( "inner join", "left join", "right join" ),
-            	        "where", "having", "order", "limit"                  );
+            	        "where", "having", "group", "order", "limit"                  );
 	            
 	    return stTools::getWrappedStatement($stats, $this->getStatement());
 	}
@@ -907,7 +907,7 @@ class STDbTable extends STBaseTable
             $statement.= " $whereStatement";
         }
         
-        // Order Statement hinzufügen wenn vorhanden
+        // add order statement if exist
         if(	!isset($this->bOrder) ||
             $this->bOrder == true		)
         {
@@ -922,6 +922,22 @@ class STDbTable extends STBaseTable
             }else
                 STCheck::echoDebug("db.statements", "do not need an <b>order</b> statement");
         }
+
+		// add group statement if exist
+        if(	!isset($this->bGroup) ||
+			$this->bGroup == true		)
+		{
+			$groupStat= $this->getGroupStatement($aliasTables);
+			$groupStat= trim($groupStat);
+			if($groupStat !== "")
+			{
+				$statement.= " group by $groupStat";
+				STCheck::echoDebug("db.statements", "need follow <b>group</b> statement: group by $groupStat");
+			}else
+				STCheck::echoDebug("db.statements", "do not need an <b>group</b> statement");
+		}
+
+		// add limit statement if exist
         $limitStat= $this->getLimitStatement(false);
         if($limitStat)
         {
@@ -944,7 +960,7 @@ class STDbTable extends STBaseTable
         {
             $stats= array(  "show", "select", "update", "delete", "from",
                 array( "inner join", "left join", "right join" ),
-                "where", "having", "order", "limit"                  );
+                "where", "having", "order", "group", "limit"                  );
             STCheck::echoDebug("db.statements", "<b>finisched <i>select</i> statement</b>:");
             $aStatement= stTools::getWrappedStatement($stats, $statement);
             STCheck::echoDebug("db.statements", $aStatement);
@@ -2057,7 +2073,8 @@ class STDbTable extends STBaseTable
 	        $oTable= &$this->getTable($tableName);
 	        $aNeededColumns= $oTable->getIdentifColumns();
 	    }
-	    if(!$oTable->asOrder)
+	    if(	!$oTable->asOrder ||
+			empty($oTable->asOrder))
 	    {
 	        return "";
 	    }
@@ -2139,6 +2156,119 @@ class STDbTable extends STBaseTable
         {
             $this->aStatement['order']= $statement;
             $this->aStatement['orderAlias']= $aTableAlias;
+        }
+        return $statement;
+	}
+	protected function getGroupStatement(&$aTableAlias, $tableName= null, $bIsGrouped= false)
+	{
+	    if(isset($this->aStatement['group']))
+	    {
+	        if(STCheck::isDebug("db.statements.group"))
+	        {
+	            $msg[]= "take predefined group statement";
+	            $msg[]= "\"".$this->aStatement['group']."\"";
+	            STCheck::echoDebug("db.statements.group", $msg);
+	        }
+	        if(isset($this->aStatement['groupAlias']))
+	            $aTableAlias= array_merge($aTableAlias, $this->aStatement['groupAlias']);
+	        return $this->aStatement['group'];
+	    }
+	    $statement= "";
+	    if(	$tableName===null
+	        or
+	        $this->Name===$tableName	)
+	    {
+	        
+	        $oTable= &$this;
+	        $aNeededColumns= $oTable->getSelectedColumns();
+	        //if tableName is null
+	        $tableName= $this->Name;
+	    }else
+	    {
+	        $oTable= &$this->getTable($tableName);
+	        $aNeededColumns= $oTable->getIdentifColumns();
+	    }
+	    if(	!$oTable->asGroup ||
+			empty($oTable)		)
+	    {
+	        return "";
+	    }
+	    $bAlias= false;
+	    if(count($aTableAlias)>1)
+	        $bAlias= true;
+        foreach($oTable->asGroup as $sortArray)
+        {
+            $alias= "";
+            if($bAlias)
+            {
+                $alias= $aTableAlias[$sortArray['table']];
+                $alias.= ".";
+            }
+            $statement.= $alias.$sortArray['column'];
+            $statement.= ",";
+            if($bIsGrouped)
+            {
+                return $statement;
+            }
+        }
+        foreach($aNeededColumns as $columnContent)
+        {
+            $fkTableName= $oTable->getFkTableName($columnContent["column"]);
+            if(	isset($fkTableName) &&
+                $this->Name != $fkTableName	)
+            {
+                $group= $this->getGroupStatement($aTableAlias, $fkTableName, $bIsGrouped);
+                if($group)
+                {
+                    if($bIsGrouped)
+                        return $group;
+                    $statement.= $group.",";
+                }
+            }
+        }
+        $statement= substr($statement, 0, strlen($statement)-1);
+        $tableName= $this->getName();
+        $query= new STQueryString();
+        $queryArr= $query->getArrayVars();
+        if(isset($queryArr["stget"]["sort"][$tableName]))
+        {
+            $query_statement= "";
+            foreach($queryArr["stget"]["sort"][$tableName] as $column)
+            {
+                //preg_match("/^([^_]+)_(ASC|DESC)$/i", $column, $inherit);
+                preg_match("/^(.+)_(ASC|DESC)$/i", $column, $inherit);
+                $field= $this->searchByAlias($inherit[1]);
+                if( isset($field["column"]) )
+                {
+                    $aliasTable= "";
+                    if(count($aTableAlias) > 1)
+                        $aliasTable= $aTableAlias[$field['table']].".";
+                        $query_statement.= $aliasTable.$field["column"]." ".$inherit[2].",";
+                }elseif(STCheck::isDebug())
+                {
+                    if( isset($queryArr["stget"]["action"]) &&
+                        $queryArr["stget"]["action"] != STINSERT &&
+                        $queryArr["stget"]["action"] != STUPDATE &&
+                        $queryArr["stget"]["action"] != STDELETE    )
+                    {
+                        $message= "column alias('".$inherit[1]."') from query string not found inside table '$tableName'";
+                        STCheck::write($message, 1);
+                        $message= "maybe not reach table definition for current container or action";
+                        STCheck::write($message, 1);
+                    }
+                }
+            }
+            if(strlen($query_statement) > 0)
+                $query_statement= substr($query_statement, 0, strlen($query_statement)-1);
+            if($statement != "")
+                $statement= $query_statement.",".$statement;
+            else
+                $statement= $query_statement;
+        }
+        if(trim($statement) != "")
+        {
+            $this->aStatement['group']= $statement;
+            $this->aStatement['groupAlias']= $aTableAlias;
         }
         return $statement;
 	}
