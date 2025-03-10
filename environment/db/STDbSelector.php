@@ -515,13 +515,33 @@ class STDbSelector extends STDbTable implements STContainerTempl
 		    $tableName= $this->container->getTableName($tableName);
 		    if($tableName == $this->Name)
 		    {
-		        STDbTable::orderBy($column, $bASC);
+		        STDbTable::orderBy($column, $bASC, $warnFuncOutput+1);
 		        return;
 		    }
 		    $table= $this->getTable($tableName);
 		    $field= $table->findAliasOrColumn($column);
 		    $column= $field['column'];
 		    STDbTable::orderByI($tableName, $column, $bASC, $warnFuncOutput+1);
+		}
+		public function groupBy($tableName, $column= true, int $warnFuncOutput= 0)
+		{
+		    if(is_bool($column))
+		    {// method is as normaly table groupBy
+		        $column= $tableName;
+		        STDbTable::groupBy($column, $warnFuncOutput+1);
+		        return;
+		    }
+		    
+		    $tableName= $this->container->getTableName($tableName);
+		    if($tableName == $this->Name)
+		    {
+		        STDbTable::groupBy($column, $warnFuncOutput+1);
+		        return;
+		    }
+		    $table= $this->getTable($tableName);
+		    $field= $table->findAliasOrColumn($column);
+		    $column= $field['column'];
+		    STDbTable::groupByI($tableName, $column, $warnFuncOutput+1);
 		}
 		function select(string $tableName, $column= "", $alias= null, $nextLine= true, $add= false)
 		{

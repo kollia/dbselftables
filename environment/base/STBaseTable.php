@@ -102,7 +102,18 @@ class STBaseTable
 	var $errorText;
 	var	$showTypes= array();
 	var $oWhere= null;
+	/**
+	 * all columns which should be ordered
+	 * with table reference and sort direction
+	 * @var array
+	 */
 	var $asOrder= array();
+	/**
+	 * all columns which should be grouped
+	 * in the select statement
+	 * @var array
+	 */
+	protected $asGroup= array();
 	var	$identifier;
 	var	$bDistinct= false;
 	var $bOrder= NULL;
@@ -1462,6 +1473,32 @@ class STBaseTable
         $this->asOrder[]= array(    "table" => $tableName,
                                     "column"=> $column,
                                     "sort"  => $sort        );
+	}
+	public function groupBy(string $column, int $warnFuncOutput= 0)
+	{
+	    $field= $this->findAliasOrColumn($column);
+	    $column= $field["column"];
+	    $this->groupByI($this->getName(), $column, $warnFuncOutput+1);
+	}
+	protected function groupByI(string $tableName, string $column, int $warnFuncOutput= 0)
+	{
+	    if( !isset($this->abOrigChoice["order"]) ||
+	        $this->abOrigChoice["order"] == true    )
+	    {
+	        $this->asOrder= array();
+	        $this->abOrigChoice["order"]= false;
+	    }
+		if(typeof($this, "STDbTable"))
+		{
+			if(!preg_match("/,/", $column))
+			{
+				$deli= $this->db->getFieldDelimiter()[0];
+				$column= "{$deli['open']['delimiter']}$column{$deli['open']['delimiter']}";
+			}else
+				STCheck::warning(true, "STBaseTable::groupBy()", "set only column one by one, because than can set field delimiter for columns", $warnFuncOutput+1);
+		}
+        $this->asGroup[]= array(    "table" => $tableName,
+                                    "column"=> $column     );
 	}
 	function clearCreatedAliases()
 	{

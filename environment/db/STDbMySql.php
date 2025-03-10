@@ -575,24 +575,40 @@ class STDbMySql extends STDatabase
 	protected function getValueKeywords() : array
 	{
 	    return array(
-	        "null" => array( "type" => "byte", "len" => 1, "needOp" => true ),
-	        "false" => array( "type" => "byte", "len" => 1, "needOp" => true ),
-	        "true" => array( "type" => "byte", "len" => 1, "needOp" => true )
+	        "null" => array( "name" => "NULL", "type" => "byte", "len" => 1, "needOp" => true ),
+	        "false" => array( "name" => "FALSE", "type" => "byte", "len" => 1, "needOp" => true ),
+	        "true" => array( "name" => "TRUE", "type" => "byte", "len" => 1, "needOp" => true )
 	    );
 	}
 	public function getFunctionKeywords() : array
 	{
-	    return array(
-	        "now" => array( "type" => "date", "len" => 10, "needOp" => true ),
-	        "date" => array( "type" => "date", "len" => 10, "needOp" => true ),
-	        "sysdate" => array( "type" => "date", "len" => 10, "needOp" => true ),
-	        "password" => array( "type" => "char", "len" => 512, "needOp" => true ),
-	        "count" => array( "type" => "int", "len" => 11, "needOp" => true ),
-	        "min" => array( "type" => "int", "len" => 11, "needOp" => true ),
-	        "max" => array( "type" => "int", "len" => 11, "needOp" => true ),
-			"datediff" => array( "type" => "int", "len" => 11, "needOp" => true ),
-	        "in" => array( "type" => "text", "len" => $this->getTextLen(), "needOp" => false )
-	    );
+		return array(
+			"now" => array( "name" => "NOW", "type" => "date", "len" => 10, "needOp" => true, "aggregate" => false ),
+			"curdate" => array( "name" => "CURDATE", "type" => "date", "len" => 10, "needOp" => true, "aggregate" => false ),
+			"date" => array( "name" => "DATE", "type" => "date", "len" => 10, "needOp" => true, "aggregate" => false ),
+			"sysdate" => array( "name" => "SYSDATE", "type" => "date", "len" => 10, "needOp" => true, "aggregate" => false ),
+			"password" => array( "name" => "PASSWORD", "type" => "char", "len" => 512, "needOp" => true, "aggregate" => false ),
+			"in" => array( "name" => "IN", "type" => "text", "len" => $this->getTextLen(), "needOp" => false, "aggregate" => false ),
+			"count" => array( "name" => "COUNT", "type" => "int", "len" => 11, "needOp" => true, "aggregate" => true ),
+			"sum" => array( "name" => "SUM", "type" => "int", "len" => 11, "needOp" => true, "aggregate" => true ),
+			"avg" => array( "name" => "AVG", "type" => "int", "len" => 11, "needOp" => true, "aggregate" => true ),
+			"min" => array( "name" => "MIN", "type" => "int", "len" => 11, "needOp" => true, "aggregate" => true ),
+			"max" => array( "name" => "MAX", "type" => "int", "len" => 11, "needOp" => true, "aggregate" => true ),
+			"datediff" => array( "name" => "DATEDIFF", "type" => "int", "len" => 11, "needOp" => true, "aggregate" => false ),
+			"abs" => array( "name" => "ABS", "type" => "int", "len" => 11, "needOp" => true, "aggregate" => false ),
+			"ceil" => array( "name" => "CEIL", "type" => "int", "len" => 11, "needOp" => true, "aggregate" => false ),
+			"floor" => array( "name" => "FLOOR", "type" => "int", "len" => 11, "needOp" => true, "aggregate" => false ),
+			"round" => array( "name" => "ROUND", "type" => "int", "len" => 11, "needOp" => true, "aggregate" => false ),
+			"concat" => array( "name" => "CONCAT", "type" => "string", "len" => 255, "needOp" => true, "aggregate" => false ),
+			"length" => array( "name" => "LENGTH", "type" => "int", "len" => 11, "needOp" => true, "aggregate" => false ),
+			"lower" => array( "name" => "LOWER", "type" => "string", "len" => 255, "needOp" => true, "aggregate" => false ),
+			"upper" => array( "name" => "UPPER", "type" => "string", "len" => 255, "needOp" => true, "aggregate" => false ),
+			"substring" => array( "name" => "SUBSTRING", "type" => "string", "len" => 255, "needOp" => true, "aggregate" => false ),
+			"trim" => array( "name" => "TRIM", "type" => "string", "len" => 255, "needOp" => true, "aggregate" => false ),
+			"coalesce" => array( "name" => "COALESCE", "type" => "string", "len" => 255, "needOp" => true, "aggregate" => false ),
+			"ifnull" => array( "name" => "IFNULL", "type" => "string", "len" => 255, "needOp" => true, "aggregate" => false ),
+			"nullif" => array( "name" => "NULLIF", "type" => "string", "len" => 255, "needOp" => true, "aggregate" => false )
+		);
 	}
 	/**
 	 * get structure of foreign key to which column refer to
