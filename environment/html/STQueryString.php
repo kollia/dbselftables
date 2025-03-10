@@ -614,22 +614,42 @@ class STQueryString
 			}
 		}
 		/**
-		 * update query parameter with new values
+		 * update query parameter with new values.<br />
+		 * Parameter can be an string where the value is separated by '='.
+		 * Like 'param=value' and also 'param1=value1&param2=value2&...' be possible.
+		 * For an one or more dimensional array the parameter can be 'array[param1][param2]=value'.
+		 * Also is possible to update the query with an hole link, like 'http://www.example.com?param=value&...',
+		 * or an javascript link with parameters like 'javascript:location.href="http://www.example.com?param=value&..."'.
+		 * In this link cases the methode update the parameters and return the only the link without the parameters.
+		 * The parameter can also be an array with the parameter name as key and the value as value.
 		 * 
-		 * @param string|array $paramValue	Parameter with new value.<br />
-		 * 							   		Parameter can be an string where the value is separated by '='.
-		 * 							   		Like 'param=value' and also 'param1=value1&param2=value2&...' be possible.
-		 * 							   		For an one or more dimensional array the parameter can be 'array[param1][param2]=value'.
-		 * 							   		The parameter can also be an array with the parameter name as key and the value as value.
+		 * @param string|array $paramValue	Parameter with new value.
+		 * @return bool|string	whether the update was successful or the link without the parameters if exits. 
 		 */
-		public function update(string|array $paramValue)
+		public function update(string|array $paramValue) : bool|string
 		{
+			$Rv= true;
 			if(is_string($paramValue))
 			{
-				$array= $this->splitParamValue($paramValue);
-				$this->updateA($array, $this->param_vars);
+				$preg= array();
+				$pattern= "(javascript:)?";
+				$pattern.= "(location|window\.location|window\.location\.href)?";
+				$pattern.= "=?([^?]*)?\??(.*)";
+				if(preg_match("/^$pattern/i", $paramValue, $preg))
+				{
+					if($preg[4] != "")
+					{
+						$paramValue= $preg[4];
+						$Rv= $preg[3];
+					}else
+						$paramValue= $preg[3];
+					$array= $this->splitParamValue($paramValue);
+					$this->updateA($array, $this->param_vars);
+				}else
+					$Rv= false;
 			}else
 				$this->actualice($paramValue);
+			return $Rv;
 		}
 		private function updateA($array, &$param_vars)
 		{
