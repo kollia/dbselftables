@@ -1557,6 +1557,12 @@ class STItemBox extends STBaseBox
 
 		$td= new ColumnTag(TD);
 		$td->add(br());
+		if(STCheck::isDebug("test"))
+		{
+			$needChangeBox= true;
+			$function= "javascript:DB_changeBox('make')";
+			STCheck::test_tagClassAttributeLinks("action", "function", $function);
+		}
 		$input= new InputTag();
 		$buttonValue= $this->sButtonValue;
 		if(!$buttonValue)
@@ -1746,6 +1752,13 @@ class STItemBox extends STBaseBox
 					$td->add($forward);
 				$tr->add($td);
 			$this->add($tr);
+		}
+		if(	STCheck::isDebug("test") &&
+			$display == false &&
+			$message == "NOERROR"		)
+		{
+			$link= $this->msg->getOKUrl();
+			STCheck::test_tagClassAttributeLinks("action", "link", $link);
 		}
 		STCheck::echoDebug("db.statements.limit", "set all old limits inside table from $firstRow to $maxRow");
 		if(isset($maxRow))

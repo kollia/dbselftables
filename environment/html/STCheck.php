@@ -541,15 +541,6 @@ class STCheck
 				$HTML_CLASS_DEBUG_CONTENT_CLASS_FUNCTION= "";
 			}
 		}
-		public static function test_tagClassAttributeLinks(string $type, string $class, string $attribute)
-		{
-			global $global_selftable_test_links;
-
-			if(preg_match("/^###/", $class))
-				$global_selftable_test_links[$type][$class][]= $attribute;
-			else
-				$global_selftable_test_links[$type][$class]= $attribute;
-		}
 		private static function print_query_post()
 		{
 			global	$HTTP_GET_VARS,
@@ -899,6 +890,42 @@ class STCheck
 			//if($stop)
 			//	exit();
 		}
+	/**
+	 * implememt some test positions of tag attributes
+	 * where the testing routine can find next links
+	 * for new pages to test
+	 * 									
+	 * @param string $type 	type of new link
+	 *  						"back" 	for a new back link testet first when exist
+	 * 							"edit" 	for new button aktivities (link in an input-tag)
+	 * 									or other links if nessesary
+	 * 							"table" for new table link in an input-tag
+	 * 						this types are required for testing in this same order
+	 * @param string $class class name of button input-tag, or "###link" if attribute is an link
+	 * @param string $attribute name of attribute which contains the link, or an link if class variable is "###link"
+	 */
+	public static function test_tagClassAttributeLinks(string $type, string $class, string $attribute)
+	{
+		global $global_selftable_test_links;
+
+		if(preg_match("/^###/", $class))
+		{
+			if($type !== "back_tables")
+				$global_selftable_test_links[$type][$class][]= $attribute;
+			else
+				$global_selftable_test_links[$type][$class]= $attribute;
+		}else
+			$global_selftable_test_links[$type][$class]= $attribute;
+	}
+	/**
+	 * create test values for form fields by given table and fieldname
+	 * 
+	 * @param string $action STINSERT or STUPDATE for inserting or updating values inside table from database
+	 * @param STBaseTable $table table object which contains the field
+	 * @param string $fieldName name of field which should be tested
+	 * @param string $oldValue old value of field
+	 * @return string new value for field
+	 */
 	public function getTestFormValue($action, STBaseTable $table, string $fieldName, $oldValue)
 	{
 		$content= $table->getColumnField($fieldName);

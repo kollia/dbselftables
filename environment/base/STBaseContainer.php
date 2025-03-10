@@ -1552,6 +1552,7 @@ abstract class STBaseContainer extends BodyTag implements STContainerTempl
 						$backAddress= $this->backButtonAddress;
 					if($this->bBackButton)
 					{
+						STCheck::test_tagClassAttributeLinks("back_tables", "###link", $backAddress);
 						if(!$backAddress)
 						{
 							$backAddress= $this->starterPage;

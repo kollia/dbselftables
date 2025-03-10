@@ -141,7 +141,7 @@ class Tag extends STCheck
 		 * inside array $global_selftable_test_links
 		 * @var array $aTestTypes
 		 */
-		private array $aTestTypes= array("edit", "table");
+		private array $aTestTypes= array("back_tables", "edit", "table", "action", "container_back");
 		private int $nStopTestDisplayCount= 2; // if value -1 testing to end
 		public function display()
 		{
@@ -159,9 +159,10 @@ class Tag extends STCheck
 				$testdebug= $query->getParameterValue("testdebug");//"testdebug");
 				$status= $query->getParameterValue("testdebug", "status");//"testdebug[action]");
 				if(	isset($__global_finished_SiteCreator_result) &&
-					$__global_finished_SiteCreator_result === "NOERROR" &&
+					(	$__global_finished_SiteCreator_result === "NOERROR" ||
+						$__global_finished_SiteCreator_result === "EMPTY_RESULT"	) &&
 					(	!isset($status) ||
-						$status !== "finished"	)							)
+						$status !== "finished"	)											)
 				{
 					$selftable_test_links= array();
 					// Sort keys according to the order in $this->aTestTypes
@@ -195,6 +196,7 @@ class Tag extends STCheck
 						$testdebug['table']= $this->getTableName();
 						$testdebug['link-type']= $type;
 						$testdebug['link-class']= key($selftable_test_links[$type]);
+						$testdebug['backbutton-test']= "false";
 						$testdebug['onEditLinkCount']= -1;
 						$testdebug['onEditDeleteCount']= -1;
 						$testdebug['onTableTagCount']= -1;
@@ -219,59 +221,90 @@ class Tag extends STCheck
 						$bFinished= true;
 						$testdebug['status']= "finished";
 					}
-					if($__global_finished_SiteCreator_result === "NOERROR")
+					if(	$__global_finished_SiteCreator_result === "NOERROR" ||
+						$__global_finished_SiteCreator_result === "EMPTY_RESULT"	)
 					{
-						if( !isset($selftable_test_links['edit']['###link'][$testdebug['onEditLinkCount']+1]) &&
-							!isset($selftable_test_links['edit']['###delete'][$testdebug['onEditDeleteCount']+1])	)
-						{ // loop through table links
-							$type= "table";
-							$testdebug['onEditLinkCount']= -1;
-							$testdebug['onEditDeleteCount']= -1;
-							$buttonClass= $testdebug['link-class'];
-							$onAttribute= $selftable_test_links[$type][$buttonClass];
-							$tags= $this->getElementsByClass($buttonClass);
-							$tagCount= $testdebug['onTableTagCount'] + 1;
-							if(isset($tags[$tagCount]))
-							{
-								$link= $tags[$tagCount]->getAttribut($onAttribute);
-								$split= preg_split("/\?/", $link);
-								$link= $split[0];
-								if(preg_match("/^javascript:location='/", $link))
-									$link= substr($link, 21);
-								if(preg_match("/'$/", $link))
-									$link= substr($link, 0, -1);
-								if(count($split) > 1)
-									$query->update(substr($split[1], 0, -1));
-								$testdebug['onTableTagCount']= $tagCount;
-								$type= "link";
+						if(	isset($selftable_test_links['back_tables']) ||
+							isset($selftable_test_links['action'])			)
+						{
+							if($testdebug['backbutton-test'] === "false")
+							{// STItemBox should test first back-button
+								$type= "back_tables";
+								$testdebug['backbutton-test']= "true";
+								$link= $query->update($selftable_test_links[$type]['###link']);
+								STCheck::warning(is_bool($link), "no correct back link found", 1);
+								$query->update(array( 'testdebug' => $testdebug ));
+								$link= "window.location='$link".$query->getUrlParamString()."'";
 							}else
-							{
-								$bFinished= true;
-								$link= "";
-								$testdebug['status']= "finished";
+							{// test come back from tables where from STItemBox
+							 // back-button was tested
+
+								if(isset($selftable_test_links['action']['function']))
+								{// test now insert function
+								 // and create new entry in database
+									$link= $selftable_test_links['action']['function'];
+									$type= "action";
+								}else
+								{// now entry was inserted correctly
+								 // and there be defined only an forward link
+								 // backbutton-test wasn't correct set by insert to false, but do it now
+									$testdebug['backbutton-test']= "false";
+									$link= $query->update($selftable_test_links['action']['link']);
+									$query->update(array( 'testdebug' => $testdebug ));
+									$type= "link";
+								}
 							}
+							$testdebug['link-type']= $type;
 						}else
-						{ // loop through edit links
-							$type= "edit";
-							$link= "window.location='";
-							if(isset($selftable_test_links['edit']['###link'][$testdebug['onEditLinkCount']+1]))
-							{
-								$testdebug['onEditLinkCount']++;
-								$link.= $selftable_test_links['edit']['###link'][$testdebug['onEditLinkCount']];
+						{
+							if( !isset($selftable_test_links['edit']['###link'][$testdebug['onEditLinkCount']+1]) &&
+								!isset($selftable_test_links['edit']['###delete'][$testdebug['onEditDeleteCount']+1])	)
+							{ // loop through table links
+								$type= "table";
+								$testdebug['onEditLinkCount']= -1;
+								$testdebug['onEditDeleteCount']= -1;
+								$buttonClass= $testdebug['link-class'];
+								$onAttribute= $selftable_test_links[$type][$buttonClass];
+								$tags= $this->getElementsByClass($buttonClass);
+								$tagCount= $testdebug['onTableTagCount'] + 1;
+								if(isset($tags[$tagCount]))
+								{
+									$link= $tags[$tagCount]->getAttribut($onAttribute);
+									$link= $this->updateLinkOnQuery($link, $query);
+									$testdebug['onTableTagCount']= $tagCount;
+									$type= "link";
+								}else
+								{
+									$bFinished= true;
+									$link= "";
+									$testdebug['status']= "finished";
+								}
 							}else
-							{
-								$testdebug['onEditDeleteCount']++;
-								$link.= $selftable_test_links['edit']['###delete'][$testdebug['onEditDeleteCount']];
+							{ // loop through edit links
+								if(	isset($selftable_test_links['edit']['###link'][$testdebug['onEditLinkCount']+1]) ||
+									(	$testdebug['backbutton-test'] === "true" &&
+										isset($selftable_test_links['edit']['###delete'][$testdebug['onEditLinkCount']]	)	)	)
+								{
+									if($testdebug['backbutton-test'] === "false") // if backbutton-test, go back to
+										$testdebug['onEditLinkCount']++;		// first link from where comming
+									$link= $selftable_test_links['edit']['###link'][$testdebug['onEditLinkCount']];
+								}else
+								{
+									$testdebug['onEditDeleteCount']++;
+									$link= $selftable_test_links['edit']['###delete'][$testdebug['onEditDeleteCount']];
+
+								}
+								$link= $query->update($link);
+								$type= "link";
 							}
-							$link.= "'";
-						}
+						}// end of else backbutton-test	
 
 						$output= false;
 						if( isset($HTML_CLASS_DEBUG_CONTENT_CLASS_FUNCTION) &&
 							$HTML_CLASS_DEBUG_CONTENT_CLASS_FUNCTION != ""		)
 						{
 							$exp= explode("/", $HTML_CLASS_DEBUG_CONTENT_CLASS_FUNCTION);
-							if(count($exp) > 1)
+							if(count($exp) > 1) // it exists more than debug('test')
 								$output= true;
 						}
 						if($output)
@@ -294,7 +327,8 @@ class Tag extends STCheck
 					if($bFinished)
 						$report.= $this->reportEndTime($testdebug['start']);					
 
-					if($__global_finished_SiteCreator_result === "NOERROR")
+					if(	$__global_finished_SiteCreator_result === "NOERROR" ||
+						$__global_finished_SiteCreator_result === "EMPTY_RESULT"	)
 					{
 						if($bFinished)
 						{
@@ -309,15 +343,8 @@ class Tag extends STCheck
 								$link= "window.location='$link".$query->getUrlParamString()."'";
 							elseif($type == "edit")
 							{
-								$split= preg_split("/\?/", $link);
-								$link= $split[0];
-								if(preg_match("/^window.location='/", $link))
-									$link= substr($link, 17);
-								if(preg_match("/'$/", $link))
-									$link= substr($link, 0, -1);
-								if(count($split) > 1)
-									$query->update(substr($split[1], 0, -1));
-								$link= "window.location='".$query->getUrlParamString()."'";
+								$link= $this->updateLinkOnQuery($link, $query);
+								$link= "window.location='$link".$query->getUrlParamString()."'";
 							}
 						}
 						$script= new JavaScriptTag();
@@ -338,6 +365,20 @@ class Tag extends STCheck
 				}
 			}
 		    echo $this->getDisplayString(0);
+		}
+		private function updateLinkOnQuery(string $link, STQueryString &$query) : string
+		{
+			$split= preg_split("/\?/", $link);
+			$link= $split[0];
+			if(preg_match("/^window.location='/", $link))
+				$link= substr($link, 17);
+			elseif(preg_match("/^javascript:location='/", $link))
+				$link= substr($link, 21);
+			if(preg_match("/'$/", $link))
+				$link= substr($link, 0, -1);
+			if(count($split) > 1)
+				$query->update(substr($split[1], 0, -1));
+			return $link;
 		}
 		private function reportContainer()
 		{
