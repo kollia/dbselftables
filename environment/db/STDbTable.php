@@ -1121,8 +1121,8 @@ class STDbTable extends STBaseTable
                 $fkTableName= null;
 				//$fkTableName= $this->getFkTableName($column["column"]);
                 if( (   !typeof($oMainTable, "STDbSelector") &&
-                        isset($column['type']) && // <- otherwise field is PK for update or delete inside STListBox
-                        $column['type'] == "select"             ) ||
+                        (	!isset($column['type']) || // <- otherwise field is PK for update or delete inside STListBox
+                        	$column['type'] == "select"	)		) ||
                     (   typeof($oMainTable, "STDbSelector") &&
                         (   (	!isset($oMainTable->abOrigChoice["select"]) &&
 								(	!isset($column['type']) || // <- if not set maybe field is default selection (all columns) from table
