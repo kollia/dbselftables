@@ -684,9 +684,13 @@ class STDbTable extends STBaseTable
 		    unset($this->aFks[$toTableName]["table"]);
 		}
 	}
-	function &getDatabase()
+	public function &getDatabase()
 	{
 		return $this->db;
+	}
+	public function getDatabaseName()
+	{
+		return $this->db->getDatabaseName();
 	}
 	function getResult($sqlType= null)
 	{
@@ -863,10 +867,19 @@ class STDbTable extends STBaseTable
             $aliasTables= array_merge($aliasTables, $joinTables);
         $whereAliases= $this->getWhereAliases();
         if(count($whereAliases))
+		{
+			$this->aStatement['whereAliases']= $whereAliases;
             $aliasTables= array_merge($aliasTables, $whereAliases);
+		}
+		$orderAliases= $this->getOrderAliases($bFromIdentifications);
+		if(count($orderAliases))
+		{
+			$this->aStatement['orderAliases']= $orderAliases;
+			$aliasTables= array_merge($aliasTables, $orderAliases);
+		}
         if(STCheck::isDebug("db.statements"))
         {
-            $space= STCheck::echoDebug("db.statements", "need follow tables inside select-statement");
+            $space= STCheck::echoDebug("db.statements", "need follow tables inside select-, where-, order-statement");
             st_print_r($aliasTables, 1, $space);
             STCheck::echoDebug("db.statements", "need follow <b>select</b> statement: $statement");
         }
@@ -911,7 +924,15 @@ class STDbTable extends STBaseTable
         if(	!isset($this->bOrder) ||
             $this->bOrder == true		)
         {
-            $orderStat= $this->getOrderStatement($aliasTables);
+			$mainTableName= null;
+			if($bFromIdentifications)
+			{
+				if(strtolower($this->Name) == "x")
+					$mainTableName= "y";
+				else
+					$mainTableName= "x";
+			}
+            $orderStat= $this->getOrderStatement($aliasTables, $mainTableName);
             $orderStat= trim($orderStat);
             if(	$orderStat !== "" &&
                 $orderStat != "ASC" &&
@@ -1098,6 +1119,7 @@ class STDbTable extends STBaseTable
             if($aliasCount>1)
             {
                 $fkTableName= null;
+				//$fkTableName= $this->getFkTableName($column["column"]);
                 if( (   !typeof($oMainTable, "STDbSelector") &&
                         isset($column['type']) && // <- otherwise field is PK for update or delete inside STListBox
                         $column['type'] == "select"             ) ||
@@ -1313,6 +1335,16 @@ class STDbTable extends STBaseTable
             if(!in_array($tableName, $aUseAliases))
                 unset($aTableAlias[$tableName]);
         }
+		if(	isset($whereClause) &&
+			$whereClause != ""		)
+		{
+			$whereAliases= $this->getWhereAliases();
+			if(count($whereAliases))
+				$aTableAlias= array_merge($aTableAlias, $whereAliases);
+		}
+		$orderAliases= $this->getOrderAliases(/* from identification columns*/!$bFirstSelect);
+		if(count($orderAliases))
+			$aTableAlias= array_merge($aTableAlias, $orderAliases);
         if( STCheck::isDebug("db.statements.aliases") )
         {
             $space= STCheck::echoDebug("db.statements.aliases", "need table aliases:");
@@ -2044,7 +2076,52 @@ class STDbTable extends STBaseTable
 	        $from= $aliases;
 	    return $statement;
 	}
-	protected function getOrderStatement(&$aTableAlias, $tableName= null, $bIsOrdered= false)
+	protected function getOrderAliases(bool $bFromIdentifications= false) : array
+	{
+		if(isset($this->aStatement['orderAliases']))
+			return $this->aStatement['orderAliases'];
+	    $aRv= array();
+		if($bFromIdentifications)
+			$aNeededColumns= $this->getIdentifColumns();
+		else
+			$aNeededColumns= $this->getSelectedColumns();
+		foreach($aNeededColumns as $columnContent)
+		{
+            $fkTableName= $this->getFkTableName($columnContent["column"]);
+            if(	isset($fkTableName) &&
+                $this->Name != $fkTableName	)
+            {
+				$oTable= $this->getTable($fkTableName);
+				$order= $oTable->getOrderAliases(/* from identification columns */true);
+				$aRv= array_merge($aRv, $order);
+            }
+		}
+		if(count($this->asOrder))
+		{
+			$aliasTables= $this->db->getAliasOrder();
+			$alias[$this->Name]= $aliasTables[$this->Name];
+			$aRv= array_merge($aRv, $alias);
+		}
+	    if( STCheck::isDebug("db.statements.order") &&
+	        count($aRv)                                )
+	    {
+	        $msg= "need additional table alias from ";
+	        $msg.= get_class($this)."(<b>".$this->Name."</b>[".$this->ID."])";
+	        $msg.= " order statement";
+		    $space= STCheck::echoDebug("db.statements.order", $msg);
+		    st_print_r($aRv, 3, $space);
+	    }
+	    return $aRv;
+	}
+	/**
+	 * create order statement
+	 * 
+	 * @param array $aTableAlias array of alias names
+	 * @param string $tableName name of main table (currently only to know whether need selected or identif columns for foreign key tables)
+	 * @param boolean $bIsOrdered true if only the order statement needed for own table
+	 * @return string order statement
+	 */
+	protected function getOrderStatement(&$aTableAlias, $tableName= null, $bIsOrdered= false) : string
 	{
 	    if(isset($this->aStatement['order']))
 	    {
@@ -2063,25 +2140,20 @@ class STDbTable extends STBaseTable
 	        or
 	        $this->Name===$tableName	)
 	    {
-	        
-	        $oTable= &$this;
-	        $aNeededColumns= $oTable->getSelectedColumns();
+	        $aNeededColumns= $this->getSelectedColumns();
 	        //if tableName is null
 	        $tableName= $this->Name;
 	    }else
-	    {
-	        $oTable= &$this->getTable($tableName);
-	        $aNeededColumns= $oTable->getIdentifColumns();
-	    }
-	    if(	!$oTable->asOrder ||
-			empty($oTable->asOrder))
+	        $aNeededColumns= $this->getIdentifColumns();
+ 	    if(	!$this->asOrder ||
+			empty($this->asOrder))
 	    {
 	        return "";
 	    }
 	    $bAlias= false;
 	    if(count($aTableAlias)>1)
 	        $bAlias= true;
-        foreach($oTable->asOrder as $sortArray)
+        foreach($this->asOrder as $sortArray)
         {
             $alias= "";
             if($bAlias)
@@ -2098,18 +2170,19 @@ class STDbTable extends STBaseTable
         }
         foreach($aNeededColumns as $columnContent)
         {
-            $fkTableName= $oTable->getFkTableName($columnContent["column"]);
+            $fkTableName= $this->getFkTableName($columnContent["column"]);
             if(	isset($fkTableName) &&
                 $this->Name != $fkTableName	)
             {
                 //echo __FILE__.__LINE__."<br>";
                 //echo "getOrderStatement($aTableAlias, $fkTableName, $bIsOrdered)<br>";
-                $order= $this->getOrderStatement($aTableAlias, $fkTableName, $bIsOrdered);
+				$oTable= $this->getTable($fkTableName);
+                $order= $oTable->getOrderStatement($aTableAlias, $tableName, $bIsOrdered);
                 if($order)
                 {
                     if($bIsOrdered)
                         return $order;
-                        $statement.= $order.",";
+                    $statement.= $order.",";
                 }
             }
         }
@@ -2178,25 +2251,20 @@ class STDbTable extends STBaseTable
 	        or
 	        $this->Name===$tableName	)
 	    {
-	        
-	        $oTable= &$this;
-	        $aNeededColumns= $oTable->getSelectedColumns();
+	        $aNeededColumns= $this->getSelectedColumns();
 	        //if tableName is null
 	        $tableName= $this->Name;
 	    }else
-	    {
-	        $oTable= &$this->getTable($tableName);
-	        $aNeededColumns= $oTable->getIdentifColumns();
-	    }
-	    if(	!$oTable->asGroup ||
-			empty($oTable)		)
+	        $aNeededColumns= $this->getIdentifColumns();
+	    if(	!$this->asGroup ||
+			empty($this->asGroup)	)
 	    {
 	        return "";
 	    }
 	    $bAlias= false;
 	    if(count($aTableAlias)>1)
 	        $bAlias= true;
-        foreach($oTable->asGroup as $sortArray)
+        foreach($this->asGroup as $sortArray)
         {
             $alias= "";
             if($bAlias)
@@ -2213,11 +2281,12 @@ class STDbTable extends STBaseTable
         }
         foreach($aNeededColumns as $columnContent)
         {
-            $fkTableName= $oTable->getFkTableName($columnContent["column"]);
+            $fkTableName= $this->getFkTableName($columnContent["column"]);
             if(	isset($fkTableName) &&
                 $this->Name != $fkTableName	)
             {
-                $group= $this->getGroupStatement($aTableAlias, $fkTableName, $bIsGrouped);
+				$oTable= $this->getTable($fkTableName);
+                $group= $oTable->getGroupStatement($aTableAlias, $tableName, $bIsGrouped);
                 if($group)
                 {
                     if($bIsGrouped)
