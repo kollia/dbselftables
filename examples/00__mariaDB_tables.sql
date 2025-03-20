@@ -63,10 +63,10 @@
     -- Insert Countries
     INSERT INTO `Country` (`country_id`, `name`) VALUES
     (1, 'USA'),
-    (2, 'Deutschland'),
-    (3, 'Spanien'),
-    (4, 'Frankreich'),
-    (5, 'England');
+    (2, 'Germany'),
+    (3, 'Spain'),
+    (4, 'France'),
+    (5, 'United Kingdom');
 
     -- Insert States
     INSERT INTO `State` (`state_id`, `name`, `country`) VALUES
