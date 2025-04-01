@@ -746,6 +746,21 @@ class STDbTable extends STBaseTable
 	    }
 	    return $statement;
 	}
+	public function setFirstAction($action, $where= null)
+	{
+		if(STCheck::isDebug())
+		{
+			STCheck::paramCheck($action, 1, "string");
+			STCheck::paramCheck($where, 2, "STDbWhere", "string", "null");
+			STCheck::warning($action == STUPDATE && !isset($where), "STBaseTable::setFirstAction()",
+				"for action STUPDATE should be set a where clause", 1);
+			STCheck::warning($action != STUPDATE && isset($where), "STBaseTable::setFirstAction()",
+				"where clause is only for action STUPDATE allowed", 1);
+		}
+
+		STBaseTable::setFirstAction($action);
+		$this->where($where);
+	}
 	public function setStatement(string $statement)
 	{
 	    if(STCheck::isDebug("db.statement"))

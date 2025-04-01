@@ -4161,13 +4161,13 @@ class STBaseTable
 			}
 			return $checked;
 		}
-	function setFirstAction($action)
+	public function setFirstAction($action, $where= null)
 	{
 		STCheck::paramCheck($action, 1, "string");
 
 		$this->sFirstAction= $action;
 	}
-	function getFirstAction()
+	public function getFirstAction()
 	{
 		return $this->sFirstAction;
 	}
