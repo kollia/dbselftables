@@ -1765,6 +1765,12 @@ class STItemBox extends STBaseBox
 			$this->asDBTable->setMaxRowSelect($maxRow);
 		if(isset($firstRow))
 			$this->asDBTable->setFirstRowSelect($firstRow);
+		if(	$display == true &&
+			(	$message == "EMPTY_RESULT" ||
+				$message == "NOERROR"			)	)
+		{
+			$message= "BOXDISPLAY";
+		}
 		return $message;
 	}
 	function callback($columnNameAction, $callbackFunction, $action= "SAME AS columnNameAction")
@@ -2174,6 +2180,11 @@ class STItemBox extends STBaseBox
 					    $this->msg->setMessageId("SQLERROR@", $db_case->getErrorString());
             			$this->setSqlError($res);
             			$bError= true;
+					}elseif(STCheck::isDebug("test"))
+					{
+						$pkColumn= $this->asDBTable->getPkColumnName();
+						$lastInsertID= $db_case->getLastInsertID();
+						STCheck::test_tagClassAttributeLinks(STINSERT, $pkColumn, $lastInsertID);
 					}
             	}            	
 				if(!$bError)

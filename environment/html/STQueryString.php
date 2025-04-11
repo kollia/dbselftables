@@ -632,19 +632,23 @@ class STQueryString
 			if(is_string($paramValue))
 			{
 				$preg= array();
-				$pattern= "(javascript:)?";
+				$pattern= "^(javascript:)?";
 				$pattern.= "(location|window\.location|window\.location\.href)?";
-				$pattern.= "=?([^?]*)?\??(.*)";
-				if(preg_match("/^$pattern/i", $paramValue, $preg))
+				$pattern.= "=?('|\")?([^?]*)?\??([^'\"]*)('|\")?\$";
+				if(preg_match("/$pattern/i", $paramValue, $preg))
 				{
-					if($preg[4] != "")
-					{
+					$paramValue= "";
+					if($preg[5] != "")
+					{ // update is an link with address
+						$paramValue= $preg[5];
+						$Rv= $preg[4];
+					}else // update only for parameters
 						$paramValue= $preg[4];
-						$Rv= $preg[3];
-					}else
-						$paramValue= $preg[3];
-					$array= $this->splitParamValue($paramValue);
-					$this->updateA($array, $this->param_vars);
+					if($paramValue != "")
+					{
+						$array= $this->splitParamValue($paramValue);
+						$this->updateA($array, $this->param_vars);
+					}
 				}else
 					$Rv= false;
 			}else

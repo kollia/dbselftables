@@ -900,6 +900,7 @@ class STCheck
 	 * 							"edit" 	for new button aktivities (link in an input-tag)
 	 * 									or other links if nessesary
 	 * 							"table" for new table link in an input-tag
+	 * 							"insert" if class parameter is the name of the primary key and the attribute is the value, only as information
 	 * 						this types are required for testing in this same order
 	 * @param string $class class name of button input-tag, or "###link" if attribute is an link
 	 * @param string $attribute name of attribute which contains the link, or an link if class variable is "###link"

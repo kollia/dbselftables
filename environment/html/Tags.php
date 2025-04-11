@@ -138,7 +138,9 @@ class Tag extends STCheck
 		}
 		/**
 		 * sorting order of links
-		 * inside array $global_selftable_test_links
+		 * inside array $global_selftable_test_links.
+		 * entry STINSERT not implemented, because thats only for information
+		 * which last entry was inserted
 		 * @var array $aTestTypes
 		 */
 		private array $aTestTypes= array("back_tables", "edit", "table", "action", "container_back");
@@ -160,6 +162,7 @@ class Tag extends STCheck
 				$status= $query->getParameterValue("testdebug", "status");//"testdebug[action]");
 				if(	isset($__global_finished_SiteCreator_result) &&
 					(	$__global_finished_SiteCreator_result === "NOERROR" ||
+						$__global_finished_SiteCreator_result === "BOXDISPLAY" ||
 						$__global_finished_SiteCreator_result === "EMPTY_RESULT"	) &&
 					(	!isset($status) ||
 						$status !== "finished"	)											)
@@ -196,6 +199,7 @@ class Tag extends STCheck
 						$testdebug['table']= $this->getTableName();
 						$testdebug['link-type']= $type;
 						$testdebug['link-class']= key($selftable_test_links[$type]);
+						$testdebug['last-insert']= null;
 						$testdebug['backbutton-test']= "false";
 						$testdebug['onEditLinkCount']= -1;
 						$testdebug['onEditDeleteCount']= -1;
@@ -222,11 +226,13 @@ class Tag extends STCheck
 						$testdebug['status']= "finished";
 					}
 					if(	$__global_finished_SiteCreator_result === "NOERROR" ||
+						$__global_finished_SiteCreator_result === "BOXDISPLAY" ||
 						$__global_finished_SiteCreator_result === "EMPTY_RESULT"	)
 					{
 						if(	isset($selftable_test_links['back_tables']) ||
 							isset($selftable_test_links['action'])			)
-						{
+						{ // [2][4][5][7] Pos. table listing with action definition
+						  //       1 - go Back-Button
 							if($testdebug['backbutton-test'] === "false")
 							{// STItemBox should test first back-button
 								$type= "back_tables";
@@ -248,6 +254,10 @@ class Tag extends STCheck
 								{// now entry was inserted correctly
 								 // and there be defined only an forward link
 								 // backbutton-test wasn't correct set by insert to false, but do it now
+									$pkColumn = array_key_first($global_selftable_test_links[STINSERT]);
+									$value= $global_selftable_test_links[STINSERT][$pkColumn];
+									$testdebug['last-insert']= array();
+									$testdebug['last-insert'][$pkColumn]= $value;
 									$testdebug['backbutton-test']= "false";
 									$link= $query->update($selftable_test_links['action']['link']);
 									$query->update(array( 'testdebug' => $testdebug ));
@@ -259,7 +269,9 @@ class Tag extends STCheck
 						{
 							if( !isset($selftable_test_links['edit']['###link'][$testdebug['onEditLinkCount']+1]) &&
 								!isset($selftable_test_links['edit']['###delete'][$testdebug['onEditDeleteCount']+1])	)
-							{ // loop through table links
+							{ // [0] Pos. beginning of Container (only table-buttons are displayed)
+							  //          loop through ALL table links
+
 								$type= "table";
 								$testdebug['onEditLinkCount']= -1;
 								$testdebug['onEditDeleteCount']= -1;
@@ -270,7 +282,7 @@ class Tag extends STCheck
 								if(isset($tags[$tagCount]))
 								{
 									$link= $tags[$tagCount]->getAttribut($onAttribute);
-									$link= $this->updateLinkOnQuery($link, $query);
+									$link= $query->update($link);
 									$testdebug['onTableTagCount']= $tagCount;
 									$type= "link";
 								}else
@@ -280,16 +292,33 @@ class Tag extends STCheck
 									$testdebug['status']= "finished";
 								}
 							}else
-							{ // loop through edit links
+							{ // [1][3][6][8] Pos. Container link to table
+							  //       2 - loop through other edit links
 								if(	isset($selftable_test_links['edit']['###link'][$testdebug['onEditLinkCount']+1]) ||
 									(	$testdebug['backbutton-test'] === "true" &&
 										isset($selftable_test_links['edit']['###delete'][$testdebug['onEditLinkCount']]	)	)	)
-								{
-									if($testdebug['backbutton-test'] === "false") // if backbutton-test, go back to
-										$testdebug['onEditLinkCount']++;		// first link from where comming
-									$link= $selftable_test_links['edit']['###link'][$testdebug['onEditLinkCount']];
+								{// trigger now insert/update/delete link
+									
+									$bGoNextLink= false;
+									if($testdebug['backbutton-test'] === "true") // if backbutton-test, go back to
+									{                                             // first link from where comming
+										if(is_array($testdebug['last-insert']))
+										{
+											$query->update($link);
+											$column= array_key_first($testdebug['last-insert']);
+											$stget= array( "stget" => array( "limit" => array( $table => array())));
+											$stget['stget']['limit'][$table][$column]= $testdebug['last-insert'][$column];
+											$query->update($stget);
+											$link= $query->getUrlParamString();
+										}else
+											$link= $selftable_test_links['edit']['###link'][$testdebug['onEditLinkCount']];
+									}else
+									{
+										$testdebug['onEditLinkCount']++;
+										$link= $selftable_test_links['edit']['###link'][$testdebug['onEditLinkCount']];
+									}
 								}else
-								{
+								{// do backlink test
 									$testdebug['onEditDeleteCount']++;
 									$link= $selftable_test_links['edit']['###delete'][$testdebug['onEditDeleteCount']];
 
@@ -328,7 +357,7 @@ class Tag extends STCheck
 						$report.= $this->reportEndTime($testdebug['start']);					
 
 					if(	$__global_finished_SiteCreator_result === "NOERROR" ||
-						$__global_finished_SiteCreator_result === "EMPTY_RESULT"	)
+						$__global_finished_SiteCreator_result === "BOXDISPLAY"	)
 					{
 						if($bFinished)
 						{
