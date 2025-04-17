@@ -2183,8 +2183,13 @@ class STItemBox extends STBaseBox
 					}elseif(STCheck::isDebug("test"))
 					{
 						$pkColumn= $this->asDBTable->getPkColumnName();
-						$lastInsertID= $db_case->getLastInsertID();
-						STCheck::test_tagClassAttributeLinks(STINSERT, $pkColumn, $lastInsertID);
+						if($this->action==STUPDATE)
+						{
+							$table= $this->asDBTable->getName();
+							$pk= $query->getParameterValue("stget", "limit", $table, $pkColumn);
+						}else
+							$pk= $db_case->getLastInsertID();
+						STCheck::test_tagClassAttributeLinks($this->action, $pkColumn, $pk);
 					}
             	}            	
 				if(!$bError)
@@ -2838,23 +2843,6 @@ class STItemBox extends STBaseBox
 				$aEnums= true;
 			$this->aDisabled[$field["alias"]]= $aEnums;
 		}
-/*		function onOKMakeScript($script)
-		{
-			$this->OKScript= $script;
-		}
-		function onOKGotoUrl($url)
-		{
-			$script= $this->OKScript;
-			if(!$script)
-				$script= getJavaScriptTag();
-			if(Tag::isDebug())
-			{
-				$string= "<h3>process was OK -&gt; goto Url:<a href='$url'>".$url."</a></h3>";
-				$script->add("document.write(\"$string\")");
-			}else
-				$script->add("self.location.href='".$url."';");
-			$this->OKScript= $script;
-		}*/
 	    function delete($onError= onErrorMessage)
 		{
 			$this->createMessages();
@@ -2935,6 +2923,12 @@ class STItemBox extends STBaseBox
 						$td->add($this->msg->getMessageEndScript());
 					$tr->add($td);
             	$this->add($tr);
+				if(STCheck::isDebug("test"))
+				{
+					$link= $this->msg->getEndUrl();
+					if($link)
+						STCheck::test_tagClassAttributeLinks("action", "link", $link);
+				}
 			}
 
 			$oCallbackClass->before= false;

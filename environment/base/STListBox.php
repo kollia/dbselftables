@@ -2521,31 +2521,26 @@ class STListBox extends STBaseBox
 				$value= $this->sqlResult[0][$pk];
 				$container= $this->asDBTable->container->getContainerName();
 				$table= $this->asDBTable->getName();
-				if($this->asDBTable->canInsert())
+				if(	$this->asDBTable->canInsert() &&
+					$this->asDBTable->hasAccess(STINSERT)	)
 				{
 					$query= new STQueryString();
-					$query->insert("stget[action]=".STINSERT);
-					$query->insert("stget[table]=$table");
-					$query->insert("stget[container)=$container");
+					$query->setLimitation(STINSERT, $container, $table);
 					$url= $query->getUrlParamString();
 					STCheck::test_tagClassAttributeLinks("edit", "###link", $url);
 				}
-				if($this->asDBTable->canUpdate())
+				if(	$this->asDBTable->canUpdate() &&
+					$this->asDBTable->hasAccess(STUPDATE)	)
 				{
 					$query= new STQueryString();
-					$query->insert("stget[action]=".STUPDATE);
-					$query->insert("stget[table]=$table");
-					$query->insert("stget[container)=$container");
 					$query->setLimitation(STUPDATE, $container, $table, $pk, $value);
 					$url= $query->getUrlParamString();
 					STCheck::test_tagClassAttributeLinks("edit", "###link", $url);
 				}
-				if($this->asDBTable->canDelete())
+				if(	$this->asDBTable->canDelete() &&
+					$this->asDBTable->hasAccess(STDELETE)	)
 				{
 					$query= new STQueryString();
-					$query->insert("stget[action]=".STDELETE);
-					$query->insert("stget[table]=$table");
-					$query->insert("stget[container)=$container");
 					$query->setLimitation(STDELETE, $container, $table, $pk, $value);
 					$url= $query->getUrlParamString();
 					STCheck::test_tagClassAttributeLinks("edit", "###delete", $url);

@@ -403,5 +403,26 @@ class STMessageHandling // implements STMessageHandlingInterface <- ab version 5
 				return true;
 			return false;
 		}
+		public function getEndUrl()
+		{
+			$url= null;
+			$msg= $this->getMessageId();
+			if($msg=="NOERROR")
+				$url= $this->OKUrl;
+			else
+				$url= $this->ErrorUrl;
+			if(	!isset($url) &&
+				!$url			)
+			{
+				$url= $this->EndUrl;
+			}
+
+			if(	!isset($url) &&
+				!$url			)
+			{
+				return false;
+			}
+			return $url;
+		}
 }
 ?>
