@@ -142,11 +142,6 @@ class Tag extends STCheck
 		 */
 		public function display()
 		{
-			if(	STCheck::isDebug("test") &&
-				typeof($this, "STSiteCreator")	)
-			{
-				$this->testing();
-			}
 			echo $this->getDisplayString(0);
 		}
 		public function getDisplayString($displayCount= 0)
