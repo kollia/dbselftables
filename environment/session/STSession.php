@@ -1149,7 +1149,7 @@ class STSession
 				/**/ if( STCheck::isDebug("user") )
 				{
 				    $msg= "....login Successfull, set Project to <em>$Project</em>, ";
-				    $msg.= "update LastLogin and increase NrLogin counter";
+				    $msg.= "update LastLogin and increase NrLogin counter for user:".$HTTP_POST_VARS["user"]." with new ID:".$this->userID;
 					STCheck::echoDebug("user", $msg);
 				}
 				$this->setProperties( $Project );
@@ -1285,11 +1285,12 @@ class STSession
 
 		// deffiniere User-Name
 		$userID= $this->getSessionVar("ST_USERID");
-		if(isset($userID))
-		{//wenn ST_USERID gesetzt ist, weiss die Klasse
-			$this->userID= $userID;//die UserID nicht.
+		if(	isset($userID) &&
+			$userID > -1 		)
+		{//if ST_USERID is set, the session class
+			$this->userID= $userID;// do not know the UserID.
 			/**/Tag::echoDebug("user", "set userID from session-var ".$userID);
-		}else// sonst wurde bereits eine Authentifizierung �ber Datenbank/ELDAP gemacht
+		}else// otherwise it's the possibillity the userID set over Database or ELDAP
 		{
 			if(isset($this->userID))
 			{

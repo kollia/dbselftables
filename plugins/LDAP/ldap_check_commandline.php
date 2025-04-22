@@ -3,9 +3,9 @@
 /**
  * testing first on command line connection
  * $> openssl s_client -connect <host>:<port>  \
+ *                          -CAfile /<cert-path>/certificate.pem  \
  *                          -cert /<cert-path>/certificate.crt  \
  *                          -key /<cert-path>/certificate.key   \
- *                          -CAfile /<cert-path>/certificate.pem  \
  *                          -showcerts
  * for windows the command binary is openssl.exe
  * afterwards fill certificate options into this file

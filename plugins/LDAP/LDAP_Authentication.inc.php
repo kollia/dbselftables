@@ -140,7 +140,8 @@ class LDAP_Authentication {
 			$msg[]= " ... searching now for username:$username with password";
 			STCheck::echoDebug("user", $msg);
 		}
-		$this->ldapServer->search( "(&(sAMAccountName=".$username.")(objectClass=user))" );		
+		$filter= $this->ldapServer->filterForSearchAttributes($username);
+		$this->ldapServer->search( $filter );		
 
 		
 		if( $this->ldapServer->rowCount() < 1 )
@@ -165,9 +166,16 @@ class LDAP_Authentication {
 				echo "<br />Found Username: will try to use users password:<br />";
 			$this->ldapServer->next_record();
 			$foundData= $this->ldapServer->getAllUserData();
+			$userDN= $this->ldapServer->userBaseDnCreation($username, $foundData);
 
 			if( Tag::isDebug("user") ) 
-				echo "will unbind now:";
+			{
+				showLine();
+				echo "userDN:$userDN<br>";	
+				echo "found follow user data:";
+				st_print_r($foundData);
+				echo "<br />will unbind now:";
+			}
 			$this->ldapServer->unbind();
 			$this->ldapServer->disconnect();
 			if( Tag::isDebug("user") ) 
@@ -192,7 +200,8 @@ class LDAP_Authentication {
             	return 2;
 			}else
 			{
-				if( $this->ldapServer->bind( "", $password ) )
+				if( $this->ldapServer->bind( $userDN, $password ) )
+				//if( $this->ldapServer->bind( "", $password ) )
 				{
 					if( Tag::isDebug("user") )
 						echo "<br /><b>Successfull Bind!</b>";

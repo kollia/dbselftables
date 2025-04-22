@@ -2,7 +2,11 @@
 
 $_ldap= load_pluginModule("LDAP");
 require_once( $_ldap['mindtake_ldap'] );
-	
+
+/**
+ * main properties to connect over LDAP/Server
+ * @author Alexander Kolli
+ */
 class LDAPServer_Connection extends LDAPServer {
 
         /*public:*/
@@ -10,11 +14,49 @@ class LDAPServer_Connection extends LDAPServer {
         var $host_ = 'example.com'; // host of LDAP server
         var $port_ = '389'; // standard port, for LDAPs mostly '636';
 
+        var $loginAttribName_ = 'cn';
         var $loginUserName_ = '<user name>'; // user name for standard user first login
         var $password_ = '<password>'; // // password  for standard user first login
-        var $loginBaseDN_ = 'ou=FunctionUser,dc=example,dc=com';
-        var $baseDN_ = 'dc=example,dc=com';
-        var $loginAttribName_ = 'cn';
+        var $loginBaseDN_ = 'ou=FunctionUser,dc=example,dc=com'; // using for standard user
+        var $baseDN_ = 'dc=example,dc=com'; // using for ldap_search
+        
+        /**
+         * function to create filter for searching user attributes over ldap/server.
+         * Using also membervariable $baseDN_ for searching (ldap_search)
+         * 
+         * @param string $user name of user want to login
+         * @return string created filter for search
+         */
+        public function filterForSearchAttributes(string $user) : string
+        {
+            $filter= "(&(user=".$user.")(objectClass=user))";
+            return $filter;
+        }
+        
+        /**
+         * attributes can get back
+         * filled from LDAP-server
+         */
+        var $retrieveAttributes_= array('user',
+                                        'name',
+                                        'description',
+                                        'memberOf',
+                                        'mail'				   );
+
+        /**
+         * function to create the base DN for password verification using the ldap_bind function
+         * 
+         * @param string $user name of user want to login
+         * @param array $attributes all attributes found over ldap for user
+         * @return string created base DN string
+         */
+        public function userBaseDnCreation(string $user, array $attributes) : string
+        {
+            $baseDN= $this->loginAttribName_."=$user,";
+            $baseDN.= "ou=users,"; // or add some attributes specific from user
+            $baseDN.= $this->baseDN_;
+            return $baseDN;
+        }
         
         /**
          * array of options.<br />
@@ -48,16 +90,6 @@ class LDAPServer_Connection extends LDAPServer {
             'LDAP_OPT_X_TLS_KEYFILE'              => array( LDAP_OPT_X_TLS_KEYFILE, '/<path to ca file or bundle>/private.key'),
             'LDAP_OPT_REFERRALS'            => array( LDAP_OPT_REFERRALS, 0)
         );
-        
-        /**
-         * attributes can get back
-         * filled from LDAP-server
-         */
-        var $retrieveAttributes_= array('user',
-                                        'name',
-                                        'description',
-                                        'memberOf',
-                                        'mail'				   );
 }
 
 ?>

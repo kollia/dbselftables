@@ -9,11 +9,11 @@
  * example of usage:
  * <pre>
  *	class MY_LDAP_Server extends LDAPServer {
- *		var $host_ = 'sw02all001.klinikum.ad.local';
+ *		var $host_ = 'example.com';
  *      var $loginUserName_ = 'ZotterR';
- *		var $loginBaseDN_ = 'OU=Users,OU=ADM,DC=klinikum,DC=ad,DC=local';
- * 		var $password_ = 'Bums.ti';
- * 		var $baseDN_ = 'DC=klinikum,DC=ad,DC=local';
+ *		var $loginBaseDN_ = 'OU=Users,OU=ADM,DC=example,DC=com';
+ * 		var $password_ = 'anyPass';
+ * 		var $baseDN_ = 'DC=example,DC=com';
  *		var $loginAttribName_ = 'cn';
  * 	}
  *
@@ -73,16 +73,28 @@ class LDAPServer{
 		return $this->baseDN_;
 	}
 	//--------------------------------------------------------------------
-	function getUserDN( $userName = '' )
+	/**
+	 * create user DN witch attributename from LDAPServer_connection + username
+	 * or standard user (if userName not set) and complete BaseDN
+	 * 
+	 * @param string $userName user-name if set or as default standard user
+	 * @return string full verifyed user specification
+	 */
+	public function getUserDN( $userName = '' )
 	{
+		$bStandardUser= false;
+		if(trim($userName) == "")
+			$bStandardUser= true;
 		$UserDN=  $this->loginAttribName_.'=';
-		if($userName == '')
+		if($bStandardUser)
 			$UserDN.= $this->loginUserName_;
 		else
 			$UserDN.= $userName;
-		if($this->loginUserName_ != '')
-			$UserDN.= ',';
-		$UserDN.= $this->loginBaseDN_;
+		$UserDN.= ',';
+		if($bStandardUser)
+			$UserDN.= $this->loginBaseDN_;
+		else
+			$UserDN.= $this->baseDN_;
 		return	$UserDN;
 	}
 	//--------------------------------------------------------------------
@@ -282,9 +294,9 @@ class LDAPServer{
 			$UserDN= $fullUserNameDN;
 			if($userNameForStandardUserDN != '')
 				$UserDN= $this->getUserDN( $userNameForStandardUserDN );
-			showLine();
-			if(1)//$this->debug_)
+			if($this->debug_)
 			{
+				showLine();
 			    echo "ldap_bind(";st_print_r($this->con_, 1, 1, false);
 			    echo ", '$UserDN', '".$this->hidePassword($password)."')<br />";
 				$this->binding_ = ldap_bind( $this->con_, $UserDN, $password );
@@ -315,6 +327,7 @@ class LDAPServer{
 			if($this->debug_)
 			{
 				showLine();
+				echo "binding with standard user and standard password ".$this->password_."<br />";
 				echo "ldap_bind(";
 				st_print_r($this->con_, 1, 1, false);
 				echo ", '".$this->getUserDN()."', '".$this->hidePassword($this->password_)."')<br />";
@@ -392,33 +405,6 @@ class LDAPServer{
 		return $result;
 
 	}
-	//--------------------------------------------------------------------
-	function getMembersOf($group, $baseDNPrefix = '', $baseDN = '')
-	{
-		$members= array();
-		$alpha= array(	'a','b','c','d','e','f','g','h','i','j',
-						'k','l','m','n','o','p','q','r','s','t',
-						'u','v','w','x','y','z'						);
-//		foreach($alpha as $letter)
-//		{
-			if($this->debug_)
-				echo "<br /><b>&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;</b><br />";
-			$this->search(	"(&(description=diginfo)(objectClass=user))",
-							array('sAMAccountName', 'membersOf'), $baseDNPrefix, $baseDN);
-			$groups= $this->f('memberOf');
-			echo "1--------------------------------------------------<br />";
-			print_r($groups);
-			$groups= $this->extractGroupNames($groups);
-			echo "2--------------------------------------------------<br />";
-			print_r($groups);
-			if(array_search($group, $groups))
-			{
-				$user= $this->f('sAMAccountName');
-				$members[]= $user;
-			}
-//		}
-		return $members;
-	}
 	function search( $filter, $retrieveAttributes = false, $baseDNPrefix = '', $baseDN = '' )
 	{
 		if($this->debug_)
@@ -454,6 +440,7 @@ class LDAPServer{
 		}
 		/**/ if( $this->debug_ )
 		{
+			showLine();
 		    echo "performin search for: <br />";
 		    echo "<pre>";
 		    echo "ldap_search( [conntection]&nbsp".print_r($this->con_, true).",<br />";
@@ -463,12 +450,13 @@ class LDAPServer{
 		    st_print_r( $retrieveAttributes, 50 );
 		    echo "' );<pre><br />";
 		}
-		if( isset($retrieveAttributes) )
+		if(isset($retrieveAttributes) )
 		{
-			$this->resultRessource_ = @ldap_search( $this->con_, $rootDN, $filter, $retrieveAttributes );
+			$this->resultRessource_ = ldap_search( $this->con_, $rootDN, $filter, $retrieveAttributes );
 			$this->resultAttributes_ = $retrieveAttributes ;
 		}else
 		{
+			// search for all existing attiributes
 			$this->resultRessource_ = @ldap_search( $this->con_, $rootDN, $filter );
 			$this->resultAttributes_ = array();
 			while( $this->next_record() )
