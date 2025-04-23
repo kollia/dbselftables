@@ -2707,6 +2707,7 @@ class STBaseTable
 		public function clearSelectColumns()
 		{
 		    $this->abOrigChoice["select"]= true;
+			$this->aStatement= array();
 		    foreach($this->show as $key=>$column)
 		    {
 		        if($column['type'] == "select")
@@ -2784,6 +2785,7 @@ class STBaseTable
 		public function clearIdentifColumns()
 		{
 		    $this->abOrigChoice["identif"]= true;
+			$this->aStatement= array();
 			$this->identification= array();
 		}
 		function clearFKs()
@@ -3436,6 +3438,7 @@ class STBaseTable
 	public function clearGetColumns()
 	{
 	    $this->abOrigChoice['get']= true;
+		$this->aStatement= array();
 	    foreach($this->show as $key=>$column)
 	    {
 	        if($column['type'] == "get")
