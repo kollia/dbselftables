@@ -871,8 +871,9 @@ class STSiteCreator extends HtmlTag
 		$reportFilename= "selftable_test_report.txt";
 		$query= new STQueryString();
 		//$query->update("set=5");
-		$testdebug= $query->getParameterValue("testdebug");//"testdebug");
-		$status= $query->getParameterValue("testdebug", "status");//"testdebug[action]");
+		$testdebug= $query->getParameterValue("testdebug");
+		$status= $query->getParameterValue("testdebug", "status");
+		STCheck::end_outputBuffer(false);// flush first normal output buffer
 		if(	isset($__global_finished_SiteCreator_result) &&
 			(	$__global_finished_SiteCreator_result === "NOERROR" ||
 				$__global_finished_SiteCreator_result === "BOXDISPLAY" ||
@@ -948,6 +949,12 @@ class STSiteCreator extends HtmlTag
 				$testdebug['link-type']= "action";
 				$testdebug['step']++;
 			}	
+			if($testdebug['step'] == 0)
+			{
+				$table= $this->getTableName();
+				if(trim($table) != "")
+					$testdebug['step']= 1;
+			}
 			$this->createContainerReport($testdebug['step']);
 
 			if(	$__global_finished_SiteCreator_result === "NOERROR" ||
@@ -983,7 +990,8 @@ class STSiteCreator extends HtmlTag
 					$link= $this->makeTableAction_Test($testdebug, $sorted_selftable_test_links, $query);
 				}
 				// to get last inserted PK, write containr report after localize new values
-				$report.= $this->writeContainerReport($testdebug);
+				$sErrorOutput= STCheck::end_outputBuffer("test");
+				$report.= $this->writeContainerReport($testdebug, $sErrorOutput);
 
 				$type= $testdebug['link-type'];
 				if(	$type == "link" || $type == "edit"	)
@@ -1055,7 +1063,8 @@ class STSiteCreator extends HtmlTag
 		}else
 		{
 			$this->createContainerReport($testdebug['step']);
-			$report.= $this->writeContainerReport($testdebug);
+			$sErrorOutput= STCheck::end_outputBuffer("test");
+			$report.= $this->writeContainerReport($testdebug, $sErrorOutput);
 			$report.= $this->writeEndTimeReport($testdebug['start']);
 		}
 
@@ -1102,8 +1111,12 @@ class STSiteCreator extends HtmlTag
 			}
 		}else
 		{
-			$link= $sorted_selftable_test_links["action"]['link'];
-			$link= $this->updateQueryLink($query, $link);
+			if(isset($sorted_selftable_test_links["action"]['link']))
+			{
+				$link= $sorted_selftable_test_links["action"]['link'];
+				$link= $this->updateQueryLink($query, $link);
+			}else
+				echo "  !!ERROR!!: no action link found for table listing<br />";
 			$testdebug['step']= 1;
 			$type= "link";
 		}
@@ -1304,7 +1317,7 @@ class STSiteCreator extends HtmlTag
 	 * @var array $report
 	 */
 	private $report= array();
-	private function writeContainerReport(array $testdebug) : string
+	private function writeContainerReport(array $testdebug, string $sErrorOutput) : string
 	{
 		global $__global_finished_SiteCreator_result;
 
@@ -1333,6 +1346,7 @@ class STSiteCreator extends HtmlTag
 		$report.= " ***       result: $__global_finished_SiteCreator_result\n";
 		$report.= " ***\n";
 		$report.= "\n";
+		$report.= "$sErrorOutput\n\n";
 		return $report;
 	}
 	private function writeEndTimeReport(int $starttime)

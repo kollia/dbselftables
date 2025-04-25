@@ -16,12 +16,15 @@ $global_bOpenErrWritten= false;
  */
 $g__STCheck_exit_entry= array();
 /**
- * STCheck set output buffer by first debug setting STCheck::debug(true) with ob_start()
- * if will be release buffer after set Session or when execute STSideCreator
+ * STCheck set output buffer by first debug setting STCheck::debug(true) with ob_start().
+ * Do if will be release buffer after set Session or when execute STSideCreator
+ * or for testing framework
  * @param bool
  */
 $global_activeOutputBuffer= false;
 $global_outputBufferWasErased= false;
+$global_testingOutputBuffer= false;
+$global_testingOutputBufferWasErased= false;
 $global_clearOutputBuffer= false;
 /**
  * whether should show tat session set to noRegister
@@ -412,23 +415,87 @@ class STCheck
 				exit();
 			}
 		}
+		public static function start_outputBuffer(bool|string $dbg_str= true)
+		{
+			global $global_activeOutputBuffer,
+			       $global_outputBufferWasErased,
+				   $global_testingOutputBuffer,
+				   $global_testingOutputBufferWasErased,
+				   $global_clearOutputBuffer;
+
+			//exit;
+			if(!$global_clearOutputBuffer)
+			{
+				if( is_string($dbg_str) &&
+					substr($dbg_str, 0, 4) == "test"	)
+				{
+					if( $global_testingOutputBuffer == false &&
+						$global_testingOutputBufferWasErased == false   )
+					{
+						$global_testingOutputBuffer= true;
+						$global_testingOutputBufferWasErased= false;
+						ob_start();
+					}
+				}elseif($global_activeOutputBuffer == false &&
+						$global_outputBufferWasErased == false   )
+				{
+					$global_activeOutputBuffer= true;
+					$global_outputBufferWasErased= false;
+					ob_start();
+				}
+			}
+		}
 		public static function doNotOutputObBuffer()
 		{
 			global $global_clearOutputBuffer;
 			$global_clearOutputBuffer= true;
 		}
-		public static function end_outputBuffer()
+		/**
+		 * end output buffering began by STCheck::start_outputBuffer()
+		 * seperated for testing framework and for normal output
+		 * 
+		 * @param boolean|string $dbg_str debugging string, if it is "test" the output buffer will be ended for testing framework,
+		 *                                otherwise the output buffer will be ended for normal output
+		 * @return string|bool the output buffer content by testing or true by normal buffering, otherwise when nothing was done
+		 *                     or the buffering set to STCheck::doNotOutputObBuffer() it will be false
+		 */
+		public static function end_outputBuffer(bool|string $dbg_str= false) : string|bool
 		{
 		    global $global_activeOutputBuffer,
 		           $global_outputBufferWasErased,
+				   $global_testingOutputBuffer,
+				   $global_testingOutputBufferWasErased,
 				   $global_clearOutputBuffer;
 		    
-			if($global_clearOutputBuffer)
+			$Rv= false;
+			if(!$global_clearOutputBuffer)
+			{
+				if( is_string($dbg_str) &&
+					substr($dbg_str, 0, 4) == "test"	)
+				{
+					if( $global_testingOutputBuffer == true &&
+						$global_testingOutputBufferWasErased == false   )
+					{
+						$global_testingOutputBuffer= false;
+						$global_testingOutputBufferWasErased= true;
+						$Rv= ob_get_clean();
+						//ob_end_flush();
+					}
+				}else
+				{
+					if(	$global_activeOutputBuffer == true &&
+						$global_outputBufferWasErased == false   )
+					{
+						$global_activeOutputBuffer= false;
+						$global_outputBufferWasErased= true;
+						$Rv= true;
+						ob_end_flush();
+					}
+				}
+
+			}else
 				ob_end_clean();
-			elseif($global_activeOutputBuffer)
-		        ob_end_flush();
-	        $global_activeOutputBuffer= false;
-	        $global_outputBufferWasErased= true;
+			return $Rv;
 		}
 		/**
 		 * set debugging state
@@ -477,12 +544,7 @@ class STCheck
 			    $dbg_str !== false       )
 			{
 			    global_debug_definition(true);
-			    if( $global_activeOutputBuffer == false &&
-			        $global_outputBufferWasErased == false   )
-    			{
-    			    $global_activeOutputBuffer= true;
-    				ob_start();
-    			}
+				STCheck::start_outputBuffer($dbg_str);
 			}else
 			{
 			    global_debug_definition(false);
