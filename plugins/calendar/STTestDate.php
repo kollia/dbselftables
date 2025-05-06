@@ -321,6 +321,15 @@ class STtDate
         $time= $format;
         return $this->fmdate['formatter']->format($time);
     }
+    public function getWeekday(int|string $time= null) : int
+    {
+        if(isset($time))
+        {
+            if(is_string($time))
+                $time= strtotime($time);
+        }
+        return date("w", $time);
+    }
     public function add($time)
     {
         STCheck::param($time, 0, "STtDate", "int");
