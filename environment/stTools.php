@@ -1,10 +1,11 @@
 <?php
 
 
-function st_print_r($value, $deep=1, $space= 0, $bFirst= true)
+function st_print_r($value, $deep=1, $space= 0, $bPrint= true, $bFirst= true) : string
 {
+	$outputStr= "";
     if($bFirst)
-        echo stTools::getSpaces($space);
+        $outputStr.= stTools::getSpaces($space);
 	if(	is_object($value)
 		or
 		is_array($value)	)
@@ -14,15 +15,15 @@ function st_print_r($value, $deep=1, $space= 0, $bFirst= true)
 		else
 			$f= "array( ";
 		//STCheck::write($f);
-		//echo "typeof($value, $aExclude, null, 0)<br />";
+		//$outputStr.= "typeof($value, $aExclude, null, 0)<br />";
 		if($deep>0)
 //			and
 //			!typeof($value, $aExclude, null, 0)	)
 		{
 			if($space==0)
-				echo "\n";
+				$outputStr.= "\n";
 			$space+= strlen($f);
-			echo $f;
+			$outputStr.= $f;
 			$keyLen= 0;
 			foreach($value as $key=>$entry)
 			{
@@ -34,51 +35,56 @@ function st_print_r($value, $deep=1, $space= 0, $bFirst= true)
 			$lastCount= count((array)$value);
 			foreach($value as $key=>$entry)
 			{
-				$str= "[".$key."]";//echo $space." ".($keyLen-strlen($str));
+				$str= "[".$key."]";//$outputStr.= $space." ".($keyLen-strlen($str));
 				$str.= stTools::getSpaces((($keyLen-strlen($str))))." => ";
 				if($count>1)
-					echo stTools::getSpaces($space);
-				echo $str;
-				st_print_r($entry, ($deep-1), ($space+strlen($str)), false);
+					$outputStr.= stTools::getSpaces($space);
+				$outputStr.= $str;
+				$outputStr.= st_print_r($entry, ($deep-1), ($space+strlen($str)), /*print*/false, /*first*/false);
 				if($count != $lastCount)
-					echo "\n";
+					$outputStr.= "\n";
 				$count++;
 			}
 			if($lastCount == 0)
-				echo "-empty- )";
+				$outputStr.= "-empty- )";
 			else
-				echo "      )";
+				$outputStr.= "      )";
 			$space-= strlen($f);
 		}else
 		{
 			if(	is_array($value) &&
 				count($value) == 0	)
 			{
-				echo $f."-empty- )";
+				$outputStr.= $f."-empty- )";
 			}elseif (typeof($value, "STBaseTable"))
 			{
 				$name= $value->getName();
 				$id= $value->getID();
-			    echo $f.$name."::".$id." )";
+			    $outputStr.= $f.$name."::".$id." )";
 			}else
-				echo $f."-skip- )";
+				$outputStr.= $f."-skip- )";
 			$space-= strlen($f);
 		}
 		if($space==0 || $bFirst)
-			echo "<br />\n";
+			$outputStr.= "<br />\n";
 	}elseif(is_bool($value))
 	{
-		echo "boolean(";
+		$outputStr.= "boolean(";
 		if($value)
-			echo "true)";
+			$outputStr.= "true)";
 		else
-			echo "false)";
+			$outputStr.= "false)";
 	}elseif(is_string($value))
-		echo "\"".$value."\"";
+		$outputStr.= "\"".$value."\"";
 	elseif($value===null)
-		echo "( -NULL- )";
+		$outputStr.= "( -NULL- )";
 	else
-		echo $value;
+		$outputStr.= $value;
+	if($bPrint)
+		echo $outputStr;
+	else
+		return $outputStr;
+	return "";
 }
 function showLine(int $count= 1)
 {
