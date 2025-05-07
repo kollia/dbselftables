@@ -406,6 +406,8 @@ $bill->listCallback("billRequest");
 
 ```
 
+This behavior can also be assigned with the same callback-function for insertCallback(<function>), updateCallback(<function>) and/or deleteCallback(<function>).
+
 
 
 <br /><br />
