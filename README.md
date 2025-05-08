@@ -410,7 +410,7 @@ This behavior can also be assigned with the same callback-function for insertCal
 The display flag for the callback-object is for listing always true and for deliting always false. The before flag is true if the function was called before display the content 
 or before manipulate the database, otherwise false. The function will be called for every column and row seperatly. 
 If you call <code><nobr>-&gt;getValue()</nobr></code> or <code><nobr>-&gt;setValue(&lt;content&gt;)</nobr></code> from the callback-object, it will be called for the current column/row.
-But you can also get from other column with <code><nobr>-&gt;getValue(&lt;column&gt;)</nobr></code> or also other row with <code><nobr>-&nbsp;&gt;&nbsp;getValue(&lt;column&gt;, &lt;row&gt;)</nobr></code>. 
+But you can also get from other column with <code><nobr>-&gt;getValue(&lt;column&gt;)</nobr></code> or also other row with <code><nobr>-&gt;getValue(&lt;column&gt;, &lt;row&gt;)</nobr></code>. 
 The same by <code><nobr>setValue()</nobr></code>.
 
 Somtime you have not the chance to delete some rows, because other tables point to them.
