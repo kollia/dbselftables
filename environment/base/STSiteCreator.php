@@ -183,9 +183,7 @@ class STSiteCreator extends HtmlTag
 				$this->closeUserDbConnection();
 			}*/
 			//-------------------------------------------------------------------------------------------------------
-			echo "<!DOCTYPE html>";
-			if(STCheck::isDebug())
-				echo "\n";
+			
 			if(STCheck::isDebug("test"))
 			{
 				$this->getDisplayString(0);
@@ -194,9 +192,15 @@ class STSiteCreator extends HtmlTag
 				// because if some errors by the first time it should seen in the output log
 				// testing generate new link for automatic reload the page
 				// and by display the page on screen we need a new generated page
+				echo "<!DOCTYPE html>\n";
 				echo $this->getDisplayString(0);
 			}else
+			{
+				echo "<!DOCTYPE html>";
+				if(STCheck::isDebug())
+					echo "\n";
 				HtmlTag::display($bCloseConnection);
+			}
 			if(Tag::isDebug())
 			{
 				global	$_st_page_starttime_;
