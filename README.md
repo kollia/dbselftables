@@ -409,12 +409,12 @@ $bill->listCallback("billRequest");
 This behavior can also be assigned with the same callback-function for insertCallback(&lt;function&gt;), updateCallback(&lt;function&gt;) and/or deleteCallback(&lt;function&gt;).
 The display flag for the callback-object is for listing always true and for deliting always false. The before flag is true if the function was called before display the content 
 or before manipulate the database, otherwise false. The function will be called for every column and row seperatly. 
-If you call <code><nobr>-&gt;getValue()</nobr></code> or <code><nobr>-&gt;setValue(&lt;content&gt;)</nobr></code> from the callback-object, it will be called for the current column/row.
-But you can also get from other column with <code><nobr>-&gt;getValue(&lt;column&gt;)</nobr></code> or also other row with <span style='white-space:nowrap;'>-&gt;getValue(&lt;column&gt;, &lt;row&gt;)</span>. 
-The same by <code><nobr>setValue()</nobr></code>.
+If you call <code>getValue()</code> or <code>setValue(&lt;content&gt;)</code> from the callback-object, it will be called for the current column/row.
+But you can also get from other column with <code>getValue(&lt;column&gt;)</code> or also other row with <code>getValue(&lt;column&gt;, &lt;row&gt;)</code>. 
+The same by <code>setValue()</code>.
 
 Somtime you have not the chance to delete some rows, because other tables point to them.
-In this case you can define the table to <code><nobr>-&gt;noDelete()</nobr></code> and make an list call back
+In this case you can define the table to <code>noDelete()</code> and make an list call back
 to an other specific column which update the row to an not showen state.
 ```php
 function removeRow(STCallbackClass &$callbackObject, string $columnName, int $rownum)
