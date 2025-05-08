@@ -355,7 +355,7 @@ $creator->display();
 When you test this scripts, you can see as first a listing of all bills, where every
 bill has an ID which you link to all exist orders of the bill.<br />
 The reason is, because by creating the main container (<code>$main</code>) the Bill table defined as need
-and the column `bill_id` defined with the <code>$orderContainer</code> as `->namedLink()`.
+and the column `bill_id` defined with the <code>$orderContainer</code> as <nobr>`->namedLink()`</nobr>.
 
 After organising the container <code>$orderContainer</code>, you can see an request of the current container, table and action.
 This you can do for every table if you want better performance. Because tables and containers not always need to organise when not displayed.
@@ -381,7 +381,7 @@ This you can do for every table if you want better performance. Because tables a
 
 
 <br /><br />
-### change listing content with callbacks
+### change content with callbacks
 
 Sometime you don't want to display exactly what filled in database.<br />
 For this case you can define a callback method for the table. Like <nobr>`->listCallback(<callback funtion>)`</nobr><br />
@@ -409,12 +409,12 @@ $bill->listCallback("billRequest");
 This behavior can also be assigned with the same callback-function for insertCallback(&lt;function&gt;), updateCallback(&lt;function&gt;) and/or deleteCallback(&lt;function&gt;).
 The display flag for the callback-object is for listing always true and for deliting always false. The before flag is true if the function was called before display the content 
 or before manipulate the database, otherwise false. The function will be called for every column and row seperatly. 
-If you call <code>-&gt;getValue()</code> or <code>-&gt;setValue(&lt;content&gt;)</code> from the callback-object, it will be called for the current column/row.
-But you can also get from other column with <code>-&gt;getValue(&lt;column&gt;)</code> or also other row with <code>-&gt;getValue(&lt;column&gt;, &lt;row&gt;)</code>. 
-The sambe by <code>setValue()</code>.
+If you call <code><nobr>-&gt;getValue()</nobr></code> or <code><nobr>-&gt;setValue(&lt;content&gt;)</nobr></code> from the callback-object, it will be called for the current column/row.
+But you can also get from other column with <code><nobr>-&gt;getValue(&lt;column&gt;)</nobr></code> or also other row with <code><nobr>-&gt;getValue(&lt;column&gt;, &lt;row&gt;)</nobr></code>. 
+The same by <code><nobr>setValue()</nobr></code>.
 
 Somtime you have not the chance to delete some rows, because other tables point to them.
-In this case you can define the table to <code>-&gt;noDelete()</code> and make an list call back
+In this case you can define the table to <code><nobr>-&gt;noDelete()</nobr></code> and make an list call back
 to an other specific column which update the row to an not showen state.
 ```php
 function removeRow(STCallbackClass &$callbackObject, string $columnName, int $rownum)
