@@ -137,7 +137,7 @@ class STQueryString
 		{
 			return $this->getStringVars(/*encode*/true);
 		}		
-		public function getUrlParamString($bEncode= false)
+		public function getUrlParamString($bEncode= true)
 		{
 		    return $this->getStringVars($bEncode);
 		}
@@ -1096,9 +1096,11 @@ class STQueryString
 				if($string)
 					$string.= "&";
 				$firstString= $key;
+				if($bEncode)
+					$firstString= urlencode($firstString);
 				if(is_array($value))
 				{
-					$string.= $this->createArrayString($firstString, $value);
+					$string.= $this->createArrayString($firstString, $value, $bEncode);
 				}else
 				{
 					$string.= $firstString."=";
@@ -1110,7 +1112,7 @@ class STQueryString
 			}
 			return "?$string";
 		}
-		function createArrayString($key, $paramArray)
+		function createArrayString($key, $paramArray, bool $bEncode)
 		{
 			$sRv= "";
 			Tag::echoDebug("stget.createParamString.Array", $key);
@@ -1120,10 +1122,14 @@ class STQueryString
 					$sRv.= "&";
 				$firstString= $key."[".$pKey."]";
 				if(is_array($pValue))
-					$sRv.= $this->createArrayString($firstString, $pValue);
+					$sRv.= $this->createArrayString($firstString, $pValue, $bEncode);
 				else
 				{
-					$sRv.= $firstString."=".$pValue;
+					$sRv.= $firstString."=";
+					if($bEncode)
+						$sRv.= urlencode($pValue);
+					else
+						$sRv.= $pValue;
 					Tag::echoDebug("stget.createParamString.Array", $sRv);
 				}
 			}
