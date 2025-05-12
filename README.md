@@ -407,7 +407,7 @@ $bill->listCallback("billRequest");
 ```
 
 This behavior can also be assigned with the same callback-function for insertCallback(&lt;function&gt;), updateCallback(&lt;function&gt;) and/or deleteCallback(&lt;function&gt;).
-The display flag for the callback-object is for listing always true and for deliting always false. The before flag is true if the function was called before display the content 
+The display flag for the callback-object is for listing mostly true and for deliting always false. This flag means that the calling of callbacks The before flag is true if the function was called before display the content 
 or before manipulate the database, otherwise false. The function will be called for every column and row seperatly. 
 If you call <code>getValue()</code> or <code>setValue(&lt;content&gt;)</code> from the callback-object, it will be called for the current column/row.
 But you can also get from other column with <code>getValue(&lt;column&gt;)</code> or also other row with <code>getValue(&lt;column&gt;, &lt;row&gt;)</code>. 
