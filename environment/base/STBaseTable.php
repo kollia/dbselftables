@@ -518,7 +518,7 @@ class STBaseTable
 	 * @param string $element on which tag element the attribute should be set
 	 * @param string $attribute which attribute should be set
 	 * @param string $value the value of the attribute
-	 * @param string $tableType the action type of table (STLIST/STINSERT/STUPDATE) (default null for all actions)
+	 * @param string $tableType the action type of table (STLIST/STINSERT/STUPDATE/STINSERTUPDATE) (default null for all actions)
 	 * @param string $aliasName the specific name of column when set, otherwise for all columns
 	 */
 	function attribute($element, $attribute, $value, $tableType= null, $aliasName= null)
@@ -592,7 +592,7 @@ class STBaseTable
 	 * @param int $max maximum value of scroll bar
 	 * @param int $steps steps of scroll bar (default: <code>1</code>)
 	 * @param int $bias alignment of scroll bar - STHORIZONTAL or STVERTICAL (default: <code>STHORIZONTAL</code> changeable with next parameter)
-	 * @param enum $tableType for which display table - STLIST, STINSERT or STDELETE - width should be.
+	 * @param enum $tableType for which display table - STLIST, STINSERT or STDELETE - the attribute should be.
 	 * 							(default: <code>STINSERTUPDATE</code>)
 	 */
 	public function range(string $aliasName, int $min, int $max, $steps= 1, $bias= STHORIZONTAL, $tableType= STINSERTUPDATE, $showValue= false)

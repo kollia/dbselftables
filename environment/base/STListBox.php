@@ -1125,7 +1125,7 @@ class STListBox extends STBaseBox
 			$Rows= &$this->sqlResult;
 			$CallbackClass= new STCallbackClass($this->asDBTable, $Rows);
 			$CallbackClass->display= true;
-			$CallbackClass->before= false;
+			$CallbackClass->before= true;
 			$CallbackClass->nDisplayColumns= $this->asDBTable->nDisplayColumns;
 			$CallbackClass->arrangement= $this->arrangement;
 			$CallbackClass->aAction= $this->aAction;

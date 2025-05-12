@@ -795,7 +795,41 @@ class STQueryString
 			return false;
 		}
 		/**
-		 * return limitation of table
+		 * get all specific SelfTable variables from query string
+		 */
+		public function getSelfTableVars() : array
+		{
+			if(isset($this->param_vars["stget"]))
+				return $this->param_vars["stget"];
+			return array();
+		}
+		/**
+		 * Retrieve all link points from the SelfTable parameters
+		 * that was determined by a selected entry
+		 * 
+		 * @return array linking points when exist, otherwise an empty array
+		 */
+		public function getLinkingPoints() : array
+		{
+		    if(isset($this->param_vars['stget']['link']))
+		        return $this->param_vars['stget']['link'];
+		    return array();
+		}
+		/**
+		 * Retrieve a specific linking point from the SelfTable parameters
+		 * that was determined by a selected entry
+		 * 
+		 * @param string $entry name of the entry to retrieve the linking point for
+		 * @return string|null the linking point if it exists, otherwise null
+		 */
+		public function getLinkingPoint(string $entry)
+		{
+		    if(isset($this->param_vars['stget']['link'][$entry]))
+		        return $this->param_vars['stget']['link'][$entry];
+		    return null;
+		}
+		/**
+		 * return SelfTable limitation of table
 		 * 
 		 * @param string $tableName name of table
 		 * @return array return an array with one entry where the key is the column
@@ -1459,7 +1493,7 @@ class STQueryString
 					return true;
 			}
 			return false;
-		}
+		}		
 		function getOlderVar($currentVar)
 		{
 			$split= preg_split("/[\[\]]/", $currentVar);
