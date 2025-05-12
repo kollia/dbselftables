@@ -429,8 +429,8 @@ function removeRow(STCallbackClass &$callbackObject, string $columnName, int $ro
     {
         $query= new STQueryString();
         $remove= $query->getLinkingPoint("remove");
-			     $id= $callbackObject->getValue();
-			     if( isset($remove) &&
+        $id= $callbackObject->getValue();
+	if( isset($remove) &&
             $remove == $id     )
 			     {
             $callbackObject->skipRow();
