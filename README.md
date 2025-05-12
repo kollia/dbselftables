@@ -407,37 +407,49 @@ $bill->listCallback("billRequest");
 ```
 
 This behavior can also be assigned with the same callback-function for insertCallback(&lt;function&gt;), updateCallback(&lt;function&gt;) and/or deleteCallback(&lt;function&gt;).
-The display flag for the callback-object is for listing mostly true and for deliting always false. This flag means that the calling of callbacks The before flag is true if the function was called before display the content 
-or before manipulate the database, otherwise false. The function will be called for every column and row seperatly. 
+The display flag for the callback-object is for listing mostly true and for deliting always false. This flag means that if True it is for display (listing/insert/update) and if False the database will be manipulated.
+The before flag is true if the function was called before display the content or before manipulate the database, otherwise false. 
+
+The function will be called for every column and row seperatly. 
 If you call <code>getValue()</code> or <code>setValue(&lt;content&gt;)</code> from the callback-object, it will be called for the current column/row.
 But you can also get from other column with <code>getValue(&lt;column&gt;)</code> or also other row with <code>getValue(&lt;column&gt;, &lt;row&gt;)</code>. 
 The same by <code>setValue()</code>.
 
-Somtime you have not the chance to delete some rows, because other tables point to them.
-In this case you can define the table to <code>noDelete()</code> and make an list call back
+Somtime you have not the chance to delete some rows, because other tables point to them and you don't want to remove for document older entrys.
+In this case you have the possibility to define the table as <code>noDelete()</code> and make an list call back
 to an other specific column which update the row to an not showen state.
+
+This example assumes that the primary key has the column name ID and a column called display defines the listing status.
 ```php
 function removeRow(STCallbackClass &$callbackObject, string $columnName, int $rownum)
 {
     if(	$callbackObject->display &&
         $callbackObject->before &&
-        $columnName == "remove"     )
+        $columnName == "remove"     )  // if the column not defined by calling the listCallback mehtod as second parameter
     {
-        $table= $callbackObject->getTable();
-        $updater= new STDbUpdater($table);
-        $updater->setValue("display", "no");
-        $updater->execute();
+        $query= new STQueryString();
+        $remove= $query->getLinkingPoint("remove");
+			     $id= $callbackObject->getValue();
+			     if( isset($remove) &&
+            $remove == $id     )
+			     {
+            $callbackObject->skipRow();
+            $table= $callbackObject->getTable();
+            $updater= new STDbUpdater($table);
+            $updater->update("display", "no");
+            $updater->where("ID = $id");
+            $updater->execute();
+        }
     }
 }
 
 // .. some selects for table
-$table->select("remove", <Pk>);
+$table->select("ID", "remove");
 $table->namedLink("remove");
 $table->noDelete();
 $table->listCallback("removeRow");
 $table->where("displayFlag = "yes");
 ```
-
 
 
 
