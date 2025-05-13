@@ -430,9 +430,9 @@ function removeRow(STCallbackClass &$callbackObject, string $columnName, int $ro
         $query= new STQueryString();
         $remove= $query->getLinkingPoint("remove");
         $id= $callbackObject->getValue();
-	if( isset($remove) &&
+	    if( isset($remove) &&
             $remove == $id     )
-			     {
+        {
             $callbackObject->skipRow();
             $table= $callbackObject->getTable();
             $updater= new STDbUpdater($table);

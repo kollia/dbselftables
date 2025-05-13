@@ -576,10 +576,14 @@ class STObjectContainer extends STBaseContainer
 	}
 	function getTableName(string $tableName= null)
 	{
-		$bStdTab= false;
 		if($tableName === null)
 		{
-			$bStdTab= true;
+			/**
+			 * source before method getTableName() define furst table
+			 * found in the database as current table.
+			 * on 13/05/2025 this behavior was removed
+			 * because it's not logical
+			 */
 			if($this->actTableName != "")
 			    return $this->actTableName;
 		}
@@ -619,11 +623,7 @@ class STObjectContainer extends STBaseContainer
 		    	$tableName= $orgTableName;
 		}
 		if($tableName)
-		{
-			if($bStdTab)
-				$this->actTableName= $tableName;
 			return $tableName;
-		}
 		$tableName= $this->getFirstTableName();
 		if(	( !isset($tableName) || !trim($tableName) )
 			and
@@ -642,8 +642,6 @@ class STObjectContainer extends STBaseContainer
 		    $container= &STBaseContainer::getContainer($this->parentContainerName);
 		    $tableName= $container->getTableName();
 		}
-		if($bStdTab)
-		    $this->actTableName= $tableName;
 		return $tableName;
 	}
 	function setFirstActionOnTable($action, $tableName)
