@@ -273,16 +273,21 @@ class STtDate
             return $global_defined_specific_days[$currentYear][$currentMonthDay];
         return null;
     }
-    public function isPublicHoliday(int $timestamp= null) : bool
+    public function isPublicHoliday(int|string $time= null) : bool
     {
-        $data= $this->getSpecificDayData($timestamp);
+        if(isset($time))
+        {
+            if(is_string($time))
+                $time= strtotime($time);
+        }
+        $data= $this->getSpecificDayData($time);
         if(isset($data))
             return $data['public'];
         return false;
     }
-    public function getPublicHolidayName(int $timestamp= null) : string
+    public function getPublicHolidayName(int|string $time= null) : string
     {
-        $data= $this->getSpecificDayData($timestamp);
+        $data= $this->getSpecificDayData($time);
         if( isset($data) &&
             $data['public'] )
         {
@@ -290,9 +295,9 @@ class STtDate
         }
         return "";
     }
-    public function getSpecificDayName(int $timestamp= null) : string
+    public function getSpecificDayName(int|string $time= null) : string
     {
-        $data= $this->getSpecificDayData($timestamp);
+        $data= $this->getSpecificDayData($time);
         if(isset($data))
             return $data['name'];
         return "";
