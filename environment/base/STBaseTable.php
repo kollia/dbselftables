@@ -2880,31 +2880,44 @@ class STBaseTable
 	 	        if($operator == "")
 	 	            STCheck::echoDebug("db.statements.where", "no operator for where method be set, so clear all old where clauses");
 		 	}
-			if(	!isset($stwhere) ||
-				$stwhere == null ||
-				$stwhere == ""	)
-			{
-				return $this->oWhere;
-			}
-			// remove all pre-defined where clauses
-			// if define new fresh where clause (without operator)
-			// to create sql statement new
-			if($operator == "")
-				$this->clearWhere();
+			
+			// 2025/05/22 kollia **********************
+			// clearing now later after check for where clause
+			// whether exist. Because otherwise update for
+			// Profile in UserManagement not works properly
+	/*		if(	!isset($stwhere) ||
+	 *			$stwhere == null ||
+	 *			$stwhere == ""	)
+	 *		{
+	 *			return $this->oWhere;
+	 *		}
+	 *		// remove all pre-defined where clauses
+	 *		// if define new fresh where clause (without operator)
+	 *		// to create sql statement new
+	 *		if($operator == "")
+	 *			$this->clearWhere();
+	 */
 
 		 	if(	!isset($stwhere) ||
 				$stwhere == null ||
 				$stwhere == ""	||
-				(	is_object($stwhere) &&
+				(	is_object($stwhere) && // no string
 					get_class($stwhere) == "STDbWhere" &&
 					!$stwhere->isModified()					)	)
 		 	{
-		 	    STCheck::echoDebug("db.statements.where", "get undefined (or not modified) ".
-		 	        "where clause, so return only current where Object");
+				STCheck::is_error(	is_object($stwhere) &&
+									get_class($stwhere) == "STDbWhere" &&
+									!$stwhere->isModified()	,
+					"STBaseTable::where()",
+					"get undefined (or not modified) ".
+						"where clause, so return only current where Object");
 		 		return $this->oWhere;
 		 	}
-		 	if($operator == "")
-		 		unset($this->oWhere);
+		 	if($operator != "")
+			{// new added where statement, so clear pre-defined where statement
+		 		$this->clearWhereStatement();
+			}else // fully new where clause
+				$this->clearWhere();
 
 	 		if(	isset($this->oWhere) &&
 	 			(	is_string($stwhere) ||
@@ -2953,9 +2966,22 @@ class STBaseTable
 	 		
 		 	return $this->oWhere;
 		}
-		function clearWhere()
+		/**
+		 * clear all where clauses
+		 * and also pre-defined where statements
+		 * to rebuild the sql statement by the next call
+		 */
+		public function clearWhere()
 		{
 			$this->oWhere= null;
+			$this->clearWhereStatement();
+		}
+		/**
+		 * clear pre-defined where statements
+		 * to rebuild the sql statement by the next call
+		 */
+		protected function clearWhereStatement()
+		{
 			$this->aStatement['where']= null;
 			$this->aStatement['whereAlias']= null;
 			$this->aStatement['full']= null;

@@ -6,7 +6,7 @@ require_once($_stsitecreator);
 require_once $_stbackgroundimagesdbcontainer;
 require_once($_st_registration_text);
 
-class STUserProfileContainer extends STBackgroundImagesDbContainer
+class STUserProfileContainer extends STObjectContainer //STBackgroundImagesDbContainer
 {
 	private $bAdminActivation= false;
 
