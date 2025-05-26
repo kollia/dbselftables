@@ -639,7 +639,16 @@ class STBaseTable
 		$field= $this->findAliasOrColumn($aliasName);
 		if(STCheck::isDebug())
 		{
-			STCheck::alert(!isset($this->showTypes[$field['alias']]['link']), "STBaseTable::confirm", 
+			$bOk= false;
+			foreach($this->showTypes[$field['alias']] as $type => $value)
+			{
+				if(preg_match("/link$/", $type))
+				{
+					$bOk= true;
+					break;
+				}
+			}
+			STCheck::alert(!$bOk, "STBaseTable::confirm", 
 									"alias '$aliasName' is not defined as link column, so no confirmation can be set"); 
 		}
 		//$content= array('field');
