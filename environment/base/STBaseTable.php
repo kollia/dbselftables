@@ -625,6 +625,26 @@ class STBaseTable
 		if($tableType == STLIST)
 			$this->selectPkColumnOnListIfNeed();
 	}
+	/**
+	 * define a confirmation message for a column with a link.
+	 * 
+	 * @param string $aliasName name of column or alias for column
+	 * @param string $message the message which should be displayed in confirmation dialog
+	 * 							If the message begin with an '@' character,
+	 * 							the message will be loaded from the language message box (STMessageBox)
+	 * 							of container (without leading '@' character).
+	 */
+	public function confirm(string $aliasName, string $message)
+	{
+		$field= $this->findAliasOrColumn($aliasName);
+		if(STCheck::isDebug())
+		{
+			STCheck::alert(!isset($this->showTypes[$field['alias']]['link']), "STBaseTable::confirm", 
+									"alias '$aliasName' is not defined as link column, so no confirmation can be set"); 
+		}
+		//$content= array('field');
+		$this->aArgumentList['confirm-link'][$field['alias']]= $message;
+	}
 	protected function selectPkColumnOnListIfNeed()
 	{
 		$pk= $this->getPkColumnName();

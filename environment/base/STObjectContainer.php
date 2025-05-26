@@ -1219,49 +1219,66 @@ class STObjectContainer extends STBaseContainer
 			if( typeof($table, "STDbTable") &&
 			    !STCheck::is_warning($PK === false, "makeListTags", "in table $tableName is no preimery key defined"))
 			{
-				$updateAccess= $table->hasAccess(STUPDATE);
-				$deleteAccess= $table->hasAccess(STDELETE);
 				$bUpdate= false;
 				$bDelete= false;
 				if(	$table->canUpdate() &&
-					$updateAccess		    )
+					$table->hasAccess(STUPDATE)	)
 				{
 				    $bUpdate= true;
 				}
 				if(	$table->canDelete() &&
-					$deleteAccess		    )
+					$table->hasAccess(STDELETE)	)
 				{
 				    $bDelete= true;
 				}
 				if( $bUpdate ||
-				    $bDelete    )
+				    $bDelete ||
+					isset($table->aArgumentList['confirm-link'])   )
 				{
     				$get= new STQueryString();
 					$get->noStgetNr("stget[action]");
 					$get->noStgetNr("stget[".$tableName."][".$PK."]");
     				$script= new JavaScriptTag();
-    					$function= new jsFunction("selftable_updateDelete", "action", "VALUE");
+    					$function= new jsFunction("selftable_confirmLink", "action", "VALUE");
         					$get->setLimitation("'+action+'", $this->getContainerName(), $tableName, $PK, "'+VALUE+'");
     						
+							$function->add("if(action=='update' || action=='delete')");
+							$function->add("    bUD= true;");
+							$function->add("else");
+							$function->add("    bUD= false;");
     						$function->add("bOk= true;");
     						$function->add("if(action=='delete')");
 						if($bDelete)
-						{
-							$function->add("    bOk= confirm('".$this->msgBox->getMessageContent("DELETE_QUESTION")."');");							
-						}
+							$function->add("    bOk= confirm('".$this->msgBox->getMessageContent("DELETE_QUESTION")."');");		
 						if(!$bUpdate)
 						    $function->add("else if(action=='update')");
 						if( !$bDelete ||
 						    !$bUpdate     )
 						{
 						    $function->add("{");
-						    $function->add("bOk= false;");
-						    $function->add("alert('".$this->msgBox->getMessageContent("NOPERMISSION")."');");
+						    $function->add("    bOk= false;");
+						    $function->add("    alert('".$this->msgBox->getMessageContent("NOPERMISSION")."');");
 						    $function->add("}");
 						}
-							$function->add("if(bOk)");
-							$location= "    location.href='".$get->getStringVars()."';";
-    						$function->add($location);
+						if(isset($table->aArgumentList['confirm-link']))
+						{
+							foreach($table->aArgumentList['confirm-link'] as $column=>$message)
+							{
+								$function->add("else if(action=='$column')");
+								if(substr($message, 0, 1) == "@")
+									$message= $this->msgBox->getMessageContent(substr($message, 1));
+								$function->add("    bOk= confirm('$message');");
+							}
+						}
+							$function->add("if(bOk)");							
+							$function->add("{");
+							$function->add("    if(bUD)");
+    						$function->add("        location.href='".$get->getStringVars()."';");
+							$function->add("    else");
+							$query= new STQueryString();
+							$query->update("stget[link]['+action+']='+VALUE+'");
+							$function->add("        location.href='".$query->getStringVars()."';");
+						    $function->add("}");
     				$script->add($function);
 					$div->addObj($script);
 				}
@@ -1270,21 +1287,24 @@ class STObjectContainer extends STBaseContainer
 				$value= "%VALUE%";
 				if($pkField['type'] == "string")
 				    $value= "'$value'";
-				if(	$table->canUpdate()
-					and
-					$updateAccess		)
+				if(	$bUpdate )
 				{
 				    $sUpdateLink= $this->msgBox->getMessageContent("UPDATE");
 					$list->updateLine($PK, $sUpdateLink);
-					$list->link($sUpdateLink, "javascript:selftable_updateDelete('update',$value);");
+					$list->link($sUpdateLink, "javascript:selftable_confirmLink('update',$value);");
 				}
-				if(	$table->canDelete()
-					and
-					$deleteAccess		)
+				if(	$bDelete )
 				{
 				    $sDeleteLink= $this->msgBox->getMessageContent("DELETE");
 					$list->deleteLine($PK, $sDeleteLink);
-					$list->link($sDeleteLink, "javascript:selftable_updateDelete('delete',$value);");
+					$list->link($sDeleteLink, "javascript:selftable_confirmLink('delete',$value);");
+				}
+				if(isset($table->aArgumentList['confirm-link']))
+				{
+					foreach($table->aArgumentList['confirm-link'] as $column=>$message)
+					{
+						$list->link($column, "javascript:selftable_confirmLink('$column',$value);");
+					}
 				}
 			}
 			$this->setAllMessagesContent(STLIST, $list);
