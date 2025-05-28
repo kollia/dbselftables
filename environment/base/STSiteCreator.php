@@ -877,7 +877,7 @@ class STSiteCreator extends HtmlTag
 		//$query->update("set=5");
 		$testdebug= $query->getParameterValue("testdebug");
 		$status= $query->getParameterValue("testdebug", "status");
-		STCheck::end_outputBuffer(false);// flush first normal output buffer
+		//STCheck::end_outputBuffer(false);// flush first normal output buffer
 		if(	isset($__global_finished_SiteCreator_result) &&
 			(	$__global_finished_SiteCreator_result === "NOERROR" ||
 				$__global_finished_SiteCreator_result === "BOXDISPLAY" ||
@@ -923,8 +923,10 @@ class STSiteCreator extends HtmlTag
 				$testdebug['step']= $step;
 				$testdebug['container']= $this->getContainerName();
 				$testdebug['table']= $this->getTableName();
+				$testdebug['tables']= $global_selftable_test_links['table']['count'];
+				$testdebug['count']= $step; // on beginning step define also whether the first shows an table or table listing
 				$testdebug['link-type']= $type;
-				$testdebug['link-class']= key($sorted_selftable_test_links[$type]);
+				$testdebug['link-class']= "STChoose-menue-button"; //should be first link class
 				$testdebug['last-insert']= null;
 				$testdebug['backbutton-test']= "false";
 				$testdebug['onEditLinkCount']= -1;
@@ -957,7 +959,10 @@ class STSiteCreator extends HtmlTag
 			{
 				$table= $this->getTableName();
 				if(trim($table) != "")
+				{
 					$testdebug['step']= 1;
+					++$testdebug['count'];
+				}
 			}
 			$this->createContainerReport($testdebug['step']);
 
@@ -992,6 +997,16 @@ class STSiteCreator extends HtmlTag
 					//       8 - update done go back to table listing
 					//      10 - delete done go back to table listing
 					$link= $this->makeTableAction_Test($testdebug, $sorted_selftable_test_links, $query);
+				}
+				if	($testdebug['table'] != $this->report['table'] ||
+					(	$testdebug['step'] >= 11 &&
+						$testdebug['count'] >= $testdebug['tables']	)	)
+				{ // new next table
+					$testdebug['table']= $this->report['table'];
+					if($testdebug['count'] >= $testdebug['tables'])
+						$bFinished= true;
+					else
+						++$testdebug['count'];
 				}
 				// to get last inserted PK, write containr report after localize new values
 				$sErrorOutput= STCheck::end_outputBuffer("test");
@@ -1115,12 +1130,16 @@ class STSiteCreator extends HtmlTag
 			}
 		}else
 		{
+			$link= "";
 			if(isset($sorted_selftable_test_links["action"]['link']))
 			{
 				$link= $sorted_selftable_test_links["action"]['link'];
 				$link= $this->updateQueryLink($query, $link);
 			}else
+			{
+				$link= "fault link set";
 				echo "  !!ERROR!!: no action link found for table listing<br />";
+			}
 			$testdebug['step']= 1;
 			$type= "link";
 		}

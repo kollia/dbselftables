@@ -479,7 +479,6 @@ class STCheck
 						$global_testingOutputBuffer= false;
 						$global_testingOutputBufferWasErased= true;
 						$Rv= ob_get_clean();
-						//ob_end_flush();
 					}
 				}else
 				{
@@ -489,7 +488,7 @@ class STCheck
 						$global_activeOutputBuffer= false;
 						$global_outputBufferWasErased= true;
 						$Rv= true;
-						ob_end_flush();
+						$Rv= ob_end_flush();
 					}
 				}
 

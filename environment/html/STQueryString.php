@@ -1160,7 +1160,7 @@ class STQueryString
 				else
 				{
 					$sRv.= $firstString."=";
-					if($bEncode)
+					if($bEncode && isset($pValue) && $pValue !== "")
 						$sRv.= urlencode($pValue);
 					else
 						$sRv.= $pValue;

@@ -92,7 +92,7 @@ class STChooseBox extends TableTag
 					$aTables[]= $this->tableContainer->getTable($table);
 				else
 					$aTables= &$this->tableContainer->getTables();
-				
+				STCheck::test_tagClassAttributeLinks("table", "count", count($aTables));
 				
 				$get= new STQueryString();
 				foreach($aTables as $table)
