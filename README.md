@@ -423,14 +423,14 @@ This example assumes that the primary key has the column name ID and a column ca
 ```php
 [01] function removeRow(STCallbackClass &$callbackObject, string $columnName, int $rownum)
 [02] {
-[03]     if(	$callbackObject->display &&
+[03]     if( $callbackObject->display &&
 [04]         $callbackObject->before &&
 [05]         $columnName == "remove"     )  // if the column not defined by calling the listCallback mehtod as second parameter
 [06]     {
 [07]         $query= new STQueryString();
 [08]         $remove= $query->getLinkingPoint("remove");
 [09]         $id= $callbackObject->getValue();
-[10] 	    if( isset($remove) &&
+[10] 	     if( isset($remove) &&
 [11]             $remove == $id     )
 [12]         {
 [13]             $callbackObject->skipRow();

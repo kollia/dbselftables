@@ -6,7 +6,18 @@ require_once($_stsitecreator);
 require_once $_stbackgroundimagesdbcontainer;
 require_once($_st_registration_text);
 
-class STUserProfileContainer extends STObjectContainer //STBackgroundImagesDbContainer
+/**
+ * STUserProfileContainer is an integral part of the user management system.
+ * It is responsible for managing user profiles where users can update their personal information, 
+ * such as name, email, and password. The container also handles user registration,
+ * where the container be used as primary container and the user can set a new password.
+ * In this case when the container display content alone (not in the frame) 
+ * it use the overview logo and background image and need to extend from
+ * STBackgroundImagesDbContainer class.
+ * 
+ * @author Alexander Kolli
+ */
+class STUserProfileContainer extends STBackgroundImagesDbContainer
 {
 	private $bAdminActivation= false;
 
@@ -24,17 +35,21 @@ class STUserProfileContainer extends STObjectContainer //STBackgroundImagesDbCon
 			
 		$userID= $session->getUserID();
 		$user= &$this->needTable("User");
-		$user->where($user->getPkColumnName()."=".$userID);
+		$whereClause= $user->getPkColumnName()."=".$userID;
+		$user->where($whereClause);
 		if($registration)
 		{
+			$domain= $this->getTable("AccessDomain");
+			$domain->identifColumn("Name", "Domain");
 			// check first whether registration process is finished
 			// or active
 			$selector= new STDbSelector($user);
-			$selector->clearSelects();
+			//$selector->clearSelects();
 			//$selector->where("User", $user->getPkColumnName()."=".$userID);
 			//$selector->andWhere("User", "register>='SENDMAIL");
 			$selector->execute();
 			$result= $selector->getResult();
+			
 			if(	isset($result[0]['Pwd']) &&
 				$result[0]['Pwd'] != ""		)
 			{// registration process is finished	
@@ -81,7 +96,7 @@ class STUserProfileContainer extends STObjectContainer //STBackgroundImagesDbCon
 			}else
 			{
 				$user->setDisplayName("please set new password");
-				$user->setFirstAction(STUPDATE);
+				$user->setFirstAction(STUPDATE, $whereClause);
 				$user->updateCallback("usermanagement_main_passwordCheckCallback", "Pwd");
 				$user->insertCallback("usermanagement_main_passwordCheckCallback", "Pwd");
 			}
