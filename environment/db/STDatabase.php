@@ -1587,6 +1587,7 @@ abstract class STDatabase extends STObjectContainer
 			}else
 			{
 				if(	isset($this->aTableStructure["struct"][$fromTableName][$toTableName]) &&
+					is_array($this->aTableStructure["struct"][$fromTableName][$toTableName]) &&
 					!count($this->aTableStructure["struct"][$fromTableName][$toTableName]) &&
 					isset($aHaveFks[$toTableName]) &&
 					$aHaveFks[$toTableName]														)
