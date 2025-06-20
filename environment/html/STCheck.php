@@ -997,7 +997,23 @@ class STCheck
 		$value= null;
 		if($content["type"] == "int")
 		{
-			$value= 063;
+			if($action == STUPDATE)
+			{
+				$value= 163;
+				if($oldValue === $value)
+					$value+= 100;
+			}else
+				$value=063;
+
+		}elseif($content["type"] == "real")
+		{
+			if($action == STUPDATE)
+			{
+				$value= 122.023;
+				if($oldValue === $value)
+					$value+= 100;
+			}else
+				$value=022.5;
 
 		}elseif($content["type"] == "string")
 		{
@@ -1028,6 +1044,9 @@ class STCheck
 					$value= "03:00:01";
 			}else
 				$value= "01:43:55";
+		}else
+		{
+			STCheck::echoDebug("test", "getTestFormValue() unknown type of field '$fieldName' in table '".$table->getName()."' with type '".$content["type"]."' found", true);
 		}
 		return $value;
 	}
