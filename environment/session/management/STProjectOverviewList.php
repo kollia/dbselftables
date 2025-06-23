@@ -461,6 +461,47 @@ class STProjectOverviewList extends STBackgroundImagesDbContainer
         }
         
         $div= new DivTag("STLoginDiv");
+            $style = new StyleTag();
+                $style->add("
+                    #STLoginDiv {
+                        max-width: 400px;
+                        margin: 5vw auto 0 auto;
+                        padding: 2vw;
+                        background: #fff;
+                        border-radius: 8px;
+                        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                    }
+                    #STLoginDiv .loginInput {
+                        width: 100%;
+                        max-width: 100%;
+                        box-sizing: border-box;
+                        margin-bottom: 16px;
+                        font-size: 1.1em;
+                        padding: 8px;
+                    }
+                    #STLoginDiv input[type='submit'] {
+                        width: 100%;
+                        padding: 12px;
+                        font-size: 1.1em;
+                        background: #007bff;
+                        color: #fff;
+                        border: none;
+                        border-radius: 4px;
+                        margin-top: 8px;
+                    }
+                    #STLoginDiv .loginError {
+                        color: #b00;
+                        margin-bottom: 16px;
+                        font-size: 1em;
+                    }
+                    @media (max-width: 600px) {
+                        #STLoginDiv {
+                            max-width: 98vw;
+                            padding: 2vw 2vw 4vw 2vw;
+                        }
+                    }
+                ");
+            $div->add($style);
             $div->add(br());
             $div->add(br());
             $div->add(br());
@@ -526,22 +567,22 @@ class STProjectOverviewList extends STBackgroundImagesDbContainer
         return $this->loginMask;
     }
     private function getLoginFormTable(string $user)
-    {
+    {STCheck::debug();
         $Get= new STQueryString();
         $Get->delete("ERROR");
         $Get->delete("doLogout");
         $Get->delete("from");
         $action= $Get->getStringVars();
         
-        $table= new TableTag("loginTable");
-            $table->border(0);
-            $table->cellpadding(0);
-            $table->cellspacing(0);
-            //$table->style("border-width:1; border-style:outset; border-darkcolor:#000000; border-lightcolor:#ffffff");
-            $form= new FormTag();
-                $form->name("loginform");
-                $form->action($action);
-                $form->method("post");
+        $form= new FormTag();
+            $form->name("loginform");
+            $form->action($action);
+            $form->method("post");
+            $table= new TableTag("loginTable");
+                $table->border(1);
+                $table->cellpadding(0);
+                $table->cellspacing(0);                  
+                //$table->style("border-width:1; border-style:outset; border-darkcolor:#000000; border-lightcolor:#ffffff");
                 $tr= new RowTag();
                     $td= new ColumnTag();
                         $td->width(80);
@@ -557,7 +598,7 @@ class STProjectOverviewList extends STBackgroundImagesDbContainer
                             $input->type("text");
                             $input->name("user");
                             $input->maxlen(60);
-                            $input->size(28);
+                            //$input->size(28);
                             $input->tabindex(1);
                             if($user == "")
                                 $input->autofocus();
@@ -571,14 +612,14 @@ class STProjectOverviewList extends STBackgroundImagesDbContainer
                         $td->align("center");
                         $p= new PTag();
                             $p->style("margin-top:3; margin-left:10");
-                            $input= new InputTag("myInput");
+                            $input= new InputTag("myInput loginInput");
                                 $input->type("submit");
                                 $input->tabindex(3);
                                 $input->value("Login");
                             $p->add($input);
                         $td->add($p);
                     $tr->add($td);
-                $form->add($tr);
+                $table->add($tr);
                 $tr= new RowTag();
                     $td= new  ColumnTag();
                         $td->width(80);
@@ -596,7 +637,7 @@ class STProjectOverviewList extends STBackgroundImagesDbContainer
                             $input->tabindex(2);
                             if($user != "")
                                 $input->autofocus();
-                            $input->size(28);
+                            //$input->size(28);
                             $input->maxlen(60);
                         $td->add($input);
                     $tr->add($td);
@@ -607,9 +648,9 @@ class STProjectOverviewList extends STBackgroundImagesDbContainer
                             $input->value(1);
                         $td->add($input);
                     $tr->add($td);
-                $form->add($tr);
-            $table->add($form);  
-        return $table;
+                $table->add($tr);  
+            $form->add($table);
+        return $form;
     }
     protected function &getAccessibleChooseBox() : Tag
     {
