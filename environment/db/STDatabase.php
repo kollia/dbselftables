@@ -248,10 +248,62 @@ abstract class STDatabase extends STObjectContainer
 			return true;
 		return false;
 	}
+	/**
+	 * return an array with all sql types from the database
+	 * 
+	 * @return array<string> array with all sql types.<br />
+	 * 							array(	<type> =>	array(	'type'	=>	"int/real/string/time",
+	 *														'length'=>	x, // length of the type
+	 *														'range"=>	array(	"u"=>	array(	0, // range only set for int/real
+	 *																							255		),	// unsigned and signed
+	 *																			"s"=>	array(	-128,
+	 *																							127		)			),
+	 *														'format'=>	"Y-m-d H:i:s" // format only set for types time
+	 *																					// format from php function date()		),
+	 * 									...				)
+	 */
 	function getDatabaseType()
 	{
 		return $this->dbType;
 	}
+	/**
+	 * return all allowed database types.<br />
+	 * This function is only used for some check mechanisms
+	 * to know which database types are allowed.
+	 * (please do not extend this function with new types)
+	 * (For PHP there are allowed int/real/string/time inside the dbselftables-framework)
+	 * 
+	 * @return array<string> array with all allowed database types
+	 */
+	public function getAllowedDatabaseTypes() : array
+	{
+		$datatypes=	array(	"TINYINT",		/*MySQL*/
+							"SMALLINT",		/*MySQL*/
+							"MEDIUMINT",	/*MySQL*/
+							"INT",			/*MySQL*/
+							"INTEGER",		/*MySQL*/
+							"BIGINT",		/*MySQL*/
+							"FLOAT",		/*MySQL*/
+							"DOUBLE",		/*MySQL*/
+							"REAL",			/*MySQL*/
+							"DATE",			/*MySQL*/
+							"TIMESTAMP",	/*MySQL*/
+							"TIME",			/*MySQL*/
+							"CHAR",			/*MySQL*/
+							"STRING",		/*MySQL*/
+							"VARCHAR",		/*MySQL*/
+							"BLOB",			/*MySQL*/
+							"TEXT",			/*MySQL*/
+							"ENUM",			/*MySQL*/
+							"SET"			/*MySQL*/			);
+		return $datatypes;
+	}
+	/**
+	 * return all datatypes which are supported by the database
+	 * 
+	 * @return array<string> array with all datatypes
+	 */
+	abstract public function &getDatatypes() : array;
 	function getTyp($typ= null)
 	{
 		if(	isset($typ) &&
@@ -1112,6 +1164,19 @@ abstract class STDatabase extends STObjectContainer
 		$this->tableNames= $tables;
 		return $tables;
 	}
+	/**
+	 * list all fields of a database table
+	 * 
+	 * @param string $TableName name of the table which fields should be listed
+	 * @param int $onError whether the method should stop on error or not. see: st_pathdef.inc.php
+	 * @return array|NULL array with all fields of the table or NULL if error occurs.<br />
+	 * 					  array(	[Field]		=> name of the field,
+	 * 								[Type]		=> type of the field,
+	 * 								[Null]		=> whether the field can be NULL or not (YES/NO),
+	 * 								[Key]		=> whether the field is a key (PRI, UNI, MUL),
+	 * 								[Default]	=> default value of the field,
+	 * 								[Extra]		=> extra information about the field, like AUTO_INCREMENT, etc.	)
+	 */
 	abstract protected function list_dbtable_fields($TableName);
 	function list_fields($TableName, $onError= onErrorStop)
 	{

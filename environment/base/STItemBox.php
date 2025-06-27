@@ -889,9 +889,9 @@ class STItemBox extends STBaseBox
                     // show a PopUp-Menu
                     $joinAnz= count($aJoins[$name]);
 					for($n= $joinAnz-1; $n>=0; $n--)
-					{// f�r das Entsprechende Feld im $aJoins[$name]
-					 // k�nnen auch mehrere Tabellen f�rs PopUp-Men� sein
-					 // -> alle in verkehrter Reihenfolge und in einer Linie anzeigen
+					{// for the current field in $aJoins[$name]
+					 // can be more tables for the PopUp-menue
+					 // -> display all in reverse order and in a line
 					 	$td= new ColumnTag(TD);
 
 						$td->add(br());
@@ -948,13 +948,20 @@ class STItemBox extends STBaseBox
 							else
 								$option->add($this->aSelectNames["no_entrys"]);
 						}
-						$option->value("");
+						$option->value(""); // empty value for ussage that user should select or does not need
 						$maxlen= -10;
 						$select->add($option);
 						$bOneEntry= false;
 						if(count($aRows) == 1)
 						    $bOneEntry= true;
 						$selectedPK= null;
+						if(STCheck::isDebug("test"))
+						{
+							$choose= STCheck::getTestFormValue($this->action, $this->asDBTable, $field['name'], $aRows);
+							foreach($aRows as $key => $row)
+								$aRows[$key]['selected']= false;
+							$aRows[$choose]['selected']= true;
+						}
                         foreach($aRows as $row)
                         {// show all options for the select-tag
   							if(!is_array($row))
@@ -1139,7 +1146,7 @@ class STItemBox extends STBaseBox
 									$input->insertAttribute($event, $function);
 							}
 							if(preg_match("/enum/", $field["flags"]))
-							{//wenn Feld einen Enumbesitzt checkbox od. toDo: radiobutton erzeugen
+							{// if field is an enum, produce checkbox or. toDo: radiobutton
 								$input->name($postColumn);
 								$aEnums= $this->countingEnums($field);
 								if(	isset($this->enumField[$field["name"]]) &&
@@ -1232,7 +1239,7 @@ class STItemBox extends STBaseBox
                 					}
 								}
 							}else
-							{//normales Eingabefeld
+							{// normal input-fields
 
   							if($this->password==$name)
   							{// wenn auf ein Passwort gestossen wird,
@@ -1258,7 +1265,7 @@ class STItemBox extends STBaseBox
   								$input->name($sName);
   								$input->type("password");
   							}elseif(isset($this->uploadFields[$columns[$field["name"]]]))
-							{// Feld f�r Upload
+							{// field for upload file
 									if(isset($columnValue))
 									{
 											$input->name("old_upload_file_".$field["name"]);
@@ -1271,7 +1278,7 @@ class STItemBox extends STBaseBox
 									$input->type("file");
 									$input->accept($this->uploadFields[$field["name"]]["type"]);
 							}elseif($field["type"]=="date")
-							{// Datums-Feld
+							{// date-field
 									$input->name($postColumn);
 									$input->type("date");
 									$value= $this->db->makeUserDateFormat($columnValue);
@@ -1283,7 +1290,7 @@ class STItemBox extends STBaseBox
 										$value= STCheck::getTestFormValue("date", $this->action, $this->asDBTable, $field["name"], $value);
 									$input->value($value);
 							}elseif($field["type"]=="time")
-							{// Datums-Feld
+							{// time-field
 									$input->name($postColumn);
 									$input->type("time");
 									$value= $this->db->makeUserTimeFormat($columnValue);
@@ -1295,7 +1302,7 @@ class STItemBox extends STBaseBox
 										$value= STCheck::getTestFormValue("date", $this->action, $this->asDBTable, $field["name"], $value);
 									$input->value($value);
 							}else
-  							{// normales Eingabe-Feld
+  							{// normal input-fields
   								$input->name($postColumn);
 								if(	$field["len"]<3000
 									and

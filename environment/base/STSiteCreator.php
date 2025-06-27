@@ -1350,6 +1350,18 @@ class STSiteCreator extends HtmlTag
 		$action= $this->report['action'];
 		$description= $this->report['description'];
 		$this->report= array();
+		// correct $sErrorOutput to ASCII-only
+		// remove all html-tags
+		// --------------------------------------------------------------------------------------------------
+		if(trim($sErrorOutput) != "")
+		{
+			$sErrorOutput= str_replace("&#160;", " ", $sErrorOutput);
+			$sErrorOutput= preg_replace('/<b>|<\/b>/i', '*', $sErrorOutput);
+			$sErrorOutput= preg_replace('/<\/td>/i', ' ', $sErrorOutput);
+			$sErrorOutput= preg_replace('/<br\s*\/?>|<\/tr>|<\/li>|<\/div>|<\/p>|<\/h[1-9]>/i', "\n", $sErrorOutput);
+			$sErrorOutput= strip_tags($sErrorOutput);
+		}
+		// --------------------------------------------------------------------------------------------------
 
 		if(	(	$action == STINSERT ||
 				$action == STUPDATE ||

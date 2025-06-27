@@ -166,6 +166,12 @@ class STDbTable extends STBaseTable
 	    $str.= STBaseTable::toString();
 	    return $str;
 	}
+	public function &getDatatypes() : array
+	{
+	    if(!isset($this->db))
+	        $this->db= &$this->container->getDatabase();
+	    return $this->db->getDatatypes();
+	}
 	public function getColumnName($column)
 	{
 	    STCheck::paramCheck($column, 1, "string", "int");

@@ -990,12 +990,36 @@ class STCheck
 	 */
 	public function getTestFormValue($action, STBaseTable $table, string $fieldName, $oldValue)
 	{
+		$datatypes= $table->getDatatypes();
 		$content= $table->getColumnField($fieldName);
 		if($content === null) // if first ask for column field
 			return $oldValue; // and $content exists, then also $field should be exist
-		$field= $table->findColumnOrAlias($fieldName);
+		if(is_array($oldValue))
+		{// this mean that the field is a join field which was pointed from an other table
+			$oVal= array();
+			foreach($oldValue as $key=>$value)
+			{
+				if($value['selected'] == true)
+					$oVal[]= $key;
+			}
+			$nRv= 0;
+			do{
+				$nRv= rand(0, count($oldValue)-1);
+			}while(	in_array($nRv, $oVal) &&
+					count($oVal) < count($oldValue) &&
+					count($oldValue) > 1	);
+			return $nRv;
+		}
+		//$field= $table->findColumnOrAlias($fieldName);
 		$value= null;
-		if($content["type"] == "int")
+		$dbtype= strtoupper($content["type"]);
+		if(!isset($datatypes[$dbtype]))
+		{
+			STCheck::echoDebug("test", "getTestFormValue() unknown type of field '$fieldName' in table '".$table->getName()."' with type '".$content["type"]."' found", true);
+			return $oldValue;
+		}
+		$type= $datatypes[$dbtype]['type'];
+		if($type == "int")
 		{
 			if($action == STUPDATE)
 			{
@@ -1005,7 +1029,7 @@ class STCheck
 			}else
 				$value=063;
 
-		}elseif($content["type"] == "real")
+		}elseif($type == "real")
 		{
 			if($action == STUPDATE)
 			{
@@ -1015,7 +1039,7 @@ class STCheck
 			}else
 				$value=022.5;
 
-		}elseif($content["type"] == "string")
+		}elseif($type == "string")
 		{
 			if($action == STUPDATE)
 			{
@@ -1025,28 +1049,14 @@ class STCheck
 			}else
 				$value= "insert new text";
 
-		}elseif($content["type"] == "date")
+		}elseif($type == "time")
 		{
-			if($action == STUPDATE)
-			{
-				$value= "2005-01-01";
-				if($oldValue === $value)
-					$value= "2005-01-02";
-			}else
-				$value= "2005-01-03";
-
-		}elseif($content["type"] == "time")
-		{
-			if($action == STUPDATE)
-			{
-				$value= "02:13:00";
-				if($oldValue === $value)
-					$value= "03:00:01";
-			}else
-				$value= "01:43:55";
-		}else
-		{
-			STCheck::echoDebug("test", "getTestFormValue() unknown type of field '$fieldName' in table '".$table->getName()."' with type '".$content["type"]."' found", true);
+			$value= date($datatypes[$dbtype]["format"]);
+			if(	$action == STUPDATE &&
+				$oldValue === $value)
+			{// date minus one day and one hour
+					$value= date($datatypes[$dbtype]["format"], strtotime("-1 day -1 hour"));
+			}
 		}
 		return $value;
 	}

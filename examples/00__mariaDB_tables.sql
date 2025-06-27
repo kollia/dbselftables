@@ -7,14 +7,14 @@
     CREATE TABLE `State` (
         `state_id` INT AUTO_INCREMENT PRIMARY KEY,
         `name` VARCHAR(100) NOT NULL,
-        `country` INT,
+        `country` INT NOT NULL,
         FOREIGN KEY (`country`) REFERENCES `Country`(`country_id`)
     ) ENGINE=InnoDB;
 
     CREATE TABLE `County` (
         `county_id` INT AUTO_INCREMENT PRIMARY KEY,
         `name` VARCHAR(100) NOT NULL,
-        `state` INT,
+        `state` INT NOT NULL,
         FOREIGN KEY (`state`) REFERENCES `State`(`state_id`)
     ) ENGINE=InnoDB;
 
@@ -22,7 +22,7 @@
         `address_id` INT AUTO_INCREMENT PRIMARY KEY,
         `street` VARCHAR(255) NOT NULL,
         `city` VARCHAR(100) NOT NULL,
-        `county` INT,
+        `county` INT NOT NULL,
         FOREIGN KEY (`county`) REFERENCES `County`(`county_id`)
     ) ENGINE=InnoDB;
 
@@ -30,7 +30,7 @@
         `person_id` INT AUTO_INCREMENT PRIMARY KEY,
         `first_name` VARCHAR(100) NOT NULL,
         `last_name` VARCHAR(100) NOT NULL,
-        `address` INT,
+        `address` INT NOT NULL,
         FOREIGN KEY (`address`) REFERENCES `Address`(`address_id`),
         UNIQUE (`first_name`, `last_name`)
     ) ENGINE=InnoDB;

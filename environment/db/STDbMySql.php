@@ -374,6 +374,19 @@ class STDbMySql extends STDatabase
 	    }
 	    return $sRv;
 	}
+	/**
+	 * list all fields of a database table
+	 * 
+	 * @param string $TableName name of the table which fields should be listed
+	 * @param int $onError whether the method should stop on error or not. see: st_pathdef.inc.php
+	 * @return array|NULL array with all fields of the table or NULL if error occurs.<br />
+	 * 					  array(	[Field]		=> name of the field,
+	 * 								[Type]		=> type of the field,
+	 * 								[Null]		=> whether the field can be NULL or not (YES/NO),
+	 * 								[Key]		=> whether the field is a key (PRI, UNI, MUL),
+	 * 								[Default]	=> default value of the field,
+	 * 								[Extra]		=> extra information about the field, like AUTO_INCREMENT, etc.	)
+	 */
 	protected function list_dbtable_fields($TableName, $onError= onErrorStop)
 	{
 		if(isset($this->databaseTables[$TableName]))
@@ -803,7 +816,18 @@ class STDbMySql extends STDatabase
 	{
 		return 65535;
 	}
-	function &getDatatypes()
+	/**
+	 * get all datatypes which are supported by the database
+	 * 
+	 * @return array with all datatypes
+	 * 					  array(	"datatype" => array(	"type" => "int|real|string|time|enum",
+	 * 															"length" => int, // optional
+	 * 															"range" => array( "u"=>array(min,max), "s"=>array(min,max) ) // optional
+	 * 															"format" => "Y-m-d H:i:s" // optional for time types
+	 * 															) )
+	 * @see STDatabase::getDatatypes()
+	 */
+	public function &getDatatypes() : array
 	{
 		if(isset($this->datatypes))
 		{
@@ -871,14 +895,16 @@ class STDbMySql extends STDatabase
 																						 2,225^-308,
 																						 1,798^308		)	)	),
 							"DATE"=>		array(	"type"=>	"time",
-													"format"=>	"YYYY-MM-DD"	),
+													"format"=>	"Y-m-d"	),
 							"DATETIME"=>	array(	"type"=>	"time",
-													"format"=>	"YYYY-MM-DD hh:mm:ss"	),
+													"format"=>	"Y-m-d H:i:s"	),
 							"TIMESTAMP"=>	array(	"type"=>	"time",
-													"format"=>	"YYYY-MM-DD hh:mm:ss"	),
+													"format"=>	"Y-m-d H:i:s"	),
 							"TIME"=>		array(	"type"=>	"time",
-													"format"=>	"hh:mm:ss"	),
+													"format"=>	"H:i:s"	),
 							"CHAR"=>		array(	"type"=>	"string",
+													"length"=>	255			),
+							"STRING"=>		array(	"type"=>	"string",
 													"length"=>	255			),
 							"VARCHAR"=>		array(	"type"=>	"string",
 													"length"=>	255			),

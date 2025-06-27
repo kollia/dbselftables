@@ -385,6 +385,36 @@ class STBaseTable
 	{
 	    return $this->toString();
 	}
+	public function &getDatatypes() : array
+	{
+		$datatypes=	array(	"INT"=>			array(	"type"=>	"int",
+													"length"=>	20,
+													"range"=>	array(	"u"=>	array(	0,
+																						2E+64-1		),
+																		"s"=>	array(	-2E+63,
+																						+2E+63-1	)	)	),
+							"REAL"=>		array(	"type"=>	"real",
+													"length"=>	null,
+													"range"=>	array(	"s"=>	array(	-1,798^308,
+																						-2,225^-308,
+																						 0,
+																						 0,
+																						 2,225^-308,
+																						 1,798^308		)	)	),
+							"DATE"=>		array(	"type"=>	"time",
+													"format"=>	"Y-m-d"	),
+							"DATETIME"=>	array(	"type"=>	"time",
+													"format"=>	"Y-m-d H:i:s"	),
+							"TIMESTAMP"=>	array(	"type"=>	"time",
+													"format"=>	"Y-m-d H:i:s"	),
+							"TIME"=>		array(	"type"=>	"time",
+													"format"=>	"H:i:s"	),
+							"CHAR"=>		array(	"type"=>	"string",
+													"length"=>	65535		),
+							"ENUM"=>		array(	"type"=>	"enum",
+													"max"=>		65535		)									);
+		return $datatypes;
+	}
 	public function getID()
 	{
 		return $this->ID;
