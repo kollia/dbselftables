@@ -128,9 +128,7 @@ class STDbSqlCases
             $this->aFieldTypes= $this->read_inFields("type");
         $type= $this->aFieldTypes[$column];
         if(	$type=="int" ||
-            $type=="real" ||
-            $type=="datetime" ||
-            $type=="time"           )
+            $type=="real"   )
         {
             if( !isset($value) ||
                 $value === null ||

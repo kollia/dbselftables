@@ -1277,6 +1277,19 @@ class STItemBox extends STBaseBox
 									$input->name($postColumn);
 									$input->type("file");
 									$input->accept($this->uploadFields[$field["name"]]["type"]);
+							}elseif($field["type"]=="datetime")
+							{// datetime-field
+									$input->name($postColumn);
+									$input->type("datetime-local");
+									$value= $this->db->makeUserDateFormat($columnValue);
+									if(!$value)
+										$value= $columnValue;
+									if(!$value)
+										$value= $this->db->getNullDate();
+									if(STCheck::isDebug('test'))
+										$value= STCheck::getTestFormValue($this->action, $this->asDBTable, $field["name"], $value);
+									$input->value($value);
+
 							}elseif($field["type"]=="date")
 							{// date-field
 									$input->name($postColumn);
@@ -1287,7 +1300,7 @@ class STItemBox extends STBaseBox
 									if(!$value)
 										$value= $this->db->getNullDate();
 									if(STCheck::isDebug('test'))
-										$value= STCheck::getTestFormValue("date", $this->action, $this->asDBTable, $field["name"], $value);
+										$value= STCheck::getTestFormValue($this->action, $this->asDBTable, $field["name"], $value);
 									$input->value($value);
 							}elseif($field["type"]=="time")
 							{// time-field
@@ -1299,7 +1312,7 @@ class STItemBox extends STBaseBox
 									if(!$value)
 										$value= $this->db->getNullTime();
 									if(STCheck::isDebug('test'))
-										$value= STCheck::getTestFormValue("date", $this->action, $this->asDBTable, $field["name"], $value);
+										$value= STCheck::getTestFormValue($this->action, $this->asDBTable, $field["name"], $value);
 									$input->value($value);
 							}else
   							{// normal input-fields
@@ -1403,18 +1416,6 @@ class STItemBox extends STBaseBox
 								$td->add($string);
 							}
 							$td->add($input);
-							if(preg_match("/datetime/", $field["type"]))
-							{// bei einem Datums-Feld auch noch das Format angeben
-								$td->add("(".$this->db->getDateFormat()." ".$this->db->getTimeFormat().")");
-							}else
-							if(preg_match("/date/", $field["type"]))
-							{// bei einem Datums-Feld auch noch das Format angeben
-								$td->add("(".$this->db->getDateFormat().")");
-							}else
-							if(preg_match("/time/", $field["type"]))
-							{// bei einem Datums-Feld auch noch das Format angeben
-								$td->add("(".$this->db->getTimeFormat().")");
-							}
     				}
 
     				// add content (strings or HTML-Tags)
