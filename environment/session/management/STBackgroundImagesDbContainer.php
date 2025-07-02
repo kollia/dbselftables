@@ -105,17 +105,22 @@ abstract class STBackgroundImagesDbContainer extends STObjectContainer
     }
     protected function createOverviewImages(STSiteCreator $externSiteCreator, bool $bLogoutButton= false)
     {
-        if(!isset($this->image['overview']['img']))
-            return;
-        
         $get= new STQueryString();
         $user= STSession::instance();
             
-        $table= new st_tableTag();
-            $table->border(0);
-            $table->cellpadding(0);
-            $table->cellspacing(0);
-            $table->width("100%");                    
+        $container = new DivTag();
+        $container->class("OverviewBannerContainer mobile-overview-container");
+        
+        // Banner-Header mit Logo und Logout-Button
+        $headerDiv = new DivTag();
+        $headerDiv->class("OverviewHeader");
+        $headerDiv->style("display: flex; justify-content: space-between; align-items: center; width: 100%;");
+
+        if(isset($this->image['overview']['img']))
+        {// Banner-Link und Bild (links)
+            $logoDiv = new DivTag();
+            $logoDiv->style("flex-shrink: 0;");
+            $logoDiv->class("logo-container");
             $a= new ATag();
                 $query= $user->getSessionUrlParameter();
                 if($query != "")
@@ -132,53 +137,62 @@ abstract class STBackgroundImagesDbContainer extends STObjectContainer
                 $entryPoint= $externSiteCreator->getLoginEntryPointUrl();
                 $a->href($entryPoint.$query);
                 $a->target("_top");
+                
                 $img= new ImageTag();
+                    $img->class("OverviewBannerImage");
                     $img->src($this->image['overview']['img']);
                     $img->height($this->image['overview']['height']);
                     $img->width($this->image['overview']['width']);
                     $img->border(0);
                     $img->alt($this->image['overview']['alt']);
                 $a->add($img);
-            $table->add($a);
-            if(isset($this->image['overview']['background']))
-            {
-                $onBody= false;
-                if($this->image['overview']['background-body'] == true)
-                    $onBody= true;
+            $logoDiv->add($a);
+            $headerDiv->add($logoDiv);
+        }
+        
+        // Logout-Button (rechts) falls gewünscht
+        if( $bLogoutButton &&
+            $user->isLoggedIn())
+        {
+            $logoutDiv= new DivTag();
+            $logoutDiv->class("OverviewLogoutContainer mobile-logout");
+            $logoutDiv->style("text-align: right; flex-shrink: 0; margin-left: 20px;");
+                $logout= $user->getLogoutButton( "Logout" );
+                $logoutDiv->add($logout);
+                $logoutDiv->add(br());
+                $logoutDiv->add("logged In as: ");
+                $b= new BTag();
+                    $span= new SpanTag("colorONE");
+                        $span->add($user->getUserName());
+                    $b->add($span);
+                    $b->add("&nbsp;&nbsp;");
+                $logoutDiv->add($b);
+            $headerDiv->add($logoutDiv);
+        }
+        
+        $container->add($headerDiv);
+                
+        // Background-Styling falls vorhanden
+        if(isset($this->image['overview']['background']))
+        {
+            $onBody= false;
+            if($this->image['overview']['background-body'] == true)
+                $onBody= true;
 
-                $styleString= "background-image: url('{$this->image['overview']['background']}');";
-                if(isset($this->image['overview']['height']))
-                {
-                    $styleString.= " background-size: auto {$this->image['overview']['height']};";
-                    if($this->image['overview']['background-repeat'] == false)
-                        $styleString.= " background-repeat: no-repeat;";
-                }
-                if($onBody)
-                    $this->style($styleString);
-                else
-                    $table->columnStyle($styleString);
-            }
-            if( $bLogoutButton &&
-                $user->isLoggedIn())
+            $styleString= "background-image: url('{$this->image['overview']['background']}');";
+            if(isset($this->image['overview']['height']))
             {
-                $div= new DivTag();
-                    $logout= $user->getLogoutButton( "Logout" );
-                    $div->add($logout);
-                    $div->add(br());
-                    $div->add("logged In as: ");
-                    $b= new BTag();
-                        $span= new SpanTag("colorONE");
-                            $span->add($user->getUserName());
-                        $b->add($span);
-                        $b->add("&nbsp;&nbsp;");
-                    $div->add($b);
-                    $table->add($div);
-                if(isset($this->image['overview']['background']))
-                    $table->columnStyle($styleString);
-                //$table->width("100%");
-                $table->columnAlign("right");
+                $styleString.= " background-size: auto {$this->image['overview']['height']};";
+                if($this->image['overview']['background-repeat'] == false)
+                    $styleString.= " background-repeat: no-repeat;";
             }
-        $this->append($table);
+            if($onBody)
+                $this->style($styleString);
+            else
+                $container->style($styleString);
+        }
+        
+        $this->append($container);
 
         foreach($this->addedContent as $tag)
         {
@@ -295,7 +309,14 @@ abstract class STBackgroundImagesDbContainer extends STObjectContainer
             $this->createOverviewImages($externSiteCreator);
         // do not need overview images more
         $this->bAddContent= false;
-        return STObjectContainer::execute($externSiteCreator, $onError);
+        $res= STObjectContainer::execute($externSiteCreator, $onError);
+
+        $head= $this->getHead();
+        $meta= new MetaTag();
+        $meta->name("viewport");
+        $meta->content("width=device-width, initial-scale=1.0, user-scalable=yes");
+        $head->add($meta);
+        return $res;
     }
 }
 

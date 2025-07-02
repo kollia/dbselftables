@@ -24,6 +24,8 @@ class STProjectOverviewList extends STBackgroundImagesDbContainer
     public function __construct(string $name, STObjectContainer &$container, string $bodyClass= "ProjectAccessBody")
     {
         STBackgroundImagesDbContainer::__construct($name, $container, $bodyClass);
+        
+        // Viewport meta tag is already added in parent constructor
     }
 	/**
 	 * method to create messages for different languages.<br />
@@ -328,8 +330,8 @@ class STProjectOverviewList extends STBackgroundImagesDbContainer
             $this->setMessageContent($messageId, $message, 1);
         }
         
+        // Remove debug output that breaks HTML
         STObjectContainer::execute($externSideCreator, $onError);
-
   
         $available= $this->showAvailableSite();
         if( STCheck::isDebug() &&
@@ -450,207 +452,101 @@ class STProjectOverviewList extends STBackgroundImagesDbContainer
     }
     private function &getLoginMask(array $available) : object
     {
-        //$Get->delete("user");
-        $session= STSession::instance();
-        $user= $session->getUserName();
-        if(	$user == "" &&
-            isset($_GET["user"]) &&
-            $_GET["user"]		)
-        {
-            $user= $_GET["user"];
+        $session = STSession::instance();
+        $user = $session->getUserName();
+        if ($user == "" && isset($_GET["user"]) && $_GET["user"]) {
+            $user = $_GET["user"];
         }
+
+        $div = new DivTag();
+        $div->class("STLoginDiv mobile-responsive");
         
-        $div= new DivTag("STLoginDiv");
-            $style = new StyleTag();
-                $style->add("
-                    #STLoginDiv {
-                        max-width: 400px;
-                        margin: 5vw auto 0 auto;
-                        padding: 2vw;
-                        background: #fff;
-                        border-radius: 8px;
-                        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-                    }
-                    #STLoginDiv .loginInput {
-                        width: 100%;
-                        max-width: 100%;
-                        box-sizing: border-box;
-                        margin-bottom: 16px;
-                        font-size: 1.1em;
-                        padding: 8px;
-                    }
-                    #STLoginDiv input[type='submit'] {
-                        width: 100%;
-                        padding: 12px;
-                        font-size: 1.1em;
-                        background: #007bff;
-                        color: #fff;
-                        border: none;
-                        border-radius: 4px;
-                        margin-top: 8px;
-                    }
-                    #STLoginDiv .loginError {
-                        color: #b00;
-                        margin-bottom: 16px;
-                        font-size: 1em;
-                    }
-                    @media (max-width: 600px) {
-                        #STLoginDiv {
-                            max-width: 98vw;
-                            padding: 2vw 2vw 4vw 2vw;
-                        }
-                    }
-                ");
-            $div->add($style);
-            $div->add(br());
-            $div->add(br());
-            $div->add(br());
-            $div->add(br());
-            $layout= new st_tableTag();
-                $layout->border(0);
-                $layout->add("&#160;");
-                $layout->columnWidth("10%");
-                $divx= new DivTag("loginMaskDescription");
-                if(isset($_GET["debug"]))
-                {
-                    $Get= new STQueryString();
-                    $Get->delete("ERROR");
-                    $Get->delete("doLogout");
-                    $Get->delete("from");
-                    $action= $Get->getStringVars();
-                    $divx->add("INPUT of form-tag sending to address <b>'$action'</b><br />");
-                }
-                    $maskDescription= $this->getMessageContent("LoginMaskDescription");
-                    $divx->add($maskDescription);
-                $layout->add($divx);
-                $layout->colspan(3);
-            
-            $layout->nextRow();
-            $errorString= $this->getLoginErrorString($available);
-            if($errorString != "")
-            {
-                $layout->add("&#160;");
-                $layout->add("&#160;");
-                $divE= new DivTag("loginError");
-                    $divE->add($errorString);
-                $layout->add($divE);
-                $layout->colspan(2);
-                $layout->nextRow();
-                    
-            }
-            if(!$available['LoggedIn'])
-            {
-                $layout->add("&#160;");
-                $layout->columnWidth("5%");
-                $layout->add("&#160;");
-                $layout->columnWidth("5%");
-                $layout->add("&#160;");
-                $layout->columnWidth("10%");
-                    $table= $this->getLoginFormTable($user);
-                $layout->add($table);
-            }
-            $div->add($layout);
-            $script= new JavaScriptTag();
-                $inputPos= 0;
-                if($user != "")
-                    $inputPos= 1;
-                $function= new jsFunction("doFocus");
-                    $function->add("tag= document.getElementsByClassName('loginInput');");
-                    $function->add("tag[$inputPos].focus();");
-                $script->add($function);
-                $script->add("window.onload= doFocus();");
-                //$script->add("inp= document.getElementsByClassName('loginInput');");
-                //$script->add("console.log(inp);");
-                //$script->add("inp[1].focus();");
-            $div->add($script);
-        $this->loginMask= $div;
-        return $this->loginMask;
-    }
-    private function getLoginFormTable(string $user)
-    {STCheck::debug();
-        $Get= new STQueryString();
-        $Get->delete("ERROR");
-        $Get->delete("doLogout");
-        $Get->delete("from");
-        $action= $Get->getStringVars();
-        
-        $form= new FormTag();
+        // Login description
+        $dDiv= new DivTag("loginDesc mobile-login-desc");
+            $dDiv->add($this->getMessageContent("LoginMaskDescription"));
+        $div->add($dDiv);
+
+        // Error Description-String
+        $errorString = $this->getLoginErrorString($available);
+        if ($errorString != "") {
+            $errorDiv = new DivTag("loginError mobile-error");
+            $errorDiv->add($errorString);
+            $div->add($errorDiv);
+        }
+
+        // Login-Formular
+        if (!$available['LoggedIn']) {
+            $Get = new STQueryString();
+            $Get->delete("ERROR");
+            $Get->delete("doLogout");
+            $Get->delete("from");
+            $action = $Get->getStringVars();
+
+            $form = new FormTag();
             $form->name("loginform");
             $form->action($action);
             $form->method("post");
-            $table= new TableTag("loginTable");
-                $table->border(1);
-                $table->cellpadding(0);
-                $table->cellspacing(0);                  
-                //$table->style("border-width:1; border-style:outset; border-darkcolor:#000000; border-lightcolor:#ffffff");
-                $tr= new RowTag();
-                    $td= new ColumnTag();
-                        $td->width(80);
-                        $td->align("right");
-                        $p= new PTag();
-                            $p->style("margin-right: 4;");
-                            $p->add("User Name:&#160; ");
-                        $td->add($p);
-                    $tr->add($td);
-                    $td= new ColumnTag();
-                        $td->width(175);
-                        $input= new InputTag("loginInput");
-                            $input->type("text");
-                            $input->name("user");
-                            $input->maxlen(60);
-                            //$input->size(28);
-                            $input->tabindex(1);
-                            if($user == "")
-                                $input->autofocus();
-                            $input->value($user);
-                            $td->add($input);
-                        $tr->add($td);
-                    $td= new ColumnTag();
-                        $td->width(100);
-                        $td->rowspan(2);
-                        $td->valign("top");
-                        $td->align("center");
-                        $p= new PTag();
-                            $p->style("margin-top:3; margin-left:10");
-                            $input= new InputTag("myInput loginInput");
-                                $input->type("submit");
-                                $input->tabindex(3);
-                                $input->value("Login");
-                            $p->add($input);
-                        $td->add($p);
-                    $tr->add($td);
-                $table->add($tr);
-                $tr= new RowTag();
-                    $td= new  ColumnTag();
-                        $td->width(80);
-                        $td->align("right");
-                        $p= new PTag();
-                            $p->style("margin-right: 4;");
-                            $p->add("Password:&#160; ");
-                        $td->add($p);
-                    $tr->add($td);
-                    $td= new  ColumnTag();
-                        $td->width(175);
-                        $input= new InputTag("loginInput");
-                            $input->type("password");
-                            $input->name("pwd");
-                            $input->tabindex(2);
-                            if($user != "")
-                                $input->autofocus();
-                            //$input->size(28);
-                            $input->maxlen(60);
-                        $td->add($input);
-                    $tr->add($td);
-                    $td= new  ColumnTag();
-                        $input= new InputTag();
-                            $input->type("hidden");
-                            $input->name("doLogin");
-                            $input->value(1);
-                        $td->add($input);
-                    $tr->add($td);
-                $table->add($tr);  
-            $form->add($table);
-        return $form;
+            $form->class("mobile-login-form");
+
+            // username
+            $fieldUser = new DivTag("loginField mobile-input-field");
+            $labelUser = new DivTag("loginLabel mobile-label", "Benutzername");
+            $inputUser = new InputTag("loginInput mobile-input");
+            $inputUser->type("text");
+            $inputUser->name("user");
+            $inputUser->maxlen(60);
+            $inputUser->tabindex(1);
+            $inputUser->autocomplete("username");
+            if ($user == "") $inputUser->autofocus();
+            $inputUser->value($user);
+            $fieldUser->add($labelUser);
+            $fieldUser->add($inputUser);
+            $form->add($fieldUser);
+
+            // password
+            $fieldPwd = new DivTag("loginField mobile-input-field");
+            $labelPwd = new DivTag("loginLabel mobile-label", "Passwort");
+            $inputPwd = new InputTag("loginInput mobile-input");
+            $inputPwd->type("password");
+            $inputPwd->name("pwd");
+            $inputPwd->tabindex(2);
+            $inputPwd->autocomplete("current-password");
+            if ($user != "") $inputPwd->autofocus();
+            $fieldPwd->add($labelPwd);
+            $fieldPwd->add($inputPwd);
+            $form->add($fieldPwd);
+
+            // Submit-Button
+            $btnDiv = new DivTag("loginField mobile-button-field");
+            $inputBtn = new InputTag("loginButton mobile-submit-btn");
+            $inputBtn->type("submit");
+            $inputBtn->tabindex(3);
+            $inputBtn->value("Login");
+            $btnDiv->add($inputBtn);
+            $form->add($btnDiv);
+
+            // Hidden Feld
+            $inputHidden = new InputTag();
+            $inputHidden->type("hidden");
+            $inputHidden->name("doLogin");
+            $inputHidden->value(1);
+            $form->add($inputHidden);
+
+            $div->add($form);
+        }
+
+        // Fokus per JS
+        $script = new JavaScriptTag();
+        $inputPos = ($user != "") ? 1 : 0;
+        $function = new jsFunction("doFocus");
+        $function->add("tag = document.getElementsByClassName('loginInput');");
+        $function->add("if(tag.length > $inputPos) tag[$inputPos].focus();");
+        $script->add($function);
+        $script->add("window.onload= doFocus();");
+        $div->add($script);
+
+        $this->loginMask = $div;
+        return $this->loginMask;
     }
     protected function &getAccessibleChooseBox() : Tag
     {
@@ -691,7 +587,7 @@ class STProjectOverviewList extends STBackgroundImagesDbContainer
     {
         if(isset($this->accessibilityProjectMask))
             return $this->accessibilityProjectMask;
-         
+        
         $session= STSession::instance();
         $user= $session->getUserData();
         $bLoggedIn= $session->isLoggedIn();
@@ -712,65 +608,52 @@ class STProjectOverviewList extends STBackgroundImagesDbContainer
                             ." should be 'ACTIVE'");
         }
 
-        $div= new DivTag("AccessibleProjectList");
-            $table= new st_tableTag("ListTable");
-                $table->border(0);
-                $table->cellpadding("10px");
-                $table->cellspacing("2px");
-                $table->add("&#160");
-                $table->columnWidth("20%");
-                $p= new PTag("AccessibilityProjects");
-                    $p->add(br());
-                    $accessibilityString= $this->getMessageContent("AccessibilityProjectString");
-                    $p->add($accessibilityString);
-                $table->add($p);
-                $table->colspan(2);
-            $table->nextRow();
-                $table->add("&#160;");
-                $table->columnWidth("20%");
-                $table->add("&#160;");
-                $table->columnWidth("10%");
-                $divo= new DivTag();
-                    $lu= new  st_tableTag("ListTable");
-                    foreach( $this->accessableProjects as $project )
-                    {
-                        if( !$bLoggedIn || // if nobody is logged-in accasable projects only with ONLINE-group
-                            (   isset($user['register']) && // elsewhere show only Profile if register is INACTIVE
-                                $user['register'] == "ACTIVE" ) ||
-                            $project['Name'] == $profile['name']    )
-                        {
-                            $divI= new DivTag();
-                                $a= new ATag();
-                                if( $project['Target'] == "SELF" ||
-                                    $project['Path'] == "X"         )
-                                {
-                                    $href= "?ProjectID=";
-                                    $href.= urlencode( $project['ID'] );
-                                    $session= STSession::getSessionUrlParameter();
-                                    if($session != "")
-                                        $href.= "&".$session;
-                                }else
-                                    $href= $project['Path'];
+        $div = new DivTag();
+        $div->class("AccessibleProjectList mobile-project-list");
 
-                                    $a->href($href);
-                                    $a->target("_".strtolower($project['Target']));
-                                    $a->style("font-size:12pt;font-weight=bold;");
-                                    $a->add($project[ 'Name' ]);
-                                $divI->add($a);
-                                $divI->add(br());
-                                $divI->add($project[ 'Description' ]);
-                            $lu->add($divI);
-                            $lu->nextRow();
-                        }
-                    }
-                    $divo->add($lu);
-                    $divo->add(br());
-                    $divo->add(br());
-                $table->add($divo);
-                $table->columnValign("top");
-                $table->columnAlign("left");
-            $div->add($table);
-        $this->accessibilityProjectMask= $div;
+        // Titel
+        $titleDiv = new DivTag("projectListTitle mobile-project-title");
+        $accessibilityString = $this->getMessageContent("AccessibilityProjectString");
+        $titleDiv->add($accessibilityString);
+        $div->add($titleDiv);
+
+        // Projektliste
+        foreach($this->accessableProjects as $project)
+        {
+            if( !$bLoggedIn || // if nobody is logged-in accasable projects only with ONLINE-group
+                (   isset($user['register']) && // elsewhere show only Profile if register is INACTIVE
+                    $user['register'] == "ACTIVE" ) ||
+                $project['Name'] == $profile['name']    )
+            {
+                $entryDiv = new DivTag("projectEntry mobile-project-entry");
+
+                $a = new ATag();
+                if( $project['Target'] == "SELF" || $project['Path'] == "X" )
+                {
+                    $href = "?ProjectID=" . urlencode($project['ID']);
+                    $sessionParam = STSession::getSessionUrlParameter();
+                    if($sessionParam != "")
+                        $href .= "&" . $sessionParam;
+                }
+                else
+                {
+                    $href = $project['Path'];
+                }
+                $a->href($href);
+                $a->target("_".strtolower($project['Target']));
+                $a->class("projectLink mobile-project-link");
+                $a->add($project['Name']);
+                $entryDiv->add($a);
+
+                $descDiv = new DivTag("projectDesc mobile-project-desc");
+                $descDiv->add($project['Description']);
+                $entryDiv->add($descDiv);
+
+                $div->add($entryDiv);
+            }
+        }
+
+        $this->accessibilityProjectMask = $div;
         return $this->accessibilityProjectMask;
     }
 }
