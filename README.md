@@ -11,7 +11,7 @@ Or you just want to collect data for later use or something else. There are many
 dbselftable is implemented now for php 8.x / 9.x<br />
 and using as database MariaDb or MySql
 
-You can download the .zip or .tar.zip package from last release on the right column and extract this in your project folder.
+You can download the .zip or .tar.zip package from last release on the right column in the About-Panel and extract this in your project folder.
 Or if you work with git, clone the main repository which should be the same.
 ```
 git clone https://github.com/kollia/dbselftables.git
