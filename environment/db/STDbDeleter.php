@@ -69,6 +69,7 @@ class STDbDeleter extends STDbSqlWhereCases
 	        return $this->aStatement['full'];
 	    
 	    $tableName= $this->table->getName();
+		$tableName= $this->table->db->getDelimitedString($tableName, "field");
 	    $this->table->allowFkQueryLimitation(false);
 	    $whereStatement= $this->getWhereStatement(0);
         $statement= "delete from ".$tableName;
