@@ -1083,8 +1083,15 @@ class STSiteCreator extends HtmlTag
 		{
 			$this->createContainerReport($testdebug['step']);
 			$sErrorOutput= STCheck::end_outputBuffer("test");
-			$report.= $this->writeContainerReport($testdebug, $sErrorOutput);
-			$report.= $this->writeEndTimeReport($testdebug['start']);
+			if(trim($sErrorOutput) != "")
+			{
+				$report.= "\n\n";
+				$report.= " ****************************************\n";
+				$report.= " ***  ERROR: on Ending of test\n";
+				$report.= "\n";
+				$report.= $sErrorOutput;
+				$report.= "\n\n\n\n";
+			}
 		}
 
 		if(file_put_contents($reportFilename, $report, FILE_APPEND) === false)
