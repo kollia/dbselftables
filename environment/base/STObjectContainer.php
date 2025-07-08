@@ -347,6 +347,7 @@ class STObjectContainer extends STBaseContainer
 			STCheck::alert(!isset($table), "STObjectContainer::getTable()", "cannot clone $oldTable");
 			
 			$table->abOrigChoice= array();
+			// new cloned table should now be inside this container
 			unset($table->container);
 			$table->container= $this;
 			$this->oGetTables[$tableName]= &$table;
@@ -401,11 +402,16 @@ class STObjectContainer extends STBaseContainer
 		$oRv= null;
 		
 		if(preg_match("/^([^.]+)\.([^.]+)/", $tableName, $preg))
-		{
+		{// if tableName separated with dot, the first part should be the container name
 			$container= $this->getContainer($preg[1]);
-			$table= $container->getTable($preg[2]);
+			$table= clone $container->getTable($preg[2]);
 			if($table)
 			{
+				if($this->name != $container->name)
+				{// new cloned table should now be inside this container
+					unset($table->container);
+					$table->container= $this;
+				}
 				$this->oGetTables[$tableName]= &$table;
 				return $table;
 			}
@@ -422,6 +428,12 @@ class STObjectContainer extends STBaseContainer
 				$table= $oContainer->getTable($tableName, /*container*/null, /*empty*/true);
 				if($table)
 				{
+					$table= clone $table;
+					if($this->name != $container->name)
+					{// new cloned table should now be inside this container
+						unset($table->container);
+						$table->container= $this;
+					}
 					$this->oGetTables["$dbName.$tableName"]= &$table;
 					$oRv= $table;
 					break;
@@ -457,17 +469,22 @@ class STObjectContainer extends STBaseContainer
   		    if(!count($this->oGetTables))
   		    {
     			$tableNames= $this->db->list_tables($onError);
-    			// alex 17/05/2005:	die Tabellen werden nun von der �berschriebenen Funktion
-    			//					getTable() aus dem Datenbank-Objekt erzeugt.
+    			// alex 17/05/2005:	the tables only used  by the overwritten function
+    			//					getTable() created from the database object.
     			foreach($tableNames as $name)
     			{
     			    $keyTableName= strtolower($name); 
-    			    $this->oGetTables[$keyTableName]= clone $this->db->getTable($name);//, $bAllByNone);
+    			    $table= clone $this->db->getTable($name);//, $bAllByNone);
+					if($this->name != $this->db->name)
+					{// new cloned table should now be inside this container
+						unset($table->container);
+						$table->container= $this;
+					}
+					$this->oGetTables[$keyTableName]= $table;
     			}
   		    }else
   		        return $this->oGetTables; 
 		}
-		//st_print_r($this->tables, 1);
 		return $this->tables;
 	}
 	function setInTableNewColumn($tableName, $columnName, $type)

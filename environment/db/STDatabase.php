@@ -108,7 +108,7 @@ abstract class STDatabase extends STObjectContainer
 	private $aAliases= null;
 	
 	/**
-	 * all type-name whitch column
+	 * all type-name which column
 	 * can have
 	 */
 	private $allowedTypes=	array(	"int",
@@ -150,7 +150,7 @@ abstract class STDatabase extends STObjectContainer
 									"bit"      		);*/
 
 /**
-*  contains all tablenames in the database to which was curently conected
+*  contains all table names in the database to which was curently conected
 *  installed from STDbTableCreator
 *
 * @access private
