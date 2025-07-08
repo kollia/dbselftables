@@ -288,7 +288,7 @@ function actionCallback(&$callbackObject, string $columnName, int $rownum)
     $domain= $session->getCustomDomain();
     if( $callbackObject->sqlResult[$rownum]["Group"] == $session->onlineGroup ||
         $callbackObject->sqlResult[$rownum]["Group"] == $session->loggedinGroup ||
-        $callbackObject->sqlResult[$rownum]["Domain"] != $domain['ID']              )
+        $callbackObject->sqlResult[$rownum]["Domain"] != $domain['Name']              )
     {
         $callbackObject->noUpdate();
         $callbackObject->noDelete();
@@ -366,7 +366,7 @@ class STUserManagement extends STObjectContainer
 		$project->setDisplayName("existing Projects");
 	    $project->accessBy($session->usermanagement_ProjectAccess, STLIST);
 	    $project->accessBy($session->usermanagement_ProjectModif, STADMIN);
-		$this->setFirstTable(array("Project", "User", "Mail"));
+		$this->setFirstTable(array("User", "Project", "Mail"));
 	}
 	protected function init(string $action, string $table)
 	{
@@ -455,26 +455,6 @@ class STUserManagement extends STObjectContainer
 			$user->preSelect("DateCreation", "sysdate()");
 		}
 		
-		$groups= &$this->getTable("Group");
-		if($table == $groups->getName())
-		{
-			$groups->select("domain", "Domain");
-			$groups->preSelect("domain", $domain['Name']);
-			$groups->disabled("domain");
-			$groups->preSelect("DateCreation", "sysdate()");
-			$groups->select("Name", "Group");
-			if($action==STLIST)
-			{
-				$groups->select("ID", "access descriptions");
-				$groups->listCallback("descriptionCallback", "access descriptions");
-				//$groups->listCallback("actionCallback", "update");
-				$groups->listCallback("actionCallback", "delete");
-				$groups->orderBy("domain");
-				$groups->orderBy("Name");
-				$groups->setMaxRowSelect(50);
-			}
-		}
-		
 		$project= &$this->getTable("Project");
 		if($table == $project->getName())
 		{
@@ -501,6 +481,26 @@ class STUserManagement extends STObjectContainer
 			{
 				$userClusterGroup= $this->getContainer("UserClusterGroupManagement");
 				$project->namedLink("Project", $userClusterGroup);
+			}
+		}
+		
+		$groups= &$this->getTable("Group");
+		if($table == $groups->getName())
+		{
+			$groups->select("domain", "Domain");
+			$groups->preSelect("domain", $domain['Name']);
+			$groups->disabled("domain");
+			$groups->preSelect("DateCreation", "sysdate()");
+			$groups->select("Name", "Group");
+			if($action==STLIST)
+			{
+				$groups->select("ID", "access descriptions");
+				$groups->listCallback("descriptionCallback", "access descriptions");
+				//$groups->listCallback("actionCallback", "update");
+				$groups->listCallback("actionCallback", "delete");
+				$groups->orderBy("domain");
+				$groups->orderBy("Name");
+				$groups->setMaxRowSelect(50);
 			}
 		}
 	}
