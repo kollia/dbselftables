@@ -39,7 +39,7 @@ class STClusterGroupAssignment extends STObjectContainer
 	        $buttonText.= $res['ID'];
         $nnTable= $this->needTable("Group");
 	    $nnTable->setDisplayName($buttonText);
-	    $nnTable->select("Group", "domain", "domain");
+	    $nnTable->select("AccessDomain", "Name", "Domain");
 	    $nnTable->nnTableCheckboxColumn("Affilation");
 	    $nnTable->select("Group", "Name", "Group");
 	    $nnTable->select("ClusterGroup", "DateCreation", "membership since");

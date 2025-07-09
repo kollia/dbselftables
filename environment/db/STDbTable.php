@@ -1139,8 +1139,8 @@ class STDbTable extends STBaseTable
             
             if($aliasCount>1)
             {
-                $fkTableName= null;
 				//$fkTableName= $this->getFkTableName($column["column"]);
+                $fkTableName= null;
                 if( (   !typeof($oMainTable, "STDbSelector") &&
                         (	!isset($column['type']) || // <- otherwise field is PK for update or delete inside STListBox
                         	$column['type'] == "select"	)		) ||
