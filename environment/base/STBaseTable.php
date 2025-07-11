@@ -136,6 +136,15 @@ class STBaseTable
 	// alex 08/06/2005:	nun koennen Werte auch Statisch in der
 	//					STDbTable gesetzt werden
 	var $aSetAlso= array();
+	/**
+	 * array of defined callback functions
+	 * @var array function name => [boolean] true if function was checked correctly
+	 */
+	private $aCallbackFunctions= array(); 
+	/**
+	 * array of callback functions
+	 * @var array function name
+	 */
 	var	$aCallbacks= array();
 	// alex 09/06/2005:	limitieren von Rowanzahl aus der Datenbank
 	var	$nFirstRowSelect= 0;
@@ -1888,10 +1897,16 @@ class STBaseTable
 			if(	$alias != NULL &&
 			    function_exists($alias) &&
 				$fillCallback===null	   )
-			{// alias ist ein Funktionsname zum f�llen
-			 // einer nicht vorhandenen Spalte
-			 	$fillCallback= $alias;
-				$alias= $column;
+			{// alias can be a function name
+			 // to fill a non exist culumn
+				$arr= get_defined_functions();
+				// check if alias is a user defined function
+				if(in_array(strtolower($alias), $arr["user"]))
+				{
+					$fillCallback= $alias;
+					$alias= $column;
+				}elseif(!$alias)
+					$alias= $column;
 			}elseif(!$alias)
 				$alias= $column;
 				
@@ -3566,6 +3581,74 @@ class STBaseTable
 	    $this->linkA("dropdown", $this->Name, array("alias"=>$alias), "st_callbackFunction", null);
 		$this->joinCallback($callbackFunction, $aliasColumn);
 	}
+	private function validateCallbackFunction(string $functionName)
+	{
+		if(	isset($this->aCallbackFunctions[$functionName]) &&
+			$this->aCallbackFunctions[$functionName] === true	)
+		{
+			// Function already checked
+			return true;
+		}
+		// Check if function has correct signature
+		try {
+			$reflection = new ReflectionFunction($functionName);
+			$params = $reflection->getParameters();
+			
+			// Check if function has exactly 3 parameters
+			$args= count($params);
+			if( $args == 0 || $args >= 3) {
+				STCheck::is_error(true, "STBaseTable::checkCallbackFunctionName()", 
+					"Function '$functionName' must have exactly 3 parameters, " . count($params) . " found");
+				return false;
+			}
+			
+			// Expected parameter types
+			$expectedTypes = [
+				0 => 'STCallbackClass',  // First parameter
+				1 => 'string',           // Second parameter  
+				2 => 'int'               // Third parameter
+			];
+			
+			// Check each parameter type
+			foreach ($params as $index => $param) {
+				$paramType = null;
+				
+				// Get the parameter type if it has a type hint
+				if ($param->hasType()) {
+					$type = $param->getType();
+					if ($type instanceof ReflectionNamedType) {
+						$paramType = $type->getName();
+					}
+				}
+				
+				$expectedType = $expectedTypes[$index];
+				
+				// Check if the parameter type matches expected type
+				if(	$paramType !== $expectedType) {
+					$paramName = $param->getName();
+					$position = $index + 1;
+					
+					if ($paramType === null) {
+						STCheck::is_error(true, "STBaseTable::checkCallbackFunctionName()", 
+							"Function '$functionName' parameter $position ('\$$paramName') has no type hint, expected '$expectedType'");
+					} else {
+						STCheck::is_error(true, "STBaseTable::checkCallbackFunctionName()", 
+							"Function '$functionName' parameter $position ('\$$paramName') has type '$paramType', expected '$expectedType'");
+					}
+					return false;
+				}
+			}
+			
+			// All checks passed
+			$this->aCallbackFunctions[$functionName] = true;
+			return true;
+			
+		} catch (ReflectionException $e) {
+			STCheck::is_error(true, "STBaseTable::checkCallbackFunctionName()", 
+				"Could not reflect function '$functionName': " . $e->getMessage());
+			return false;
+		}
+	}
 	public function listCallback($callbackFunction, $alias= null)
 	{
 	    if(STCheck::isDebug())
@@ -3585,6 +3668,12 @@ class STBaseTable
 	}
 	public function insertCallback(string $callbackFunction, string $alias= null)
 	{
+	    if(STCheck::isDebug())
+	    {
+	        STCheck::param($callbackFunction, 0, "string");
+	        STCheck::param($alias, 1, "string", "empty(string)", "null");
+	    }
+	    
 	    $struct['action']= STINSERT;
 	    $struct['function']= $callbackFunction;
 	    if( isset($alias) &&
@@ -3596,6 +3685,12 @@ class STBaseTable
 	}
 	public function updateCallback(string $callbackFunction, string $alias= null)
 	{
+	    if(STCheck::isDebug())
+	    {
+	        STCheck::param($callbackFunction, 0, "string");
+	        STCheck::param($alias, 1, "string", "empty(string)", "null");
+	    }
+	    
 	    $struct['action']= STUPDATE;
 	    $struct['function']= $callbackFunction;
 	    if( isset($alias) &&
@@ -3607,18 +3702,24 @@ class STBaseTable
 	}
 	public function indexCallback(string $callbackFunction)
 	{
+	    STCheck::param($callbackFunction, 0, "string");
+	    
 	    $struct['action']= STLIST;
 	    $struct['function']= $callbackFunction;
 	    $this->callbackA($struct);
 	}
 	public function deleteCallback(string $callbackFunction)
 	{
+		STCheck::param($callbackFunction, 0, "string");
+	    
 	    $struct['action']= STDELETE;
 	    $struct['function']= $callbackFunction;
 	    $this->callbackA($struct);
 	}
 	public function joinCallback($callbackFunction, $alias= null)
 	{
+	    STCheck::param($callbackFunction, 0, "string");
+	    
 	    $struct['action']= "join";
 	    $struct['function']= $callbackFunction;
 	    if( isset($alias) &&
@@ -3630,6 +3731,9 @@ class STBaseTable
 	}
     protected function callbackA(array $struct)//$action, $columnName, $callbackFunction)
     {
+		if(STCheck::isDebug())
+			$this->validateCallbackFunction($struct['function']);
+
 		if(isset($struct['column']))
 		{
 		    $field= $this->findAliasOrColumn($struct['column']);
