@@ -2219,12 +2219,34 @@ class STDbTable extends STBaseTable
                 //preg_match("/^([^_]+)_(ASC|DESC)$/i", $column, $inherit);
                 preg_match("/^(.+)_(ASC|DESC)$/i", $column, $inherit);
                 $field= $this->searchByAlias($inherit[1]);
+				if( !isset($field) )
+				{
+					// if the column is not found in the table,
+					// search in foreign key tables
+					// this is needed if the column is an alias from a foreign key table
+					// toDo: it is not known which number of selected column is used.
+					//		 This mean it can be that from an other foreign key column
+					//		 there the identif-column can have the same alias
+					// toDo: make shure to select the correct FK table for right ordering
+					foreach($aNeededColumns as $columnContent)
+					{
+						$fkTableName= $this->getFkTableName($columnContent["column"]);
+						if(	isset($fkTableName) &&
+							$this->Name != $fkTableName	)
+						{
+							$fkTable= $this->getTable($fkTableName);
+							$field= $fkTable->searchByAlias($inherit[1], /*onlyShowIdentif*/false);
+							if( isset($field) )
+								break;
+						}
+					}
+				}
                 if( isset($field["column"]) )
                 {
                     $aliasTable= "";
                     if(count($aTableAlias) > 1)
                         $aliasTable= $aTableAlias[$field['table']].".";
-                        $query_statement.= $aliasTable.$field["column"]." ".$inherit[2].",";
+                    $query_statement.= $aliasTable.$field["column"]." ".$inherit[2].",";
                 }elseif(STCheck::isDebug())
                 {
                     if( isset($queryArr["stget"]["action"]) &&

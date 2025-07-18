@@ -1855,10 +1855,7 @@ class STBaseTable
     			STCheck::param($add, 5, "bool");
     			$nParams= func_num_args();
     			STCheck::lastParam(5, $nParams);
-		    }
-		    
-			if(STCheck::isDebug())
-			{
+
 				STCheck::alert(!$this->validColumnContent($column), "STBaseTable::selectA()",
 											"column $column not exist in table ".$this->Name.
 											"(".$this->getDisplayName().")");
@@ -2294,45 +2291,56 @@ class STBaseTable
 		 * as seleted column or only as identif column
 		 * 
 		 * @param string $aliasName
+		 * @param bool|null $bOnlyShowIdentif search only in selected columns (value true)
+		 * 									  or only in identif-columns (value false).
+		 * 									  As default (value null) search in both
 		 * @return array|NULL array with tablename, aliasname, type is alias and get as select or identif
 		 */
-		function searchByAlias(string $aliasName)
+		function searchByAlias(string $aliasName, bool|null $bOnlyShowIdentif= null)
 		{
 			STCheck::param($aliasName, 0, "string");
 
-			foreach($this->show as $field)
-			{
-				if(	isset($field["alias"]) &&
-					$field["alias"] == $aliasName	)
+			if( !isset($bOnlyShowIdentif) ||
+				$bOnlyShowIdentif === true	)
+			{// search in selected columns
+				foreach($this->show as $field)
 				{
-					$aRv= $field;
-					// 17/02/2023 alex
-					// table should always from original
-					//$aRv["table"]= $this->Name;
-					$aRv["type"]= "alias";
-					$aRv["get"]= "select";
-					$this->addFkDescription($aRv);
-					//$aRv["alias"]= $field["alias"];
-					return $aRv;
+					if(	isset($field["alias"]) &&
+						$field["alias"] == $aliasName	)
+					{
+						$aRv= $field;
+						// 17/02/2023 alex
+						// table should always from original
+						//$aRv["table"]= $this->Name;
+						$aRv["type"]= "alias";
+						$aRv["get"]= "select";
+						$this->addFkDescription($aRv);
+						//$aRv["alias"]= $field["alias"];
+						return $aRv;
+					}
 				}
 			}
-			foreach($this->identification as $column)
-    		{
-    			if( isset($column["alias"]) &&
-    				$column["alias"] == $aliasName	)
-    			{
-    			    $aRv= $column;
-    			    // 17/02/2023 alex
-    			    // table should always from original
-    			    //$aRv["table"]= $this->Name;
-					$aRv["type"]= "alias";
-    				$aRv["get"]= "identif";
-					$this->addFkDescription($aRv);
-					//$aRv["alias"]= $column["alias"];
-					//st_print_r($aRv);
-    				return $aRv;
-    			}
-    		}
+			if( !isset($bOnlyShowIdentif) ||
+				$bOnlyShowIdentif === false	)
+			{// search in identif columns
+				foreach($this->identification as $column)
+				{
+					if( isset($column["alias"]) &&
+						$column["alias"] == $aliasName	)
+					{
+						$aRv= $column;
+						// 17/02/2023 alex
+						// table should always from original
+						//$aRv["table"]= $this->Name;
+						$aRv["type"]= "alias";
+						$aRv["get"]= "identif";
+						$this->addFkDescription($aRv);
+						//$aRv["alias"]= $column["alias"];
+						//st_print_r($aRv);
+						return $aRv;
+					}
+				}
+			}
 			return null;
 		}
 		function &isForeignKey($columnName, $bIsColumn= false)
