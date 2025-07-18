@@ -2208,11 +2208,11 @@ class STDbTable extends STBaseTable
             }
         }
         $statement= substr($statement, 0, strlen($statement)-1);
-        $tableName= $this->getName();
         $query= new STQueryString();
-        $queryArr= $query->getArrayVars();
-        if(isset($queryArr["stget"]["sort"][$tableName]))
-        {
+        $queryArr= $query->getArrayVars();		
+        if(	$tableName == $this->Name &&
+			isset($queryArr["stget"]["sort"][$tableName])	)
+        {// kollia 2025/07/18: search for order statement in query only for current table
             $query_statement= "";
             foreach($queryArr["stget"]["sort"][$tableName] as $column)
             {
