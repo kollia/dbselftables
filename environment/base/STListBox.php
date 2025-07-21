@@ -416,10 +416,25 @@ class STListBox extends STBaseBox
 				echo __file__.__line__;
 				st_print_r($where,10);
 			}
-			// alex 28/06/2005:	kontrolliere ob eine fixe Einschr�nkung vorhanden ist
-			//					und gib diese dann in die Where-Clausl
-			// alex 03/08/2005: kontrolle der fixen Einschr�nkung nach STDatabase verschoben
-			
+			if(	STCheck::isDebug("test") &&
+				(	(	$this->asDBTable->canUpdate() &&
+						$this->asDBTable->hasAccess(STUPDATE)	) ||
+					(	$this->asDBTable->canDelete() &&
+						$this->asDBTable->hasAccess(STDELETE)	)		)	)
+			{
+				$pk= $this->asDBTable->getPkColumnName();
+				$field= $this->asDBTable->searchByColumn($pk);
+				if(	!isset($field) ||
+					(	isset($field['get']) &&
+						$field['get'] === false	) )
+				{// if the primary key is not in selet statement create get column
+					$this->asDBTable->getColumn($tableName, $pk);
+				}
+			}
+			// alex 28/06/2005:	check whether a fix restriction exist
+			//					and give them into the werer-clause
+			// alex 03/08/2005: restriction check swift into STDababase
+
 			if(typeof($oTable, "STDBSelector"))
 			{
 				$this->oSelector= &$oTable;
@@ -434,7 +449,6 @@ class STListBox extends STBaseBox
 					$firstRow= 0;
 				$this->oSelector->limit($firstRow, $nMaxSelect);
 			}
-			
 			$this->statement= $this->oSelector->getStatement();
 			$aliases= array();
 			$aliases= $this->db->getAliasOrder();
@@ -2516,9 +2530,26 @@ class STListBox extends STBaseBox
 				$this->makeResult($onError);
 
 			if(STCheck::isDebug("test"))
-			{
-				$pk= $this->asDBTable->getPkColumnName();
-				$value= $this->sqlResult[0][$pk];
+			{//toDo: check what to do if no primary key in selection
+				$bUpdate= false;
+				$bDelete= false;
+				if(	$this->asDBTable->canUpdate() &&
+					$this->asDBTable->hasAccess(STUPDATE)	)
+				{
+					$bUpdate= true;
+				}
+				if(	$this->asDBTable->canDelete() &&
+					$this->asDBTable->hasAccess(STDELETE)	)
+				{
+					$bDelete= true;
+				}
+				if(	$bUpdate ||
+					$bDelete	)
+				{
+					$pk= $this->asDBTable->getPkColumnName();
+					$field= $this->asDBTable->searchByColumn($pk);
+					$value= $this->sqlResult[0][$field["alias"]];
+				}
 				$container= $this->asDBTable->container->getContainerName();
 				$table= $this->asDBTable->getName();
 				if(	$this->asDBTable->canInsert() &&
@@ -2529,16 +2560,14 @@ class STListBox extends STBaseBox
 					$url= $query->getUrlParamString();
 					STCheck::test_tagClassAttributeLinks("edit", "###link", $url);
 				}
-				if(	$this->asDBTable->canUpdate() &&
-					$this->asDBTable->hasAccess(STUPDATE)	)
+				if($bUpdate)
 				{
 					$query= new STQueryString();
 					$query->setLimitation(STUPDATE, $container, $table, $pk, $value);
 					$url= $query->getUrlParamString();
 					STCheck::test_tagClassAttributeLinks("edit", "###link", $url);
 				}
-				if(	$this->asDBTable->canDelete() &&
-					$this->asDBTable->hasAccess(STDELETE)	)
+				if($bDelete)
 				{
 					$query= new STQueryString();
 					$query->setLimitation(STDELETE, $container, $table, $pk, $value);

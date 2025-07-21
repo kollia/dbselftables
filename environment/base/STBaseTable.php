@@ -3317,7 +3317,7 @@ class STBaseTable
 	 * @param object $address can be an address which should link to, or an STBaseContainer to which link should set
 	 * @param string $valueColumn pre defined link when selection should be disabled
 	 */ 
-	protected function linkA(string $which, string $tableName, array $column, $address= null, string $valueColumn= null)
+	protected function linkA(string $which, string $tableName, array $column, $address= null, ?string $valueColumn= null)
 	{
 	    if(STCheck::isDebug())
 	    {
