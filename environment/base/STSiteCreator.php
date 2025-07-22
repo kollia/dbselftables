@@ -923,6 +923,7 @@ class STSiteCreator extends HtmlTag
 				$testdebug['step']= $step;
 				$testdebug['container']= $this->getContainerName();
 				$testdebug['table']= $this->getTableName();
+				$testdebug['oupval']= null; // old update value
 				$testdebug['tables']= $global_selftable_test_links['table']['count'];
 				$testdebug['count']= $step; // on beginning step define also whether the first shows an table or table listing
 				$testdebug['link-type']= $type;
@@ -1342,6 +1343,41 @@ class STSiteCreator extends HtmlTag
 		$this->report['description']= $description;
 	}
 	/**
+	 * create site number container/table/steps for report
+	 * 
+	 * @param int $step  step number of current action
+	 * @return string site number
+	 */
+	protected function getSiteNumber(int $step) : string
+	{
+		$query= new STQueryString();
+		$currentRow= $query->getParameterValue("stget", "firstrow");
+		$container= $this->getContainerName();
+		$sContHash = "C" . substr(md5($container), 0, 4);
+		$table= $this->getTable();
+		if(!isset($table))
+		{
+			$tableName= $this->getTableName();
+			if($tableName == "")
+				$tableName= "#no-table";
+			$sTabNr = "B" . substr(md5($tableName), 0, 4);
+		}else
+		{
+			$sTabNr = $table->getTableNumber();
+			$tableName= "no-table";
+		}
+		$sStepNr= "S";
+		if($step < 10)
+			$sStepNr .= "0";
+		$sStepNr .= $step;
+		if(isset($currentRow[$tableName]))
+			$sStepNr .= "R" . $currentRow[$tableName];
+		else
+			$sStepNr .= "R0";
+		$sRv = $sContHash . $sTabNr . $sStepNr;
+		return $sRv;
+	}
+	/**
 	 * member variable to report
 	 * values for later use
 	 * @var array $report
@@ -1351,9 +1387,16 @@ class STSiteCreator extends HtmlTag
 	{
 		global $__global_finished_SiteCreator_result;
 
+		if(	!STCheck::isDebug("test.see") &&
+			(	$__global_finished_SiteCreator_result === "NOERROR" ||
+				$__global_finished_SiteCreator_result === "BOXDISPLAY"	)	)
+		{
+			return ""; // no report if no error output
+		}
 		$container= $this->report['container'];
 		$table= $this->report['table'];
 		$step= $this->report['step'];
+		$siteNr= $this->getSiteNumber($step);
 		$action= $this->report['action'];
 		$description= $this->report['description'];
 		$this->report= array();
@@ -1380,6 +1423,7 @@ class STSiteCreator extends HtmlTag
 			$action.= " PK ".$testdebug['last-insert'][$pkColumn];
 		}
 		$report= " *******************************************************************************\n";
+		$report.= " ***      site Nr: $siteNr\n";
 		$report.= " ***    container: $container\n";
 		$report.= " ***        table: $table\n";
 		$report.= " ***         step: $step for table in container\n";

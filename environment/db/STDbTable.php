@@ -128,6 +128,17 @@ class STDbTable extends STBaseTable
 		$this->aFks= &$main->aFks;
 		$this->aBackJoin= &$main->aBackJoin;
     }
+	public function getTableNumber() : string
+	{
+		$dbName= $this->db->getDatabaseName();
+		$sRv= "D".substr(md5($dbName), 0, 4)."T";
+		$aliases= $this->getAliasOrder();
+		if(isset($aliases[$this->Name]))
+			$sRv.= $aliases[$this->Name];
+		else
+			$sRv.= STBaseTable::getTableNumber();
+		return $sRv;
+	}
 	function copy($oTable)
 	{
 		STCheck::param($oTable, 0, "STDbTable");

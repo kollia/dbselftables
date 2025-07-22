@@ -2,10 +2,12 @@
 
 require_once($_stsession);
 
+$__static_global_STBaseTable_Nr= array();
 $__static_global_STBaseTable_ID= array();
 
 class STBaseTable
 {
+	protected $Nr= 0;
     protected $ID= 0;
 	var $Name;
 	/**
@@ -228,6 +230,7 @@ class STBaseTable
 	  */
 	function __construct($oTable= null)
 	{
+		global $__static_global_STBaseTable_Nr;
 	    global $__static_global_STBaseTable_ID;
 	    
 		STCheck::param($oTable, 0, "string", "STBaseTable", "null");
@@ -253,6 +256,9 @@ class STBaseTable
 			$__static_global_STBaseTable_ID[$this->Name]++;
 		else
 			$__static_global_STBaseTable_ID[$this->Name]= 0;
+		if(!in_array($this->Name, $__static_global_STBaseTable_Nr))
+			$__static_global_STBaseTable_Nr[]= $this->Name;
+		$this->Nr = array_search($this->Name, $__static_global_STBaseTable_Nr);
 		$this->ID= $__static_global_STBaseTable_ID[$this->Name];	
     	STCheck::increase("table");
         if( STCheck::isDebug() &&
@@ -393,6 +399,18 @@ class STBaseTable
 	public function __toString() : string
 	{
 	    return $this->toString();
+	}
+	public function getTableNumber() : string
+	{
+		$sRv= "";
+		if($this->Nr < "1000")
+			$sRv.= "0";
+		if($this->Nr < "100")
+			$sRv.= "0";
+		if($this->Nr < "10")
+			$sRv.= "0";
+		$sRv.= $this->Nr;
+		return $sRv;
 	}
 	public function &getDatatypes() : array
 	{

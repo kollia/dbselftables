@@ -75,6 +75,17 @@ class STDbSelector extends STDbTable implements STContainerTempl
 		    STDbTable::__clone();
 		    STCheck::echoDebug("table", "clone STDbSelector::content ".$this->Name.":".$this->ID);
 		}
+		public function getTableNumber(): string
+		{
+			$dbName= $this->db->getDatabaseName();
+			$sRv= "D".substr(md5($dbName), 0, 4)."T";
+			$aliases= $this->getAliasOrder();
+			foreach($this->aoToTables as $tableName=>$table)
+			{
+				$sRv.= $aliases[$tableName];
+			}
+			return $sRv;
+		}
 		function add($table)
 		{
 			Tag::paramCheck($table, 1, "string", "STDbTable");
