@@ -110,7 +110,7 @@ the FK in table as 'from Country'. This you see by updating row or by insert (cl
 To sort the table, the user has always the possibility to order the table by clicking in the headlines. 
 If you want an other order by begin, order the table with the command ->orderBy()
 ```ex. $state->orderBy("name"); ```<br />
-You can also limit the table listing with ->setMaxRowSelect(&lt;rowNr&gt;)
+You can also limit the table listing with ->setMaxRowSelect(&lt;row-count&gt;)
 
 here the full code for all tables:<br />
 <b>[ [02_table_listing.php](examples/02_table_listing.php)]</b>
