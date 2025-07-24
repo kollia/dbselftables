@@ -4,7 +4,7 @@ The goal of this project is for you to design your database table and automatica
 This solution can be useful for research if you have written your own specific algorithm that uses data from the database. 
 When first developing, you make your data available via an SQL interface such as phpMyAdmin. After that, when your own project is finished and you want to make it usable for other users, you need an interface through which others can also insert data. In this case, you can link to the generated interface from the DB selfTables from your own project.
 
-Or you just want to collect data for later use or something else. There are many more solutions you can use...
+Or maybe you just want to collect data for future use, create statistics, or something else. There are many other solutions you can use...
 
 
 ## INSTALLATION
@@ -14,8 +14,15 @@ and using as database MariaDb or MySql
 You can download the .zip or .tar.zip package from last release on the right column in the About-Panel and extract this in your project folder.
 Or if you work with git, clone the main repository which should be the same.
 ```
-git clone https://github.com/kollia/dbselftables.git
+git clone --recurse-submodules https://github.com/kollia/dbselftables.git
 ```
+The option `--recursive-submodules` will be used to download also some external submodules inside the plugins order.
+If you have cloned the repository in an previuse version and need now a submodule which not exist before, no problem, 
+use:
+```
+git submodule update --init --recursive
+```
+
 <br />
 
 the folder structure should be:
@@ -103,7 +110,7 @@ the FK in table as 'from Country'. This you see by updating row or by insert (cl
 To sort the table, the user has always the possibility to order the table by clicking in the headlines. 
 If you want an other order by begin, order the table with the command ->orderBy()
 ```ex. $state->orderBy("name"); ```<br />
-You can also limit the table listing with ->setMaxRowSelect(<count>)
+You can also limit the table listing with ->setMaxRowSelect(&lt;rowNr&gt;)
 
 here the full code for all tables:<br />
 <b>[ [02_table_listing.php](examples/02_table_listing.php)]</b>
