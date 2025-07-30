@@ -80,7 +80,7 @@ now you can have three solutions:
 >           if you want to know from what is being talked about.
 
 the first what you should do is to define which column(s) describe the table as best.<br />
-In my example db there we have among other tables `Country` and `State`. If you look on the website
+In the example db there we have among other tables `Country` and `State`. If you look on the website
 clicking on the `[State]` button. You see the table with the columns:
 `state_id`, `name`, `country_id`
 but the table in the database has:
@@ -100,7 +100,7 @@ $state->setDisplayName("States");
 $state->select("name", "Name");
 $state->select("country", "from Country");
 ```
-You see now in table State as second position the name of the country as 'Country', altough you defined
+You see now in table State as second position the name of the country as 'Country' (identif-column from table Country), altough you defined
 the FK in table as 'from Country'. This you see by updating row or by insert (clicking on button 'new Entry')
 
 > **Tipp:** for developing, it's a good choice to set after including 'st_pathdef.inc.php' 
