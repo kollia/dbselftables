@@ -189,10 +189,9 @@ $article->setMaxRowSelect(50);
 
 ```
 
-<br />
-... and execute/display in an second file, for late changes.<br />
-<b>[ [03_basic_display.php](examples/03_basic_display.php) ]</b>
+... and execute/display in a second file, for late changes.
 
+**[ [03_basic_display.php](examples/03_basic_display.php) ]**
 ```php
 <?php
 
