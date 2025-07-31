@@ -192,6 +192,7 @@ $article->setMaxRowSelect(50);
 ... and execute/display in an second file, for late changes.<br />
 <b>[ [02_common_db.php](examples/02_common_db.php) ]</b>
 ```php
+<?php
 
 require_once '02_common_db.php';
 
