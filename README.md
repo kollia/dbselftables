@@ -16,7 +16,7 @@ Or if you work with git, clone the main repository which should be the same.
 ```
 git clone --recurse-submodules https://github.com/kollia/dbselftables.git
 ```
-The option `--recursive-submodules` will be used to download also some external submodules inside the plugins order.
+The option `--recurse-submodules` will be used to download also some external submodules inside the plugins order.
 If you have cloned the repository in an previuse version and need now a submodule which not exist before, no problem, 
 use:
 ```
