@@ -252,13 +252,13 @@ It is also possible to link to a container over an table entry, see below as in 
 
 
 
-now the final creation by structuring the website:<br />
+here the code with new knoledge and more ...<br />
 (we use the first database container only as template)<br />
-<b>[ [04_basic_main.php](examples/04_basic_main.php) ]</b>
+**[ [04_basic_main.php](examples/04_basic_main.php) ]**
 ```php
 <?php
 
-require_once '03_common_db.php';
+require_once '02_common_db.php';
 
 //STCheck::debug("query"); // <- to see current query from URL
 

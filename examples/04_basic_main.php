@@ -1,6 +1,6 @@
 <?php
 
-require_once '03_common_db.php';
+require_once '02_common_db.php';
 require_once $_stsitecreator;
 
 //STCheck::debug("query"); // <- to see current query from URL
