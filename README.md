@@ -112,132 +112,9 @@ If you want an other order by begin, order the table with the command ->orderBy(
 ```ex. $state->orderBy("name"); ```<br />
 You can also limit the table listing with ->setMaxRowSelect(&lt;row-count&gt;)
 
-here the full code for all tables:<br />
-<b>[ [02_table_listing.php](examples/02_table_listing.php)]</b>
-```php
-<?php
-
-require_once 'dbselftables/st_pathdef.inc.php';
-require_once $_stdbmariadb;
-require_once $_stsitecreator;
-
-//STCheck::debug(true); // <- a good choice for developing
-
-$db= new STDbMariaDb();
-$db->connect('<host>', '<user>', '<password>');
-$db->database('<your preferred database>');
-
-
-$country= $db->getTable("Country");
-$country->setDisplayName("existing Countries");
-$country->identifColumn("name", "Country");
-$country->select("name", "Name");
-$country->setMaxRowSelect(20);
-
-$state= $db->getTable("State");
-$state->setDisplayName("States");
-$state->identifColumn("name", "State");
-$state->select("name", "Name");
-$state->select("country", "from Country");
-$state->orderBy("name");
-$state->setMaxRowSelect(20);
-
-$county= $db->getTable("County");
-$county->identifColumn("name", "County");
-$county->select("state", "State");
-$county->select("name", "County");
-$county->setMaxRowSelect(50);
-
-$person= $db->getTable("Person");
-$person->identifColumn("first_name", "first Name");
-$person->identifColumn("last_name", "last Name");
-$person->select("first_name", "first Name");
-$person->select("last_name", "last Name");
-$person->select("address", "Address");
-$person->setMaxRowSelect(50);
-
-$address= $db->getTable("Address");
-$address->identifColumn("city", "City");
-$address->identifColumn("street", "Street");
-//$address->identifColumn("county", "County");
-$address->select("city", "City");
-$address->select("street", "Street");
-$address->select("county", "from County");
-$address->setMaxRowSelect(50);
-
-$order= $db->getTable("Order");
-$order->identifColumn("bill_id", "Order ID");
-$order->select("bill_id", "Order ID");
-$order->select("person", "for Person");
-$order->select("article", "Article");
-$order->select("amount", "Amount");
-$order->setMaxRowSelect(50);
-
-$article= $db->getTable("Article");
-$article->identifColumn("title", "Article");
-$article->select("title", "Article");
-$article->select("content", "Description");
-//$article->select("price", "Price");
-$article->setMaxRowSelect(50);
-
-
-$creator= new STSiteCreator($db);
-$creator->addCssLink('dbselftables/design/websitecolors.css');
-$creator->execute();
-$creator->display();
-
-```
-
-<br /><br />
-### structuring Website
-
-Maybe this will be a little confusing when the user see all seven tables first.<br />
-If you want to see only some tables, you can use needTable() instead of getTable().<br />
-like this:<br />
-```php
-// configure tables with ->getTable("...")
-$country= $db->getTable("Country");
-// ... some configuration
-// ... also other tables
-
-$article= $db->needTable("Article");
-// ... some configuration
-// and
-$order= $db->needTable("Bill");
-// ... some configuration
-```
-In this case, you have all seven tables organized, but only see the two defined tables you need.
-
-The idea of ​​the project is to have a container for each web page which can display one or more tables.<br />
-<br />
-&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;![STDbContainers](wiki/ContainerStack.png?raw=true "STDbContainer stack")
-
-The database (STDbMariaDb) that you configured first is also a container.
-
-
-For an second website create a new `STObjectContainer` from an existing container. The tables you have configured before are the same. Only you want other columns (identifColumns), you need to select the new colums.
-The definition from the container before are the default config.
-```php
-$addressee= new STObjectContainer("addressee", $db);
-$addressee->needTable("Country");
-$addressee->needTable("State");
-$addressee->needTable("County");
-$addressee->needTable("Person");
-$addressee->needTable("Address");
-$addressee->setFirstTable("Person");
-
-$db->needContainer($addressee);
-```
-You see that the container `STObjectContainer` need a name. This is also for the database which have as default the name `main-menue`.
-(If you need an second other database, you have to define in the constructor)<br />
-To link to this created other container, the container object is implemented with <nobr>`->needContainer(<object>)`</nobr> and you have access to them over a button like the other tables.
-It is also possible to link to a container over an table entry, see below as in the table Bill to Order.
-
 Now let us organize the scripts inside two files.<br />
-This common_db php file is the same as `02_table_listing.php`<br />
-only the last four lines of creation from `STSiteCreator()` are missing
-and will be done in the next file.<br />
-<b>[ [03_common_db.php](examples/03_common_db.php) ]</b>
+Inside the common_db php file the primary configurations of database ...<br />
+<b>[ [02_common_db.php](examples/02_common_db.php) ]</b>
 ```php
 <?php
 
@@ -311,6 +188,67 @@ $article->select("price", "Price");
 $article->setMaxRowSelect(50);
 
 ```
+<br />
+... and execute/display in an second file, for late changes.<br />
+<b>[ [02_common_db.php](examples/02_common_db.php) ]</b>
+```php
+
+require_once '02_common_db.php';
+
+$creator= new STSiteCreator($db);
+$creator->addCssLink('dbselftables/design/websitecolors.css');
+$creator->execute();
+$creator->display();
+
+```
+
+
+<br /><br />
+### structuring Website
+
+Maybe this will be a little confusing when the user see all seven tables first.<br />
+If you want to see only some tables, you can use needTable() instead of getTable().<br />
+like this:<br />
+```php
+// configure tables with ->getTable("...")
+$country= $db->getTable("Country");
+// ... some configuration
+// ... also other tables
+
+$article= $db->needTable("Article");
+// ... some configuration
+// and
+$order= $db->needTable("Bill");
+// ... some configuration
+```
+In this case, you have all seven tables organized, but only see the two defined tables you need.
+
+The idea of ​​the project is to have a container for each web page which can display one or more tables.<br />
+<br />
+&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;![STDbContainers](wiki/ContainerStack.png?raw=true "STDbContainer stack")
+
+The database (STDbMariaDb) which you configured first is also a container.
+
+
+For an second website create a new `STObjectContainer` from an existing container. The tables you have configured before are the same. Only you want other columns (identifColumns), you need to select the new colums.
+The definition from the container before are the default config.
+```php
+$addressee= new STObjectContainer("addressee", $db);
+$addressee->needTable("Country");
+$addressee->needTable("State");
+$addressee->needTable("County");
+$addressee->needTable("Person");
+$addressee->needTable("Address");
+$addressee->setFirstTable("Person");
+
+$db->needContainer($addressee);
+```
+You see that the container `STObjectContainer` need a name. This is also for the database which have as default the name `main-menue`.
+(If you need an second other database, you have to define in the constructor)<br />
+To link to this created other container, the container object is implemented with <nobr>`->needContainer(<object>)`</nobr> and you have access to them over a button like the other tables.
+It is also possible to link to a container over an table entry, see below as in the table Bill to Order.
+
+
 
 now the final creation by structuring the website:<br />
 (we use the first database container only as template)<br />
