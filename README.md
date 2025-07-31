@@ -114,7 +114,6 @@ You can also limit the table listing with ->setMaxRowSelect(&lt;row-count&gt;)
 
 Now let us organize the scripts inside two files.<br />
 Inside the common_db php file the primary configurations of database ...<br />
-<b>[ [02_common_db.php](examples/02_common_db.php) ]</b><br />
 <b>[ [02_common_db.php](examples/02_common_db.php) ]</b>
 ```php
 <?php
@@ -189,6 +188,7 @@ $article->select("price", "Price");
 $article->setMaxRowSelect(50);
 
 ```
+
 <br />
 ... and execute/display in an second file, for late changes.<br />
 <b>[ [03_basic_display.php](examples/03_basic_display.php) ]</b>
