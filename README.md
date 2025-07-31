@@ -120,7 +120,6 @@ Inside the common_db php file the primary configurations of database ...<br />
 
 require_once 'dbselftables/st_pathdef.inc.php';
 require_once $_stdbmariadb;
-require_once $_stsitecreator;
 
 //STCheck::debug(true); // <- a good choice for developing
 
