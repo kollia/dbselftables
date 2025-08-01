@@ -16,6 +16,11 @@ class STSiteCreator extends HtmlTag
                         "nation"    => 'XXX', // <- undefined
                         "format"    => 'UTF-8'      );
 
+	/**
+	 * generated number unique for every site
+	 * @var string
+	 */
+	private $generatedSiteNumber= null;
 		var	$db;
 		var	$defaultTitles= array();
 		var	$project;
@@ -861,6 +866,7 @@ class STSiteCreator extends HtmlTag
 	 * @var array $aTestTypes
 	 */
 	private array $aTestTypes= array("back_tables", "edit", "table", "action", "container_back");
+	private string $reportFilename= "selftable_test_report.txt";
 	/**
 	 * testing all containers and tables
 	 * with <code>STCheck::debug("test")</code>
@@ -870,9 +876,9 @@ class STSiteCreator extends HtmlTag
 		global $global_selftable_test_links;
 		global $__global_finished_SiteCreator_result;
 		global $HTML_CLASS_DEBUG_CONTENT_CLASS_FUNCTION;
+		global $global_selftable_testing_file_warnings;
 
 		$report= "";
-		$reportFilename= "selftable_test_report.txt";
 		$query= new STQueryString();
 		//$query->update("set=5");
 		$testdebug= $query->getParameterValue("testdebug");
@@ -923,16 +929,17 @@ class STSiteCreator extends HtmlTag
 				$testdebug['step']= $step;
 				$testdebug['container']= $this->getContainerName();
 				$testdebug['table']= $this->getTableName();
-				$testdebug['oupval']= null; // old update value
+				$testdebug['oupval']= array(); // old update values
 				$testdebug['tables']= $global_selftable_test_links['table']['count'];
 				$testdebug['count']= $step; // on beginning step define also whether the first shows an table or table listing
 				$testdebug['link-type']= $type;
 				$testdebug['link-class']= "STChoose-menue-button"; //should be first link class
 				$testdebug['last-insert']= null;
-				$testdebug['backbutton-test']= "false";
-				$testdebug['onEditLinkCount']= -1;
-				$testdebug['onEditDeleteCount']= -1;
-				$testdebug['onTableTagCount']= -1;
+				$testdebug['progress']= array();
+				$testdebug['progress']['onTableTagCount']= -1;
+				$testdebug['progress']['backbutton-test']= "false";
+				$testdebug['progress']['onEditLinkCount']= -1;
+				$testdebug['progress']['onEditDeleteCount']= -1;
 				$report= "\n\n";
 				$report.= " ****************************************\n";
 				$report.= " ***  new DBSelfTables test started\n";
@@ -965,25 +972,59 @@ class STSiteCreator extends HtmlTag
 					++$testdebug['count'];
 				}
 			}
+			/**
+			 * existing step cases:
+			 *	case 0 -> go to first table-button listing
+			 *  case 1 -> go to insert/update box to test backbutton
+			 *  case 2 -> display item box to test back-button
+			 *  case 3 -> show table listing again
+			 *  case 4 -> go to item box for new entry
+			 * 	case 5 -> insert new entry done, go back to table listing
+			 *  case 6 -> go to update box
+			 * 	case 7 -> display item box to update entry
+			 *  case 8 -> update entry done, go back to table listing
+			 * 	case 9 -> show table listing to delete entry inserted before
+			 *  case 10 -> delete entry done, go back to table listing
+			 * 	case 11 -> go to table listing for next table
+			 */
 			$this->createContainerReport($testdebug['step']);
+			/**
+			 * AFTER method createContainerReport() see in WATCH window
+			 * 		$this->report
+			 * 			 		['container']	- name of container
+			 * 					['table']		- name of table
+			 * 					['action']		- current action of table
+			 * 					['step']		- current step in test
+			 * 			 		['description']	- description of current step
+			 * 
+			 * 		$testdebug['progress']
+			 * 					['onTableTagCount']		- count of seen table in current container begin by 0
+			 * 					['backbutton-test']		- first step is back-button tested
+			 * 					['onEditLinkCount']+1	- current step in edit ##link (STINSERT, STUPDATE) (res:2 = done)
+			 * 					['onEditDeleteCount']+1	- current step in edit ##delete (STDELETE) (res:1 = done)
+			 * 
+			 * 		$sorted_selftable_test_links['edit']
+			 * 					['###link']		- array with links to edit (STINSERT, STUPDATE)
+			 * 					['###delete']	- array with links to delete (STDELETE)
+			 */
 
 			if(	$__global_finished_SiteCreator_result === "NOERROR" ||
 				$__global_finished_SiteCreator_result === "BOXDISPLAY"	) // ||
 			//	$__global_finished_SiteCreator_result === "EMPTY_RESULT"	)
 			{
-				// 
+				// Check if there are no back_tables or action links
 				if(	!isset($sorted_selftable_test_links['back_tables']) &&
 					!isset($sorted_selftable_test_links['action'])			)
 				{
-					if( !isset($sorted_selftable_test_links['edit']['###link'][$testdebug['onEditLinkCount']+1]) &&
-						!isset($sorted_selftable_test_links['edit']['###delete'][$testdebug['onEditDeleteCount']+1])	)
-					{ // [0][10] Pos. beginning of tables 
+					if( $testdebug['step'] == 0 ||		//  0	- go to first table listing (only table-buttons are displayed)
+						$testdebug['step'] == 11	)	// 11	- go to table listing for next table
+					{ // [0][11] Pos. beginning of tables 
 						//       0 - go to first table listing (only table-buttons are displayed)
 						//      11 - go to table listing for next table
 						$link= $this->makeNextTableContainer_Test($testdebug, $sorted_selftable_test_links, $query);
 					}else
 					{ // [1][3][6] Pos. show table listing STListBox
-						//       1 - go to insert box
+						//       1 - go to insert/update box to test backbutton
 						//       3 - go to insert box again
 						//       6 - go to update box
 						//       9 - delete inserted before
@@ -1011,6 +1052,13 @@ class STSiteCreator extends HtmlTag
 				}
 				// to get last inserted PK, write containr report after localize new values
 				$sErrorOutput= STCheck::end_outputBuffer("test");
+				if(count($global_selftable_testing_file_warnings) > 0)
+				{
+					foreach($global_selftable_testing_file_warnings as $warning)
+						$sErrorOutput.= $warning."\n";
+					$sErrorOutput.= "\n\n";
+					$global_selftable_testing_file_warnings= array();
+				}
 				$report.= $this->writeContainerReport($testdebug, $sErrorOutput);
 
 				$type= $testdebug['link-type'];
@@ -1082,40 +1130,43 @@ class STSiteCreator extends HtmlTag
 			}
 		}else
 		{
-			$this->createContainerReport($testdebug['step']);
-			$sErrorOutput= STCheck::end_outputBuffer("test");
-			if(trim($sErrorOutput) != "")
+			if( $status != "finished" )
 			{
-				$report.= "\n\n";
-				$report.= " ****************************************\n";
-				$report.= " ***  ERROR: on Ending of test\n";
-				$report.= "\n";
-				$report.= $sErrorOutput;
-				$report.= "\n\n\n\n";
+				$this->createContainerReport($testdebug['step']);
+				$sErrorOutput= STCheck::end_outputBuffer("test");
+				if(trim($sErrorOutput) != "")
+				{
+					$report.= "\n\n";
+					$report.= " ****************************************\n";
+					$report.= " ***  ERROR: on Ending of test\n";
+					$report.= "\n";
+					$report.= $sErrorOutput;
+					$report.= "\n\n\n\n";
+				}
 			}
 		}
 
-		if(file_put_contents($reportFilename, $report, FILE_APPEND) === false)
+		if(file_put_contents($this->reportFilename, $report, FILE_APPEND) === false)
 		{
-			echo "<br /> ERROR: cannot write file $reportFilename<br />";
+			echo "<br /> ERROR: cannot write file {$this->reportFilename}<br />";
 			exit();
 		}
 	}
 	private function makeNextTableContainer_Test(array &$testdebug, array $sorted_selftable_test_links, STQueryString &$query) : string
 	{
 		// ( 0) - go to first table listing (only table-buttons are displayed)
-		// (10) - go to table listing for next table
+		// (11) - go to table listing for next table
 		$type= "table";
 		$testdebug['last-insert']= null;
-		$testdebug['backbutton-test']= "false";
-		$testdebug['onEditLinkCount']= -1;
-		$testdebug['onEditDeleteCount']= -1;
+		$testdebug['progress']['backbutton-test']= "false";
+		$testdebug['progress']['onEditLinkCount']= -1;
+		$testdebug['progress']['onEditDeleteCount']= -1;
 		$buttonClass= $testdebug['link-class'];
 		if(isset($sorted_selftable_test_links[$type][$buttonClass]))
 		{
 			$onAttribute= $sorted_selftable_test_links[$type][$buttonClass];
 			$tags= $this->getElementsByClass($buttonClass);
-			$tagCount= $testdebug['onTableTagCount'] + 1;
+			$tagCount= $testdebug['progress']['onTableTagCount'] + 1;
 			if(isset($tags[$tagCount]))
 			{
 				$link= $tags[$tagCount]->getAttribut($onAttribute);
@@ -1126,7 +1177,7 @@ class STSiteCreator extends HtmlTag
 				 // because on next beginning when count is 10
 				 // button of first table not be displayed
 				 // and should begin also on first table tags entry (0)
-					$testdebug['onTableTagCount']= $tagCount;
+					$testdebug['progress']['onTableTagCount']= $tagCount;
 					$testdebug['step']= 0; // increasing outside by type link to 1 for first step
 				}
 				$type= "link";
@@ -1145,7 +1196,7 @@ class STSiteCreator extends HtmlTag
 				$link= $this->updateQueryLink($query, $link);
 			}else
 			{
-				$link= "fault link set";
+				$link= "";
 				echo "  !!ERROR!!: no action link found for table listing<br />";
 			}
 			$testdebug['step']= 1;
@@ -1156,39 +1207,180 @@ class STSiteCreator extends HtmlTag
 	}
 	private function makeTableListing_Test(array &$testdebug, array $sorted_selftable_test_links, STQueryString &$query) : string
 	{
-		if(	isset($sorted_selftable_test_links['edit']['###link'][$testdebug['onEditLinkCount']+1]) ||
-			(	$testdebug['backbutton-test'] === "true" &&
-				isset($sorted_selftable_test_links['edit']['###delete'][$testdebug['onEditLinkCount']]	)	)	)
+		global $global_selftable_testing_allowSiteFaults,
+			   $global_selftable_testing_file_warnings;
+
+		if(	$testdebug['step'] > 1)
+		{
+			$bInsertLink= true;
+			$bUpdateLink= true;
+			$bDeleteLink= true;
+			$nLinks= count($sorted_selftable_test_links['edit']['###link']);
+			if($nLinks < 2)
+			{
+				if($nLinks == 1)
+				{
+					$query2= new STQueryString();
+					$query2->update($sorted_selftable_test_links['edit']['###link'][0]);
+					$action= $query2->getParameterValue("stget", "action");
+					if($action == STUPDATE)
+						$bInsertLink= false; // no insert link found
+					else
+						$bUpdateLink= false; // no update link found
+				}else
+				{
+					$bInsertLink= false; // no insert link found
+					$bUpdateLink= false; // and no update link found
+				}
+			}
+			if(!isset($sorted_selftable_test_links['edit']['###delete']))
+				$bDeleteLink= false; // no delete link found
+
+			$currentSiteNr= $this->getSiteNumberI($testdebug['step']);// from outside only this number reachable
+			if(	$testdebug['step'] == 3 &&
+				!$bInsertLink				)
+			{
+				$testdebug['step']= 6; // show listing before
+				$this->report['step']= 6; // update entry
+			}
+			if($testdebug['step'] == 6)
+			{
+				if(	$bUpdateLink &&
+					!$bInsertLink	)
+				{ 		
+					if(!isset($global_selftable_testing_allowSiteFaults['ERRORS'][$currentSiteNr]['update']))
+					{
+						$testdebug['step']= 9; // show listing before
+						$this->report['step']= 9; // delete entry
+						$update_error_msg= array();
+						$update_error_msg[]= "<b>ERROR</b>: no insert link found for table.";
+						$update_error_msg[]=         "         In this case, the update will not be tested.";
+						$update_error_msg[]=         "         If you want test this, type after STCheck::debug('test'):";
+						$update_error_msg[]=         "         STCheck::no_test_error('$currentSiteNr', 'update' [, &lt;PK&gt;]);";
+						$update_error_msg[]=         "         -> update PK if defined, otherwise";
+						$update_error_msg[]=         "            for a random entry in table.";
+						$update_error_msg[]=		 "         : If update set to random test, update will be done in two steps:";
+						$update_error_msg[]=		 "         : 1. string to 'update text (removeable)'";
+						$update_error_msg[]=		 "         :    int/float to random value";
+						$update_error_msg[]=		 "         : 2. all values back to original values";
+						$update_error_msg[]=		 "         :    -> ATTENTION: this can cause problems if first update break by error";
+						$global_selftable_testing_file_warnings= array_merge(
+											$global_selftable_testing_file_warnings, $update_error_msg);
+					}else
+					{
+						$update_warning_msg= array();
+						$update_warning_msg[]= "<b>WARNING</b>: no insert link found for table.";
+						$update_warning_msg[]=         "      Update now random PK in table.";
+						$global_selftable_testing_file_warnings= array_merge(
+											$global_selftable_testing_file_warnings, $update_warning_msg);
+					}
+				}elseif(!$bUpdateLink)
+				{
+					$testdebug['step']= 9; // show listing before
+					$this->report['step']= 9; // delete entry
+				}
+			}
+			if($testdebug['step'] == 9)
+			{
+				// all updates be done, so delete old values
+				$testdebug['oldUpdateVals']= array();
+				//$remove= array(	'testdebug' => array(	'oldUpdateVals' => array()	)	);
+				$query->delete("testdebug[oldUpdateVals]");
+
+				if(	$bDeleteLink &&
+					!$bInsertLink	)
+				{ 
+					if(!isset($global_selftable_testing_allowSiteFaults['ERRORS'][$currentSiteNr]['delete']))
+					{
+						$testdebug['step']= 11; // go to table listing for next table
+						$this->report['step']= 11; // go to table listing for next table
+						$currentUpdateSiteNr= $this->getSiteNumberI(/*step*/3);					
+						if(	$bUpdateLink &&
+							!isset($global_selftable_testing_allowSiteFaults['ERRORS'][$currentUpdateSiteNr]['update'])	)
+						{
+							$also_delete_msg= array();
+							$also_delete_msg[]=			 "         In this case, also deletion is not tested.";
+							$also_delete_msg[]=          "         allowed by STCheck::no_test_error('$currentSiteNr', 'delete', &lt;PK&gt;);";
+							$global_selftable_testing_file_warnings= array_merge(
+											$global_selftable_testing_file_warnings, $also_delete_msg);
+						}else
+						{
+							$delete_error_msg= array();
+							$delete_error_msg[]= "<b>ERROR</b>: no insert link found for table.";
+							$delete_error_msg[]=         "         In this case, deletion is not tested.";
+							$delete_error_msg[]=         "         If you want test this, type after STCheck::debug('test'):";
+							$delete_error_msg[]=         "         STCheck::no_test_error('$currentSiteNr', 'delete', &lt;PK&gt;);";
+							$global_selftable_testing_file_warnings= array_merge(
+											$global_selftable_testing_file_warnings, $delete_error_msg);
+						}
+						$this->makeNextTableContainer_Test($testdebug, $sorted_selftable_test_links, $query);
+						return ""; // no link to return, stay on site
+					}else
+					{
+						$also_delete_msg[]= "<b>WARNING</b>: no insert link found for table.";
+						$also_delete_msg[]=         "      Deletion now random PK in table.";
+						$global_selftable_testing_file_warnings= array_merge(
+											$global_selftable_testing_file_warnings, $also_delete_msg);
+					}
+				}elseif(!$bDeleteLink)
+				{ // no delete link found, so go to next table
+					$testdebug['step']= 11; // go to table listing for next table
+					$this->report['step']= 11; // go to table listing for next table
+					$this->makeNextTableContainer_Test($testdebug, $sorted_selftable_test_links, $query);
+					return ""; // no link to return, stay on site
+				}
+			}
+		}
+
+		if(	$testdebug['step'] == 1 || // go to insert/update box to test backbutton
+			$testdebug['step'] == 3 || // go to insert box
+			$testdebug['step'] == 6	 ) // go to update box
 		{// trigger now insert/update/delete link
-			
-			if($testdebug['backbutton-test'] === "true") // if backbutton-test, go back to
+
+			if($testdebug['progress']['backbutton-test'] === "true") // if backbutton-test, go back to
 			{                                             // first link from where comming
 				if(is_array($testdebug['last-insert']))
 				{
 					// (6) step go to update box
-					$testdebug['onEditLinkCount']++;
-					$link= $sorted_selftable_test_links['edit']['###link'][$testdebug['onEditLinkCount']];
+					$testdebug['progress']['onEditLinkCount']++;
+					$link= $sorted_selftable_test_links['edit']['###link'][$testdebug['progress']['onEditLinkCount']];
 					$link= $query->update($link);
 					$this->updateQueryLimitation($query, $testdebug);
 
+				}elseif(	$testdebug['step'] == 6 &&
+							isset($global_selftable_testing_allowSiteFaults['ERRORS'][$currentSiteNr]['update'])	)
+				{	// (6) step go to update box, no last-insert be defined
+					// and update ERRORS allowed
+					$link= $sorted_selftable_test_links['edit']['###link'][$testdebug['progress']['onEditLinkCount']];
+					$link= $query->update($link);
+
 				}else
-				{ // STINSERT
-					$link= $sorted_selftable_test_links['edit']['###link'][$testdebug['onEditLinkCount']];
+				{ // STINSERT (3) step go to insert box
+					$link= $sorted_selftable_test_links['edit']['###link'][$testdebug['progress']['onEditLinkCount']];
 					$link= $query->update($link);
 				}
 			}else
 			{
-				// (1) step go to insert box
-				$testdebug['onEditLinkCount']++;
-				$link= $sorted_selftable_test_links['edit']['###link'][$testdebug['onEditLinkCount']];
+				// (1) step go to insert/update box to test backbutton
+				$testdebug['progress']['onEditLinkCount']++;
+				$link= $sorted_selftable_test_links['edit']['###link'][$testdebug['progress']['onEditLinkCount']];
 				$link= $this->updateQueryLink($query, $link);
 			}
 		}else
-		{// remove inserted before
-			$testdebug['onEditDeleteCount']++;
-			$link= $sorted_selftable_test_links['edit']['###delete'][$testdebug['onEditDeleteCount']];
-			$link= $this->updateQueryLink($query, $link);
-			$this->updateQueryLimitation($query, $testdebug);
+		{// (9) step delete entry
+			if(isset($sorted_selftable_test_links['edit']['###delete']))
+			{
+				$testdebug['progress']['onEditDeleteCount']++;
+				$link= $sorted_selftable_test_links['edit']['###delete'][$testdebug['progress']['onEditDeleteCount']];
+				$link= $this->updateQueryLink($query, $link);
+				$this->updateQueryLimitation($query, $testdebug);
+			}else
+			{
+				$testdebug['step']= 11;
+				$this->report['step']= 11;
+				$this->report['description']= "go to table listing for next table";
+				return $this->makeNextTableContainer_Test($testdebug, $sorted_selftable_test_links, $query);
+			}
 		}
 		$testdebug['link-type']= "link";
 		return $link;
@@ -1225,10 +1417,10 @@ class STSiteCreator extends HtmlTag
 	{
 		global $global_selftable_test_links;
 
-		if($testdebug['backbutton-test'] === "false")
+		if($testdebug['progress']['backbutton-test'] === "false")
 		{// STItemBox should test first back-button
 			$type= "back_tables";
-			$testdebug['backbutton-test']= "true";
+			$testdebug['progress']['backbutton-test']= "true";
 			$link= $this->updateQueryLink($query, $sorted_selftable_test_links[$type]['###link']);
 			STCheck::warning(is_bool($link), "no correct back link found", 1);
 			$testdebug['step']++;// only for type link or edit steps will be increase later
@@ -1255,11 +1447,15 @@ class STSiteCreator extends HtmlTag
 					$testdebug['last-insert'][$pkColumn]= $value;
 				}else
 				{
-					$table= $query->getParameterValue("stget", "table");
-					$column= array_key_first($testdebug['last-insert']);
+					if(isset($global_selftable_test_links[STUPDATE]))
+						$pkColumn = array_key_first($global_selftable_test_links[STUPDATE]);
+					else
+						$pkColumn= array_key_first($testdebug['last-insert']);
+					
+					//$value= $global_selftable_test_links[STUPDATE][$pkColumn];
 					if(!isset($global_selftable_test_links[STUPDATE]))
-						$testdebug['backbutton-test']= "false";
-					$query->delete("stget[limit][$table][$column]");
+						$testdebug['progress']['backbutton-test']= "false";
+					$query->delete("stget[limit][{$this->report['table']}][$pkColumn]");
 				}
 				$link= $this->updateQueryLink($query, $sorted_selftable_test_links['action']['link']);
 				$query->update(array( 'testdebug' => $testdebug ));
@@ -1338,9 +1534,17 @@ class STSiteCreator extends HtmlTag
 		}
 		$this->report['container']= $this->getContainerName();
 		$this->report['table']= $this->getTableName();
-		$this->report['step']= $step;
 		$this->report['action']= $this->getAction();
+		$this->report['step']= $step;
 		$this->report['description']= $description;
+	}
+	public function getSiteNumber() : string
+	{
+		$query= new STQueryString();
+		$step= $query->getParameterValue("testdebug", "step");
+		if($step === null)
+			$step= 0; // default step
+		return $this->getSiteNumberI($step);
 	}
 	/**
 	 * create site number container/table/steps for report
@@ -1348,8 +1552,10 @@ class STSiteCreator extends HtmlTag
 	 * @param int $step  step number of current action
 	 * @return string site number
 	 */
-	protected function getSiteNumber(int $step) : string
+	private function getSiteNumberI(int $step) : string
 	{
+		if(isset($this->generatedSiteNumber))
+			return $this->generatedSiteNumber.$this->addStepNr($step);
 		$query= new STQueryString();
 		$currentRow= $query->getParameterValue("stget", "firstrow");
 		$container= $this->getContainerName();
@@ -1366,16 +1572,22 @@ class STSiteCreator extends HtmlTag
 			$sTabNr = $table->getTableNumber();
 			$tableName= "no-table";
 		}
+		$sRv = $sContHash . $sTabNr;
+		if(isset($currentRow[$tableName]))
+			$sRv .= "R" . $currentRow[$tableName];
+		else
+			$sRv .= "R0";
+		$this->generatedSiteNumber= $sRv;
+		$sRv.= $this->addStepNr($step);
+		return $sRv;
+	}
+	private function addStepNr(int $step) : string
+	{
 		$sStepNr= "S";
 		if($step < 10)
 			$sStepNr .= "0";
 		$sStepNr .= $step;
-		if(isset($currentRow[$tableName]))
-			$sStepNr .= "R" . $currentRow[$tableName];
-		else
-			$sStepNr .= "R0";
-		$sRv = $sContHash . $sTabNr . $sStepNr;
-		return $sRv;
+		return $sStepNr;
 	}
 	/**
 	 * member variable to report
@@ -1396,7 +1608,7 @@ class STSiteCreator extends HtmlTag
 		$container= $this->report['container'];
 		$table= $this->report['table'];
 		$step= $this->report['step'];
-		$siteNr= $this->getSiteNumber($step);
+		$siteNr= $this->getSiteNumberI($step);
 		$action= $this->report['action'];
 		$description= $this->report['description'];
 		$this->report= array();
@@ -1408,8 +1620,11 @@ class STSiteCreator extends HtmlTag
 			$sErrorOutput= str_replace("&#160;", " ", $sErrorOutput);
 			$sErrorOutput= preg_replace('/<b>|<\/b>/i', '*', $sErrorOutput);
 			$sErrorOutput= preg_replace('/<\/td>/i', ' ', $sErrorOutput);
+			$sErrorOutput= preg_replace('/&nbsp;|&amp;nbsp;|&nbsp;/i', ' ', $sErrorOutput);
 			$sErrorOutput= preg_replace('/<br\s*\/?>|<\/tr>|<\/li>|<\/div>|<\/p>|<\/h[1-9]>/i', "\n", $sErrorOutput);
 			$sErrorOutput= strip_tags($sErrorOutput);
+			$sErrorOutput= preg_replace('/&lt;/i', '<', $sErrorOutput);
+			$sErrorOutput= preg_replace('/&gt;/i', '>', $sErrorOutput);
 		}
 		// --------------------------------------------------------------------------------------------------
 

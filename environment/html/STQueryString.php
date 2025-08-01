@@ -769,7 +769,7 @@ class STQueryString
 			return $value;
 
 		}
-		private function recursiveParameter(array $parameter, array $args, string &$value= null) : bool
+		private function recursiveParameter(array $parameter, array $args, ?string &$value= null) : bool
 		{
 			if(0)
 			{

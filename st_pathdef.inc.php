@@ -40,10 +40,9 @@
     //     itembox.columns       -  show all column content for every row inside STItemBox creation
 	//     STMessageHandling     -  all about message handling
 	//     test                  -  test all created containers and write debug messages into log file (selftable_test_report.txt)
+	//     test.see              -  show all test pages also when no error result found
 	//     log                   -  tracing recursive function names passed to calling one or more before defined position 
 	//     easter.date           -  show whether easter date inside STtDate() is calculated right
-	//     test                  -  test framework with whole user properties into file selftable_test_report.txt
-	//     test.see              -  show all test pages also when no error result found
 	//
 	//--------------------------------------------------------------------------
 	

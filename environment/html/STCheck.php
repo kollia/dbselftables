@@ -26,6 +26,12 @@ $global_outputBufferWasErased= false;
 $global_testingOutputBuffer= false;
 $global_testingOutputBufferWasErased= false;
 $global_clearOutputBuffer= false;
+$global_selftable_testing_allowSiteFaults= array(
+	"ERRORS" => array(),
+	"WARNINGS" => array()
+);
+$global_selftable_testing_file_warnings= array();
+
 /**
  * whether should show tat session set to noRegister
  * @var boolean $global_SESSION_noRegister_SHOWEN
@@ -259,6 +265,29 @@ class STCheck
 			if(STCheck::error_message("Fatal Error", $trigger, $functionName, $message, $outFunc+1, 20))
 				exit;
 			return false;
+		}
+		public static function no_test_error(string $siteNr, string $action, $act_PK= null)
+		{
+			global $global_selftable_testing_allowSiteFaults;
+
+			if(!STCheck::isDebug("test"))
+				return;
+			$backTrace= debug_backtrace();
+			foreach($backTrace as $bt)
+			{
+				if( $bt['function'] === 'no_test_error' ||
+					$bt['function'] === 'STCheck::no_test_error'	)
+				{
+					$file= $bt['file'];
+					$line= $bt['line'];
+					break;
+				}
+			}
+			$arr= array(
+				"file" => $file,
+				"line" => $line,
+				"pk"   => $act_PK	);
+			$global_selftable_testing_allowSiteFaults['ERRORS'][$siteNr][$action]= $arr;
 		}
 		static function deprecated($newFunction, $oldFunction= null)
 		{
@@ -994,6 +1023,32 @@ class STCheck
 		$content= $table->getColumnField($fieldName);
 		if($content === null) // if first ask for column field
 			return $oldValue; // and $content exists, then also $field should be exist
+		if($action == STUPDATE)
+		{
+			$query= new STQueryString();
+			$Rv= $query->getParameterValue("testdebug", "oldUpdateVals", $fieldName);
+			if($Rv === null)
+			{// this means that update will be the first time for this field
+			 // only by second run do not update, but set this before defined value
+				if(is_array($oldValue))
+				{
+					foreach($oldValue as $key => $defValue)
+					{
+						if($defValue['selected'] == true)
+						{
+							$Rv= $key;
+							break;
+						}
+					}
+				}else
+					$Rv= $oldValue;
+				$oldUpdateValues= array( $fieldName => $Rv );
+				$testdebug= array( 'testdebug' => array( 'oldUpdateVals' => $oldUpdateValues ) );
+				$query->update($testdebug);
+				$query->synchronize();
+			}else
+				return $Rv; // set to old value
+		}
 		if(is_array($oldValue))
 		{// this mean that the field is a join field which was pointed from an other table
 			$oVal= array();
@@ -1043,11 +1098,19 @@ class STCheck
 		{
 			if($action == STUPDATE)
 			{
-				$value= "update text";
-				if($oldValue === $value)
-					$value= "update new text";
+				$value= "update text (removable)";
 			}else
-				$value= "insert new text";
+				$value= "insert new text (removable)";
+			$len= strlen($value);
+			if(substr($oldValue, 0, $len) === $value)
+			{
+				$nr = (int) substr($oldValue, 23);
+				if($nr !== false)
+					$nr++;
+				else
+					$nr= 1;
+				$value.= " $nr";
+			}
 
 		}elseif($type == "time")
 		{
