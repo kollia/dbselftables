@@ -98,7 +98,7 @@ $country->select("name", "Name");
 $state = $db->getTable("State");
 $state->setDisplayName("States");
 $state->select("name", "Name");
-$state->select("country", "from Country");
+$state->select("country", "from Country"); // <- FK column
 ```
 You see now in table State as second position the name of the country as 'Country' (identif-column from table Country), altough you defined
 the FK in table as 'from Country'. This you see by updating row or by insert (clicking on button 'new Entry')
