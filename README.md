@@ -92,7 +92,7 @@ There is also the possibility to select only the columns you want and give them 
 ```php
 $country= $db->getTable("Country");
 $country->setDisplayName("existing Countries");
-$country->identifColumn("name", "Country");
+$country->identifColumn("name", "Country"); // identify the table
 $country->select("name", "Name");
 
 $state = $db->getTable("State");
