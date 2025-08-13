@@ -362,32 +362,32 @@ This example assumes that the primary key has the column name ID and a column ca
 /*[01]*/ function removeRow(STCallbackClass &$callbackObject, string $columnName, int $rownum)
 /*[02]*/ {
 /*[03]*/     if( $callbackObject->display &&
-[04]         $callbackObject->before &&
-[05]         $columnName == "remove"     )  // if the column not defined by calling the listCallback mehtod as second parameter
-[06]     {
-[07]         $query= new STQueryString();
-[08]         $remove= $query->getLinkingPoint("remove");
-[09]         $id= $callbackObject->getValue();
-[10] 	     if( isset($remove) &&
-[11]             $remove == $id     )
-[12]         {
-[13]             $callbackObject->skipRow();
-[14]             $table= $callbackObject->getTable();
-[15]             $updater= new STDbUpdater($table);
-[16]             $updater->update("display", "no");
-[17]             $updater->where("ID = $id");
-[18]             $updater->execute();
-[19]         }
-[20]     }
-[21] }
-[22]
-[23] // .. some selects for table
-[24] $table->select("ID", "remove");
-[25] $table->namedLink("remove");
-[26] $bill->confirm("remove", "Do you really want to remove (achrive) this entry?");
-[27] $table->noDelete();
-[28] $table->listCallback("removeRow");
-[29] $table->where("displayFlag = "yes");
+/*[04]*/         $callbackObject->before &&
+/*[05]*/         $columnName == "remove"     )  // if the column not defined by calling the listCallback mehtod as second parameter
+/*[06]*/     {
+/*[07]*/         $query= new STQueryString();
+/*[08]*/         $remove= $query->getLinkingPoint("remove");
+/*[09]*/         $id= $callbackObject->getValue();
+/*[10]*/ 	     if( isset($remove) &&
+/*[11]*/             $remove == $id     )
+/*[12]*/         {
+/*[13]*/             $callbackObject->skipRow();
+/*[14]*/             $table= $callbackObject->getTable();
+/*[15]*/             $updater= new STDbUpdater($table);
+/*[16]*/             $updater->update("display", "no");
+/*[17]*/             $updater->where("ID = $id");
+/*[18]*/             $updater->execute();
+/*[19]*/         }
+/*[20]*/     }
+/*[21]*/ }
+/*[22]*/
+/*[23]*/ // .. some selects for table
+/*[24]*/ $table->select("ID", "remove");
+/*[25]*/ $table->namedLink("remove");
+/*[26]*/ $bill->confirm("remove", "Do you really want to remove (achrive) this entry?");
+/*[27]*/ $table->noDelete();
+/*[28]*/ $table->listCallback("removeRow");
+/*[29]*/ $table->where("displayFlag = "yes");
 ```
 
 
