@@ -31,18 +31,18 @@ git submodule update --init --recursive
 the folder structure should be:
 | Folder           | Description                                                                     |
 |:-----------------|:--------------------------------------------------------------------------------|
-| dbselftables<br>├── design<br>├── environment<br>├── design     |                                                                                 |
-|        | [ Needs to be reachable from website (contains .css and .png or .svg files) ]   |
-| ├── environment  | [ PHP sources ]                                                                 |
-| │   ├── base     | [ Base classes ]                                                                |
-| │   ├── db       | [ Classes to handle with database ]                                             |
-| │   ├── html     | [ Own HTML classes ]                                                            |
-| │   ├── session  | [ Session objects ]                                                             |
-| ├── plugins      | [ Usable plugins for the project ]                                              |
-| |                |                                                                                 |
-| ├── data         | [ Only required for Modelio UMLs - can be removed for productive use ]          |
-| ├── examples     | [ Examples for learning and test cases - can be removed for productive use ]    |
-| └── wiki         | [ Wiki content for GitHub - removable ]                                         |
+| dbselftables<br>├── design<br>├── environment<br>├── design<br>├── environment<br>│   ├── base<br>│   ├── db<br>│   ├── html<br>│   ├── session<br>├── plugins<br>|<br>├── data<br>├── examples<br>└── wiki |
+| <br>[ Needs to be reachable from website (contains .css and .png or .svg files) ]   |
+|   | [ PHP sources ]                                                                 |
+|      | [ Base classes ]                                                                |
+|       | [ Classes to handle with database ]                                             |
+|      | [ Own HTML classes ]                                                            |
+|   | [ Session objects ]                                                             |
+|       | [ Usable plugins for the project ]                                              |
+|                 |                                                                                 |
+|          | [ Only required for Modelio UMLs - can be removed for productive use ]          |
+|      | [ Examples for learning and test cases - can be removed for productive use ]    |
+|          | [ Wiki content for GitHub - removable ]                                         |
 <br />
 
 ## BASICs
