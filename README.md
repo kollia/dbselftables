@@ -31,7 +31,7 @@ git submodule update --init --recursive
 the folder structure should be:
 | Folder           | Description                                                                     |
 |:-----------------|:--------------------------------------------------------------------------------|
- | `dbselftables`<br>`├── design`<br>`├── environment`<br>`│   ├── base`<br>`│   ├── db`<br>`│   ├── html`<br>`│   ├── session`<br>`├── plugins`<br>`│`<br>`├── data`<br>`├── examples`<br>`└── wiki` | <br>Needs to be reachable from website (contains .css and .png or .svg files)<br>PHP sources<br>Base classes<br>Classes to handle with database ] `<br>Own HTML classes<br>Session objects<br>Usable plugins for the project<br><br>Only required for Modelio UMLs - can be removed for productive use<br>Examples for learning and test cases - can be removed for productive use<br>Wiki content for GitHub - removable                                                  |
+ | `dbselftables`<br>`├── design`<br>`├── environment`<br>`│   ├── base`<br>`│   ├── db`<br>`│   ├── html`<br>`│   ├── session`<br>`├── plugins`<br>`│`<br>`├── data`<br>`├── examples`<br>`└── wiki` | <br>Needs to be reachable from website (contains .css and .png or .svg files)<br>PHP sources<br>Base classes<br>Classes to handle with database<br>Own HTML classes<br>Session objects<br>Usable plugins for the project<br><br>Only required for Modelio UMLs - can be removed for productive use<br>Examples for learning and test cases - can be removed for productive use<br>Wiki content for GitHub - removable                                                  |
 <br />
 
 ## BASICs
