@@ -1,8 +1,11 @@
 # DB selfTables
-The goal of this project is for you to design your database table and automatically get a user-friendly GUI interface for all your generated tables in a short time.
+The goal of this project is that you to design your database table and automatically get a user-friendly GUI interface for all your generated tables in a short time.
 
-This solution can be useful for research if you have written your own specific algorithm that uses data from the database. 
-When first developing, you make your data available via an SQL interface such as phpMyAdmin. After that, when your own project is finished and you want to make it usable for other users, you need an interface through which others can also insert data. In this case, you can link to the generated interface from the DB selfTables from your own project.
+This solution can be useful for research if you write your own specific algorithm that uses data from the database. 
+When first developing, you make your data available via an SQL interface such as phpMyAdmin or with a pure SQL-Client. After that, 
+when your own project is finished and you want to make it usable for other users, 
+you need an interface through which others can also insert data. In this case, you can link from your own project 
+to the DB selfTables generated interface.
 
 Or maybe you just want to collect data for future use, create statistics, or something else. There are many other solutions you can use...
 
@@ -26,22 +29,20 @@ git submodule update --init --recursive
 <br />
 
 the folder structure should be:
-```
-| Folder               | Description                                                                  
-|----------------------|--------------------------------------------------------------------------------
-| dbselftables         |
-| ├── design           | [ Needs to be reachable from website (contains .css and .png or .svg files) ]
-| ├── environment      | [ PHP sources ]
-| │   ├── base         | [ Base classes ]
-| │   ├── db           | [ Classes to handle with database ]
-| │   ├── html         | [ Own HTML classes ]
-| │   ├── session      | [ Session objects ]
-| ├── plugins          | [ Usable plugins for the project ]
-| |
-| ├── data             | [ Only required for Modelio UMLs - can be removed for productive use ]
-| ├── examples         | [ Examples for learning and test cases - can be removed for productive use ]
-| └── wiki             | [ Wiki content for GitHub - removable ]
-```
+| Folder           | Description                                                                     |
+|:-----------------|:--------------------------------------------------------------------------------|
+| dbselftables     |                                                                                 |
+| ├── design       | [ Needs to be reachable from website (contains .css and .png or .svg files) ]   |
+| ├── environment  | [ PHP sources ]                                                                 |
+| │   ├── base     | [ Base classes ]                                                                |
+| │   ├── db       | [ Classes to handle with database ]                                             |
+| │   ├── html     | [ Own HTML classes ]                                                            |
+| │   ├── session  | [ Session objects ]                                                             |
+| ├── plugins      | [ Usable plugins for the project ]                                              |
+| |                |                                                                                 |
+| ├── data         | [ Only required for Modelio UMLs - can be removed for productive use ]          |
+| ├── examples     | [ Examples for learning and test cases - can be removed for productive use ]    |
+| └── wiki         | [ Wiki content for GitHub - removable ]                                         |
 <br />
 
 ## BASICs
