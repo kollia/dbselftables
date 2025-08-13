@@ -31,7 +31,7 @@ git submodule update --init --recursive
 the folder structure should be:
 | Folder           | Description                                                                     |
 |:-----------------|:--------------------------------------------------------------------------------|
-| dbselftables     |                                                                                 |
+| dbselftables<br />     |                                                                                 |
 | ├── design       | [ Needs to be reachable from website (contains .css and .png or .svg files) ]   |
 | ├── environment  | [ PHP sources ]                                                                 |
 | │   ├── base     | [ Base classes ]                                                                |
