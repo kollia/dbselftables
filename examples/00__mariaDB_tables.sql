@@ -1,22 +1,33 @@
 ﻿
+-- ============================================================================
+-- MariaDB/MySQL Table Creation and Data Insertion Script
+-- Character Set: UTF-8 (Cross-platform compatible: Windows, Linux, macOS)
+-- ============================================================================
+
+-- Set character set and collation for cross-platform compatibility
+SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci;
+SET CHARACTER_SET_CLIENT = utf8mb4;
+SET CHARACTER_SET_CONNECTION = utf8mb4;
+SET CHARACTER_SET_RESULTS = utf8mb4;
+
     CREATE TABLE `Country` (
         `country_id` INT AUTO_INCREMENT PRIMARY KEY,
         `name` VARCHAR(100) NOT NULL
-    ) ENGINE=InnoDB;
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
     CREATE TABLE `State` (
         `state_id` INT AUTO_INCREMENT PRIMARY KEY,
         `name` VARCHAR(100) NOT NULL,
         `country` INT NOT NULL,
         FOREIGN KEY (`country`) REFERENCES `Country`(`country_id`)
-    ) ENGINE=InnoDB;
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
     CREATE TABLE `County` (
         `county_id` INT AUTO_INCREMENT PRIMARY KEY,
         `name` VARCHAR(100) NOT NULL,
         `state` INT NOT NULL,
         FOREIGN KEY (`state`) REFERENCES `State`(`state_id`)
-    ) ENGINE=InnoDB;
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
     CREATE TABLE `Address` (
         `address_id` INT AUTO_INCREMENT PRIMARY KEY,
@@ -24,7 +35,7 @@
         `city` VARCHAR(100) NOT NULL,
         `county` INT NOT NULL,
         FOREIGN KEY (`county`) REFERENCES `County`(`county_id`)
-    ) ENGINE=InnoDB;
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
     CREATE TABLE `Person` (
         `person_id` INT AUTO_INCREMENT PRIMARY KEY,
@@ -33,14 +44,14 @@
         `address` INT NOT NULL,
         FOREIGN KEY (`address`) REFERENCES `Address`(`address_id`),
         UNIQUE (`first_name`, `last_name`)
-    ) ENGINE=InnoDB;
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
     CREATE TABLE `Article` (
         `article_id` INT AUTO_INCREMENT PRIMARY KEY,
         `title` VARCHAR(255) NOT NULL,
         `price` DECIMAL(10, 2) NOT NULL,
         `content` TEXT
-    ) ENGINE=InnoDB;
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
    -- Create new Bill table
     CREATE TABLE `Bill` (
@@ -50,7 +61,7 @@
         `date` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (`person`) REFERENCES `Person`(`person_id`),
         FOREIGN KEY (`address`) REFERENCES `Address`(`address_id`)
-    ) ENGINE=InnoDB;
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
     -- Create new Order table
     CREATE TABLE `Order` (
@@ -60,7 +71,7 @@
         `article` INT NOT NULL,
         FOREIGN KEY (`bill`) REFERENCES `Bill`(`bill_id`),
         FOREIGN KEY (`article`) REFERENCES `Article`(`article_id`)
-    ) ENGINE=InnoDB;
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
     -- Insert Countries
     INSERT INTO `Country` (`country_id`, `name`) VALUES
@@ -87,9 +98,9 @@
     (13, 'Valencia', 3),
     (14, 'Sevilla', 3),
     (15, 'Zaragoza', 3),
-    (16, 'Île-de-France', 4),
-    (17, 'Provence-Alpes-Côte d Azur', 4),
-    (18, 'Auvergne-Rhône-Alpes', 4),
+    (16, 'Ile-de-France', 4),
+    (17, 'Provence-Alpes-Cote d Azur', 4),
+    (18, 'Auvergne-Rhone-Alpes', 4),
     (19, 'Nouvelle-Aquitaine', 4),
     (20, 'Occitanie', 4),
     (21, 'England', 5),
@@ -126,7 +137,7 @@
     (24, 'Marzahn-Hellersdorf', 7),
     (25, 'Mitte', 7),
     (26, 'Altona', 8),
-    (27, 'Eimsbüttel', 8),
+    (27, 'Eimsbuettel', 8),
     (28, 'Hamburg-Mitte', 8),
     (29, 'Hamburg-Nord', 8),
     (30, 'Wandsbek', 8),
@@ -139,7 +150,7 @@
     (37, 'Dresden', 10),
     (38, 'Leipzig', 10),
     (39, 'Zwickau', 10),
-    (40, 'Görlitz', 10),
+    (40, 'Goerlitz', 10),
     (41, 'Madrid', 11),
     (42, 'Barcelona', 12),
     (43, 'Valencia', 13),
@@ -206,7 +217,7 @@
     (104, 'Marzahn-Hellersdorf', 7),
     (105, 'Mitte', 7),
     (106, 'Altona', 8),
-    (107, 'Eimsbüttel', 8),
+    (107, 'Eimsbuettel', 8),
     (108, 'Hamburg-Mitte', 8),
     (109, 'Hamburg-Nord', 8),
     (110, 'Wandsbek', 8),
@@ -219,7 +230,7 @@
     (117, 'Dresden', 10),
     (118, 'Leipzig', 10),
     (119, 'Zwickau', 10),
-    (120, 'Görlitz', 10),
+    (120, 'Goerlitz', 10),
     (121, 'Madrid', 11),
     (122, 'Barcelona', 12),
     (123, 'Valencia', 13),
@@ -267,7 +278,7 @@
     (37, '3434 Maple St', 'Dresden', 37),
     (38, '3535 Cedar St', 'Leipzig', 38),
     (39, '3636 Birch St', 'Zwickau', 39),
-    (40, '3737 Elm St', 'Görlitz', 40),
+    (40, '3737 Elm St', 'Goerlitz', 40),
     (41, '3838 Oak St', 'Madrid', 41),
     (42, '3939 Pine St', 'Barcelona', 42),
     (43, '4040 Maple St', 'Valencia', 43),
@@ -342,7 +353,7 @@
     (112, '10909 Elm St', 'Dresden', 37),
     (113, '11010 Oak St', 'Leipzig', 38),
     (114, '11111 Pine St', 'Zwickau', 39),
-    (115, '11212 Maple St', 'Görlitz', 40),
+    (115, '11212 Maple St', 'Goerlitz', 40),
     (116, '11313 Cedar St', 'Madrid', 41),
     (117, '11414 Birch St', 'Barcelona', 42),
     (118, '11515 Elm St', 'Valencia', 43),
@@ -417,7 +428,7 @@
     (187, '18484 Maple St', 'Dresden', 37),
     (188, '18585 Cedar St', 'Leipzig', 38),
     (189, '18686 Birch St', 'Zwickau', 39),
-    (190, '18787 Elm St', 'Görlitz', 40),
+    (190, '18787 Elm St', 'Goerlitz', 40),
     (191, '18888 Oak St', 'Madrid', 41),
     (192, '18989 Pine St', 'Barcelona', 42),
     (193, '19090 Maple St', 'Valencia', 43),
@@ -492,7 +503,7 @@
     (262, '25959 Elm St', 'Dresden', 37),
     (263, '26060 Oak St', 'Leipzig', 38),
     (264, '26161 Pine St', 'Zwickau', 39),
-    (265, '26262 Maple St', 'Görlitz', 40),
+    (265, '26262 Maple St', 'Goerlitz', 40),
     (266, '26363 Cedar St', 'Madrid', 41),
     (267, '26464 Birch St', 'Barcelona', 42),
     (268, '26565 Elm St', 'Valencia', 43),
@@ -1144,4 +1155,3 @@
     (112, 56, 2, 1),  -- 2x Gloves
     (113, 57, 1, 12), -- 1x Jeans
     (114, 58, 1, 182);-- 1x Oak Ridge Shoes
-    
