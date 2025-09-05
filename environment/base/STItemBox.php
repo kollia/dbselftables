@@ -1617,23 +1617,17 @@ class STItemBox extends STBaseBox
 				$tr= new RowTag();
 					$td= new ColumnTag(TD);
 						$script= new JavaScriptTag();
-							$DB_changeBox= new jsFunction("DB_changeBox", "action");
+							$DB_changeBox= new jsFunction("DB_changeBox", "action", "newParams");
 						  		$DB_changeBox->add("document.STForm.STBoxes_action.value= action;");
+						  		$DB_changeBox->add("var currentAction = document.STForm.action;");
+						  		$DB_changeBox->add("var baseUrl = currentAction.split('?')[0];");
+						  		$DB_changeBox->add("if (typeof newParams !== 'undefined' && newParams && newParams !== '') {");
+						  		$DB_changeBox->add("    document.STForm.action = baseUrl + '?' + newParams; }");
 				  				$DB_changeBox->add("document.STForm.submit();");
 							$script->add($DB_changeBox);
 						$td->add($script);
 					$tr->add($td);
 				$this->add($tr);
-
-        /*      $this->add("<script type='text/javascript'>\n");
-              $this->add("<!---\n");
-				  $this->add("function DB_changeBox(action)\n");
-				  $this->add("{\n");
-				  $this->add("document.".$this->name.".action.value= action;\n");
-				  $this->add("document.".$this->name.".submit();\n");
-				  $this->add("}\n");
-              $this->add("//-->\n");
-              $this->add("</script>\n");*/
 			}
 		$this->msg->setMessageId("BOXDISPLAY");
 		$changedPost= $post;

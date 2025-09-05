@@ -935,6 +935,15 @@ class STSiteCreator extends HtmlTag
 				$testdebug['link-type']= $type;
 				$testdebug['link-class']= "STChoose-menue-button"; //should be first link class
 				$testdebug['last-insert']= null;
+				/**
+				 * if 'test' entry is true, the double update test will be activated
+				 * to update table row back to original values in next update.
+				 * if 'secondRun' entry is true, the second run of the update will be performed.
+				 */
+				$testdebug['DoubleUpdate']= array(	'test' => "false",
+													'secondRun' => "false"	);
+
+				$testdebug['faults']= false;
 				$testdebug['progress']= array();
 				$testdebug['progress']['onTableTagCount']= -1;
 				$testdebug['progress']['backbutton-test']= "false";
@@ -1008,7 +1017,7 @@ class STSiteCreator extends HtmlTag
 			 * 					['###delete']	- array with links to delete (STDELETE)
 			 */
 
-			if(	$__global_finished_SiteCreator_result === "NOERROR" ||
+				if(	$__global_finished_SiteCreator_result === "NOERROR" ||
 				$__global_finished_SiteCreator_result === "BOXDISPLAY"	) // ||
 			//	$__global_finished_SiteCreator_result === "EMPTY_RESULT"	)
 			{
@@ -1040,6 +1049,13 @@ class STSiteCreator extends HtmlTag
 					//      10 - delete done go back to table listing
 					$link= $this->makeTableAction_Test($testdebug, $sorted_selftable_test_links, $query);
 				}
+				if( $testdebug['step'] == 8 &&
+					$testdebug['DoubleUpdate']['test'] == "true" &&
+					$testdebug['DoubleUpdate']['secondRun'] == "true"	)
+				{ // steps are now normal again
+					$testdebug['DoubleUpdate']['test']= "false";
+					$testdebug['DoubleUpdate']['secondRun']= "false";
+				}
 				if	($testdebug['table'] != $this->report['table'] ||
 					(	$testdebug['step'] >= 11 &&
 						$testdebug['count'] >= $testdebug['tables']	)	)
@@ -1064,7 +1080,14 @@ class STSiteCreator extends HtmlTag
 				$type= $testdebug['link-type'];
 				if(	$type == "link" || $type == "edit"	)
 				{ // otherwise the increasing was made in make_XXX_Test() functions
-					$testdebug['step']++;
+					if(	$testdebug['DoubleUpdate']['test'] == "true" &&
+						$testdebug['DoubleUpdate']['secondRun'] == "false" &&
+						$testdebug['step'] == 9 					)
+					{// update was done and should updated back in a previous run
+						$testdebug['step']= 6;
+						$testdebug['DoubleUpdate']['secondRun']= "true";
+					}else
+						$testdebug['step']++;
 				}
 				$output= false;
 				if( isset($HTML_CLASS_DEBUG_CONTENT_CLASS_FUNCTION) &&
@@ -1101,7 +1124,7 @@ class STSiteCreator extends HtmlTag
 			}
 
 			if($bFinished)
-				$report.= $this->writeEndTimeReport($testdebug['start']);					
+				$report.= $this->writeEndTimeReport($testdebug);					
 
 			if(	$__global_finished_SiteCreator_result === "NOERROR" ||
 				$__global_finished_SiteCreator_result === "BOXDISPLAY"	)
@@ -1121,7 +1144,7 @@ class STSiteCreator extends HtmlTag
 					{
 						$link= $query->update($link);
 						$link= "window.location='$link".$query->getUrlParamString()."'";
-					}
+					}// by type action no update of parameters can be made, because link is made over javascript function
 				}
 				$script= new JavaScriptTag();
 					$script->add("setTimeout(function(){ $link; }, 1);");
@@ -1143,7 +1166,12 @@ class STSiteCreator extends HtmlTag
 					$report.= $sErrorOutput;
 					$report.= "\n\n\n\n";
 				}
+			}else
+			{ // on finished do not output any crutial string with maybe open pre-tag
+				$sErrorOutput= STCheck::end_outputBuffer("test");
+				//echo $sErrorOutput;
 			}
+
 		}
 
 		if(file_put_contents($this->reportFilename, $report, FILE_APPEND) === false)
@@ -1182,7 +1210,7 @@ class STSiteCreator extends HtmlTag
 				}
 				$type= "link";
 			}else
-			{
+			{ // no more table-button found, so test is finished
 				$bFinished= true;
 				$link= "";
 				$testdebug['status']= "finished";
@@ -1194,13 +1222,14 @@ class STSiteCreator extends HtmlTag
 			{
 				$link= $sorted_selftable_test_links["action"]['link'];
 				$link= $this->updateQueryLink($query, $link);
+				$testdebug['step']= 1;
+				$type= "link";
 			}else
-			{
+			{ // no other table found, so test is finished
+				$bFinished= true;
 				$link= "";
-				echo "  !!ERROR!!: no action link found for table listing<br />";
+				$testdebug['status']= "finished";
 			}
-			$testdebug['step']= 1;
-			$type= "link";
 		}
 		$testdebug['link-type']= $type;
 		return $link;
@@ -1211,7 +1240,7 @@ class STSiteCreator extends HtmlTag
 			   $global_selftable_testing_file_warnings;
 
 		if(	$testdebug['step'] > 1)
-		{
+		{// test whether insert/update/delete be allowed from table
 			$bInsertLink= true;
 			$bUpdateLink= true;
 			$bDeleteLink= true;
@@ -1266,7 +1295,8 @@ class STSiteCreator extends HtmlTag
 						$update_error_msg[]=		 "         :    -> ATTENTION: this can cause problems if first update break by error";
 						$global_selftable_testing_file_warnings= array_merge(
 											$global_selftable_testing_file_warnings, $update_error_msg);
-					}else
+											
+					}elseif(!isset($global_selftable_testing_allowSiteFaults['ERRORS'][$currentSiteNr]['update']['PK']))
 					{
 						$update_warning_msg= array();
 						$update_warning_msg[]= "<b>WARNING</b>: no insert link found for table.";
@@ -1282,29 +1312,23 @@ class STSiteCreator extends HtmlTag
 			}
 			if($testdebug['step'] == 9)
 			{
-				// all updates be done, so delete old values
-				$testdebug['oldUpdateVals']= array();
-				//$remove= array(	'testdebug' => array(	'oldUpdateVals' => array()	)	);
-				$query->delete("testdebug[oldUpdateVals]");
+				if(	$testdebug['DoubleUpdate']['test'] == "false" ||
+					$testdebug['DoubleUpdate']['secondRun'] == "true"	)
+				{
+					// all updates be done, so delete old values
+					$testdebug['oldUpdateVals']= array();
+					$testdebug['DoubleUpdate']['test']= "false";
+					$testdebug['DoubleUpdate']['firstRun']= "false";
+					//$remove= array(	'testdebug' => array(	'oldUpdateVals' => array()	)	);
+					$query->delete("testdebug[oldUpdateVals]");
 
-				if(	$bDeleteLink &&
-					!$bInsertLink	)
-				{ 
-					if(!isset($global_selftable_testing_allowSiteFaults['ERRORS'][$currentSiteNr]['delete']))
-					{
-						$testdebug['step']= 11; // go to table listing for next table
-						$this->report['step']= 11; // go to table listing for next table
-						$currentUpdateSiteNr= $this->getSiteNumberI(/*step*/3);					
-						if(	$bUpdateLink &&
-							!isset($global_selftable_testing_allowSiteFaults['ERRORS'][$currentUpdateSiteNr]['update'])	)
+					if(	$bDeleteLink &&
+						!$bInsertLink	)
+					{ 
+						if(!isset($global_selftable_testing_allowSiteFaults['ERRORS'][$currentSiteNr]['delete']))
 						{
-							$also_delete_msg= array();
-							$also_delete_msg[]=			 "         In this case, also deletion is not tested.";
-							$also_delete_msg[]=          "         allowed by STCheck::no_test_error('$currentSiteNr', 'delete', &lt;PK&gt;);";
-							$global_selftable_testing_file_warnings= array_merge(
-											$global_selftable_testing_file_warnings, $also_delete_msg);
-						}else
-						{
+							$testdebug['step']= 11; // go to table listing for next table
+							$this->report['step']= 11; // go to table listing for next table
 							$delete_error_msg= array();
 							$delete_error_msg[]= "<b>ERROR</b>: no insert link found for table.";
 							$delete_error_msg[]=         "         In this case, deletion is not tested.";
@@ -1312,22 +1336,45 @@ class STSiteCreator extends HtmlTag
 							$delete_error_msg[]=         "         STCheck::no_test_error('$currentSiteNr', 'delete', &lt;PK&gt;);";
 							$global_selftable_testing_file_warnings= array_merge(
 											$global_selftable_testing_file_warnings, $delete_error_msg);
+							$this->makeNextTableContainer_Test($testdebug, $sorted_selftable_test_links, $query);
+							return ""; // no link to return, stay on site
+						}else
+						{
+							$also_delete_msg[]= "<b>WARNING</b>: no insert link found for table.";
+							$also_delete_msg[]=         "           Deletion now random PK in table.";
+							$global_selftable_testing_file_warnings= array_merge(
+												$global_selftable_testing_file_warnings, $also_delete_msg);
 						}
+					}elseif(!$bDeleteLink)
+					{ // no delete link found, so go to next table
+						$lastInsert= array();
+						if(is_array($testdebug['last-insert']))
+						{
+							$lastInsert['column'] = array_key_first($testdebug['last-insert']);
+							if($lastInsert['column'] !== null)
+								$lastInsert['value']= $testdebug['last-insert'][$lastInsert['column']];
+						}
+						$delete_warning_msg= array();
+						$delete_warning_msg[]= "<b>WARNING</b>: no delete action can be done for last insert.";
+						$delete_warning_msg[]=         "           please remove self the last inserted column";
+						if(isset($lastInsert['value']))
+							$delete_warning_msg[]= "           where PK column '".$lastInsert['column']."' = '".$lastInsert['value']."'.";
+						$global_selftable_testing_file_warnings= array_merge(
+												$global_selftable_testing_file_warnings, $delete_warning_msg);
+						$testdebug['step']= 11; // go to table listing for next table
+						$this->report['step']= 11; // go to table listing for next table
 						$this->makeNextTableContainer_Test($testdebug, $sorted_selftable_test_links, $query);
 						return ""; // no link to return, stay on site
-					}else
-					{
-						$also_delete_msg[]= "<b>WARNING</b>: no insert link found for table.";
-						$also_delete_msg[]=         "      Deletion now random PK in table.";
-						$global_selftable_testing_file_warnings= array_merge(
-											$global_selftable_testing_file_warnings, $also_delete_msg);
 					}
-				}elseif(!$bDeleteLink)
-				{ // no delete link found, so go to next table
-					$testdebug['step']= 11; // go to table listing for next table
-					$this->report['step']= 11; // go to table listing for next table
-					$this->makeNextTableContainer_Test($testdebug, $sorted_selftable_test_links, $query);
-					return ""; // no link to return, stay on site
+				}else
+				{ // double update test, so make update again
+					$testdebug['step']= 6; // go to update box
+					$this->report['step']= 6; // go to update box
+					$testdebug['DoubleUpdate']['secondRun']= "true";
+					// get new site number with step 3 which shoud be defined from update
+					// (DoubleUpdate secondRun is not active because set by next side access)
+					$currentSiteNr= $this->getSiteNumberI(/*step*/3);
+					$this->createContainerReport($testdebug['step']); // define new beginning of report
 				}
 			}
 		}
@@ -1342,7 +1389,8 @@ class STSiteCreator extends HtmlTag
 				if(is_array($testdebug['last-insert']))
 				{
 					// (6) step go to update box
-					$testdebug['progress']['onEditLinkCount']++;
+					if($testdebug['DoubleUpdate']['secondRun'] == "false")
+						$testdebug['progress']['onEditLinkCount']++;
 					$link= $sorted_selftable_test_links['edit']['###link'][$testdebug['progress']['onEditLinkCount']];
 					$link= $query->update($link);
 					$this->updateQueryLimitation($query, $testdebug);
@@ -1350,9 +1398,18 @@ class STSiteCreator extends HtmlTag
 				}elseif(	$testdebug['step'] == 6 &&
 							isset($global_selftable_testing_allowSiteFaults['ERRORS'][$currentSiteNr]['update'])	)
 				{	// (6) step go to update box, no last-insert be defined
-					// and update ERRORS allowed
+					//     do not increase onEditLinkCount, because DoubleUpdate test
 					$link= $sorted_selftable_test_links['edit']['###link'][$testdebug['progress']['onEditLinkCount']];
 					$link= $query->update($link);
+					if(!isset($global_selftable_testing_allowSiteFaults['ERRORS'][$currentSiteNr]['update']['pk']))
+					{ // no PK set, make as next update where set values back
+						$testdebug['DoubleUpdate']['test']= "true";
+					}else
+					{ // PK set, so update only this entry for limitation
+						$pkColumns= $global_selftable_testing_allowSiteFaults['ERRORS'][$currentSiteNr]['update']['pk'];
+						$testdebug['last-insert']= $pkColumns;
+						$this->updateQueryLimitation($query, $testdebug);
+					}
 
 				}else
 				{ // STINSERT (3) step go to insert box
@@ -1408,6 +1465,8 @@ class STSiteCreator extends HtmlTag
 	private function updateQueryLimitation(STQueryString &$query, array $testdebug) : void
 	{
 		$table= $query->getParameterValue("stget", "table");
+		if( !isset($testdebug['last-insert']) || empty($testdebug['last-insert']) )
+			st_print_r($testdebug, 4);
 		$column= array_key_first($testdebug['last-insert']);
 		$stget= array( "stget" => array( "limit" => array( $table => array())));
 		$stget['stget']['limit'][$table][$column]= $testdebug['last-insert'][$column];
@@ -1435,6 +1494,38 @@ class STSiteCreator extends HtmlTag
 				// and create new entry in database
 				$link= $sorted_selftable_test_links['action']['function'];
 				$type= "action";
+				if(	$testdebug['step'] == 7 &&
+					$testdebug['DoubleUpdate']['test'] == "true" &&
+					!is_array($testdebug['last-insert'])	)
+				{
+					// item box for update was shown
+					// while DoubleUpdate test should done in next step
+					// because no insert was done before
+					// so set now last-insert to current update PK
+					
+					// Try to get PK from query parameters first
+					$currentQuery = new STQueryString();
+					$stgetVars = $currentQuery->getArrayVars();
+					
+					// Look for limit parameters in stget that contain the PK
+					if(isset($stgetVars['stget']['limit'][$this->report['table']]))
+					{
+						$limitation = $stgetVars['stget']['limit'][$this->report['table']];
+						if(is_array($limitation) && count($limitation) > 0)
+							$testdebug['last-insert'] = $limitation;
+						else
+							STCheck::warning(true, "no correct limitation for table '".$this->report['table']."' found"
+								." to set last-insert for DoubleUpdate test", 1);
+					}else
+						STCheck::warning(true, "no correct limitation for table '".$this->report['table']."' found"
+							." to set last-insert for DoubleUpdate test", 1);
+					$query->update(array( 'testdebug' => $testdebug ));
+					$newParams= $query->getUrlParamString();
+					$newParams= substr($newParams, 1);
+					$newParams= "', '$newParams')";
+					$link= str_replace("')", $newParams, $link);
+				}
+
 			}else
 			{// now entry was inserted correctly
 				// and there be defined only an forward link
@@ -1448,8 +1539,15 @@ class STSiteCreator extends HtmlTag
 				}else
 				{
 					if(isset($global_selftable_test_links[STUPDATE]))
+					{
+						if($testdebug['DoubleUpdate']['test'] == "true" &&
+						   $testdebug['DoubleUpdate']['secondRun'] == "false"	)
+						{ // DoubleUpdate test should be done in next procedure,
+						  // set last-insert from update values
+							$testdebug['last-insert']= $global_selftable_test_links[STUPDATE];
+						}
 						$pkColumn = array_key_first($global_selftable_test_links[STUPDATE]);
-					else
+					}else
 						$pkColumn= array_key_first($testdebug['last-insert']);
 					
 					//$value= $global_selftable_test_links[STUPDATE][$pkColumn];
@@ -1554,9 +1652,14 @@ class STSiteCreator extends HtmlTag
 	 */
 	private function getSiteNumberI(int $step) : string
 	{
-		if(isset($this->generatedSiteNumber))
-			return $this->generatedSiteNumber.$this->addStepNr($step);
 		$query= new STQueryString();
+		$addDoubleUpdateSign= $query->getParameterValue("testdebug", "DoubleUpdate", "secondRun");
+		if($addDoubleUpdateSign === "true")
+			$addDoubleUpdateSign= "b";
+		else
+			$addDoubleUpdateSign= "";
+		if(isset($this->generatedSiteNumber))
+			return $this->generatedSiteNumber.$this->addStepNr($step).$addDoubleUpdateSign;
 		$currentRow= $query->getParameterValue("stget", "firstrow");
 		$container= $this->getContainerName();
 		$sContHash = "C" . substr(md5($container), 0, 4);
@@ -1578,7 +1681,7 @@ class STSiteCreator extends HtmlTag
 		else
 			$sRv .= "R0";
 		$this->generatedSiteNumber= $sRv;
-		$sRv.= $this->addStepNr($step);
+		$sRv.= $this->addStepNr($step).$addDoubleUpdateSign;
 		return $sRv;
 	}
 	private function addStepNr(int $step) : string
@@ -1595,16 +1698,10 @@ class STSiteCreator extends HtmlTag
 	 * @var array $report
 	 */
 	private $report= array();
-	private function writeContainerReport(array $testdebug, string $sErrorOutput) : string
+	private function writeContainerReport(array &$testdebug, string $sErrorOutput) : string
 	{
 		global $__global_finished_SiteCreator_result;
 
-		if(	!STCheck::isDebug("test.see") &&
-			(	$__global_finished_SiteCreator_result === "NOERROR" ||
-				$__global_finished_SiteCreator_result === "BOXDISPLAY"	)	)
-		{
-			return ""; // no report if no error output
-		}
 		$container= $this->report['container'];
 		$table= $this->report['table'];
 		$step= $this->report['step'];
@@ -1627,6 +1724,14 @@ class STSiteCreator extends HtmlTag
 			$sErrorOutput= preg_replace('/&gt;/i', '>', $sErrorOutput);
 		}
 		// --------------------------------------------------------------------------------------------------
+		if(	trim($sErrorOutput) === "" &&
+			(	$__global_finished_SiteCreator_result == "NOERROR" ||
+				$__global_finished_SiteCreator_result == "BOXDISPLAY"	)	)
+		{ // no error occurred
+			if(!STCheck::isDebug("test.see"))
+				return ""; // should not write anything into report
+		}else
+			$testdebug['faults']= true;
 
 		if(	(	$action == STINSERT ||
 				$action == STUPDATE ||
@@ -1650,11 +1755,11 @@ class STSiteCreator extends HtmlTag
 		$report.= "$sErrorOutput\n\n";
 		return $report;
 	}
-	private function writeEndTimeReport(int $starttime)
+	private function writeEndTimeReport(array $testdebug) : string
 	{
 		$timestamp= time();
 		$endtime= date("H:i:s", $timestamp);
-		$finishedtime= $timestamp - $starttime;
+		$finishedtime= $timestamp - $testdebug['start'];
 		$pattern= "s";
 		$item= "sec";
 		if($finishedtime > 60)
@@ -1671,7 +1776,10 @@ class STSiteCreator extends HtmlTag
 
 		$report= " ***\n";
 		$report.= " ***\n";
-		$report.= " ***  Test finished on $endtime\n";
+		if($testdebug['faults'] === true)
+			$report.= " ***  Test finished with errors on $endtime\n";
+		else
+			$report.= " ***  Test finished on $endtime\n";
 		$report.= " ***                in $finishedtime $item\n";
 		$report.= " ********************************************************************************************************************************************************\n";
 		$report.= "\n\n\n\n\n\n\n\n";

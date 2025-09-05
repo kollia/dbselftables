@@ -266,12 +266,21 @@ class STCheck
 				exit;
 			return false;
 		}
-		public static function no_test_error(string $siteNr, string $action, $act_PK= null)
+		public static function no_test_error(string $siteNr, string $action, array|null $act_PK= null)
 		{
 			global $global_selftable_testing_allowSiteFaults;
 
 			if(!STCheck::isDebug("test"))
 				return;
+			STCheck::paramCheck($siteNr, 1, "string");
+			STCheck::paramCheck($action, 2, "string");
+			if( $action == STDELETE &&
+				$act_PK === null		)
+			{
+				STCheck::error_message("Error in parameter", true, "STCheck::no_test_error()",
+									"3. parameter must be set by action '".STDELETE."'", 1);
+				return;
+			}
 			$backTrace= debug_backtrace();
 			foreach($backTrace as $bt)
 			{
@@ -1019,15 +1028,16 @@ class STCheck
 	 */
 	public function getTestFormValue($action, STBaseTable $table, string $fieldName, $oldValue)
 	{
+		$query= new STQueryString();
 		$datatypes= $table->getDatatypes();
 		$content= $table->getColumnField($fieldName);
 		if($content === null) // if first ask for column field
 			return $oldValue; // and $content exists, then also $field should be exist
-		if($action == STUPDATE)
+		$DoubleUpdate= $query->getParameterValue("testdebug", "DoubleUpdate");
+		if(	$action == STUPDATE &&
+			$DoubleUpdate['test'] == "true"	)
 		{
-			$query= new STQueryString();
-			$Rv= $query->getParameterValue("testdebug", "oldUpdateVals", $fieldName);
-			if($Rv === null)
+			if($DoubleUpdate['secondRun'] == "false")
 			{// this means that update will be the first time for this field
 			 // only by second run do not update, but set this before defined value
 				if(is_array($oldValue))
@@ -1047,7 +1057,10 @@ class STCheck
 				$query->update($testdebug);
 				$query->synchronize();
 			}else
+			{
+				$Rv= $query->getParameterValue("testdebug", "oldUpdateVals", $fieldName);
 				return $Rv; // set to old value
+			}
 		}
 		if(is_array($oldValue))
 		{// this mean that the field is a join field which was pointed from an other table
