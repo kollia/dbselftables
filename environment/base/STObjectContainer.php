@@ -429,7 +429,7 @@ class STObjectContainer extends STBaseContainer
 				if($table)
 				{
 					$table= clone $table;
-					if($this->name != $container->name)
+					if($this->name != $oContainer->name)
 					{// new cloned table should now be inside this container
 						unset($table->container);
 						$table->container= $this;
