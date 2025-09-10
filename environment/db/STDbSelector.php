@@ -650,13 +650,16 @@ class STDbSelector extends STDbTable implements STContainerTempl
 			// to set it  all to left joins
 			// and also insert getColumns to foreign keys
 		    // for new inserts
+			$sOwnDbName= $this->db->getDatabaseName();
 		    $fks= &$nnTable->getForeignKeys();
 			foreach($fks as $table=>$content)
 			{
 				foreach($content as $key=>$column)
 				{
 				    $toTable= "no";
-				    if($table == $fixTableName)
+				    if(	$table == $fixTableName ||
+						(	preg_match("/\./", $fixTableName) &&
+							$column['table']->getDatabaseName().".".$table == $fixTableName	)	)
 				    {
 				        $bfixFk= true;
 				        $toTable= "fix";
