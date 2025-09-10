@@ -1117,15 +1117,17 @@ class STDbTable extends STBaseTable
         foreach($aNeededColumns as $column)
         {// loop the array for all exist columns            
             $columnName= $column["column"];
+			if(isset($column['singleColumn']))
+				$singleColumnName= $column['singleColumn'];
+			else
+				$singleColumnName= $columnName;
+			$tKeyword= $this->db->keyword($column["column"]);
             STCheck::echoDebug("db.statements.select", "run for ".++$columnNr.". column $columnName inside table '{$this->getName()}'");
-            
-            $preg= array();
-            if(preg_match("/(.+)\\((.+)\\)/", $columnName, $preg))
-            {
-                if($preg[2] != "*")
-                    $columnName= $preg[1]."(".$this->db->getDelimitedString($preg[2], "field").")";
-            }else
+			if(	$tKeyword === false)
+			{// if column is an sql-keyword, it was prepered inside removeNoDbColumns()
                 $columnName= $this->db->getDelimitedString($columnName, "field");
+				$singleColumnName= $columnName;
+			}
             if(isset($column["alias"]))
                 $columnAlias= $this->db->getDelimitedString($column["alias"], "string");
             else
@@ -1168,7 +1170,12 @@ class STDbTable extends STBaseTable
                     //					Otherwise it shouldn't made any output from the linked table.
                     // alex 24/02/2023: now search only for foreign keys when inside an STDbSelector container
                     //                  no extra choice was made
-                    $fkTableName= $this->getFkTableName($column["column"]);
+					if($tKeyword === false)
+					{ // if column is an sql-keyword, it was prepered inside removeNoDbColumns()
+                    	$fkTableName= $this->getFkTableName($column["column"]);
+						if($fkTableName == $this->getName())
+							$fkTableName= null; // own table
+					}
                     if(STCheck::isDebug() && isset($fkTableName))
                     {
                         STCheck::echoDebug("db.statements.select", "from ".get_class($this)." ".$this->getName()." for column ".$column["column"]." is Fk-Table \"".$fkTableName."\"");
@@ -1204,7 +1211,7 @@ class STDbTable extends STBaseTable
 						
 					}else
 					{
-						$singleColumn= $columnName;
+						$singleColumn= $singleColumnName;
 						if($this->sqlKeyword($column["column"]) != false)
 							$multiColumn= $columnName;
 						else
@@ -2521,6 +2528,7 @@ class STDbTable extends STBaseTable
             $inherit= $this->db->keyword($column);
             if($inherit)
             {
+				$singleColumn= "";
                 $columnString= "";
                 foreach($inherit["content"] as $col)
                 {
@@ -2528,18 +2536,24 @@ class STDbTable extends STBaseTable
                         or
                         $col=="*")
                     {
+						$singleColumn.= $col;
                         $columnString.= $col;
                         if($col!="*")
+						{
+							$singleColumn.= " ";
                             $columnString.= " ";
+						}
                     }else
                     {
+						$col= $this->db->getDelimitedString($col, "field");
                         if(!$needetTables[$content["table"]])
                             $needetTables[$content["table"]]= &$this->getTable($content["table"]);
                         if($needetTables[$content["table"]]->validColumnContent($col))
                         {// if exists name in table
                             if($bNeedAlias)
                                 $columnString.= $aAliases[$content["table"]].".";
-                                $columnString.= $col.",";
+                            $columnString.= $col.",";
+							$singleColumn.= $col.",";
                         }else
                         {
                             if(preg_match("/^([^.]+)\.([^.]+)$/", $col, $preg))
@@ -2551,6 +2565,7 @@ class STDbTable extends STBaseTable
                                 {
                                     $columnString.= $aAliases[$preg[1]].".";
                                     $columnString.= $preg[2].",";
+									$singleColumn.= $preg[2].",";
                                 }
                                 unset($table);
                             }
@@ -2558,9 +2573,16 @@ class STDbTable extends STBaseTable
                     }
                 }
                 if($column!="*")
+				{
+					$singleColumn= substr($singleColumn, 0, strlen($singleColumn)-1);
                     $columnString= substr($columnString, 0, strlen($columnString)-1);
+				}
                 if($columnString=="")
+				{
+					$singleColumn= "*";
                     $columnString= "*";
+				}
+				$aNeededColumns[$nr]["singleColumn"]= $inherit["keyword"]."(".$singleColumn.")";
                 $aNeededColumns[$nr]["column"]= $inherit["keyword"]."(".$columnString.")";
             }else
             {
