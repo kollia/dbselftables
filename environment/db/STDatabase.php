@@ -1018,16 +1018,16 @@ abstract class STDatabase extends STObjectContainer
  		return $Array;
  	}
 	/**
-	 *  liefert Tabellen-Information �ber einzelne Tabellen
+	 * provides table information about individual tables
 	 *
-	 * @param string:$statement: 	kann ein normales SQL-Statment sein,<br>
-     *   	 						ein Tabellen-Name<br>oder ein Ergebnis aus einem Statement
-     *   	 						(wo jedoch bei einem <code>enum</code> nur <code>enum</code>
-     *   	 						 im flag angezeigt wird -> sonst auch der Inhalt des Enums)
-	 * @param enum:$onError: 	    ob die Methode Fehler anzeigen soll und beendet werden soll.
-     *   	 						<br>noErrorShow - Fehler wird nicht angezeigt und Programm nicht beendet
-     *   	 						<br>onErrorShow - Fehler wird angezeigt aber Programm nicht beendet
-     *   	   		  			<br>onErrorStop - Fehler wird angezeigt und Programm beendet
+	 * @param string:$statement: 	can be an normal sql-statement,
+     *   	 						a table name, or a result from a statement<br>
+     *   	 						(where, however, for an <code>enum</code> only <code>enum</code>
+	 * 								 is displayed in the flag -> otherwise also the contents of the enum)
+	 * @param enum:$onError: 	    Whether the method should display errors and terminate.
+	 * 								<br>noErrorShow - Error is not displayed and the program is not terminated.
+	 * 								<br>onErrorShow - Error is displayed but the program is not terminated.
+	 * 								<br>onErrorStop - Error is displayed and the program is terminated.
 	 */
 	function describeTable($statement, $onError= onErrorStop)
 	{
@@ -2301,8 +2301,19 @@ abstract class STDatabase extends STObjectContainer
                 {
                     $inherit[]= $in_str;
                     $in_str= "";
-                }
+                }//else quote is open, so continue with next
             }
+			$splited= $inherit;
+			$inherit= array();
+			foreach($splited as $key=>$each)
+			{
+				if(preg_match("/([t0-9]+)\.(.*)/", $each, $preg))
+				{
+					$inherit['table_alias'][$key]= $preg[1];
+					$inherit[$key]= $preg[2];
+				}else
+					$inherit[$key]= $each;
+			}
 	    }
 	    return array(   "keyword" => $keyword,
 	                    "usage" => $usage,
