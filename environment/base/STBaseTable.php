@@ -3622,7 +3622,7 @@ class STBaseTable
 			
 			// Check if function has exactly 3 parameters
 			$args= count($params);
-			if( $args == 0 || $args >= 3) {
+			if( $args == 0 || $args > 3) {
 				STCheck::is_error(true, "STBaseTable::checkCallbackFunctionName()", 
 					"Function '$functionName' must have exactly 3 parameters, " . count($params) . " found");
 				return false;
