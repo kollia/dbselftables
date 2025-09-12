@@ -1360,7 +1360,8 @@ class STSiteCreator extends HtmlTag
 							$global_selftable_testing_file_warnings= array_merge(
 												$global_selftable_testing_file_warnings, $also_delete_msg);
 						}
-					}elseif(!$bDeleteLink)
+					}elseif(!$bDeleteLink &&
+							$bInsertLink)
 					{ // no delete link found, so go to next table
 						$lastInsert= array();
 						if(is_array($testdebug['last-insert']))
