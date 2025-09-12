@@ -1017,8 +1017,8 @@ class STSiteCreator extends HtmlTag
 			 * 					['###delete']	- array with links to delete (STDELETE)
 			 */
 
-				if(	$__global_finished_SiteCreator_result === "NOERROR" ||
-				$__global_finished_SiteCreator_result === "BOXDISPLAY"	) // ||
+			if(	$__global_finished_SiteCreator_result === "NOERROR" ||
+			$__global_finished_SiteCreator_result === "BOXDISPLAY"	) // ||
 			//	$__global_finished_SiteCreator_result === "EMPTY_RESULT"	)
 			{
 				// Check if there are no back_tables or action links
@@ -1296,11 +1296,20 @@ class STSiteCreator extends HtmlTag
 						$global_selftable_testing_file_warnings= array_merge(
 											$global_selftable_testing_file_warnings, $update_error_msg);
 											
-					}elseif(!isset($global_selftable_testing_allowSiteFaults['ERRORS'][$currentSiteNr]['update']['PK']))
+					}else
 					{
+						$updateArr= $global_selftable_testing_allowSiteFaults['ERRORS'][$currentSiteNr]['update'];
 						$update_warning_msg= array();
 						$update_warning_msg[]= "<b>WARNING</b>: no insert link found for table.";
-						$update_warning_msg[]=         "      Update now random PK in table.";
+						$pk_msg= 			        "           Update now ";
+						if(is_array($updateArr['pk']))
+						{
+							$column = array_key_first($updateArr['pk']);
+							$value= $updateArr['pk'][$column];
+							$pk_msg.= "PK '$column' with value '$value'";
+						}else
+							$pk_msg.= "random PK in table";
+						$update_warning_msg[]= $pk_msg.".";
 						$global_selftable_testing_file_warnings= array_merge(
 											$global_selftable_testing_file_warnings, $update_warning_msg);
 					}
@@ -1340,8 +1349,14 @@ class STSiteCreator extends HtmlTag
 							return ""; // no link to return, stay on site
 						}else
 						{
+							$deleteArr= $global_selftable_testing_allowSiteFaults['ERRORS'][$currentSiteNr]['delete'];
+							$also_delete_msg= array();
 							$also_delete_msg[]= "<b>WARNING</b>: no insert link found for table.";
-							$also_delete_msg[]=         "           Deletion now random PK in table.";
+							$pk_msg=                 "           Delete now ";
+							$column = array_key_first($deleteArr['pk']);
+							$value= $deleteArr['pk'][$column];
+							$pk_msg.= "PK '$column' with value '$value'";
+							$also_delete_msg[]= $pk_msg.".";
 							$global_selftable_testing_file_warnings= array_merge(
 												$global_selftable_testing_file_warnings, $also_delete_msg);
 						}
