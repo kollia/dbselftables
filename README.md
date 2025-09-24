@@ -1,5 +1,5 @@
 # DB selfTables
-The goal of this project is that you to design your database table and automatically get a user-friendly GUI interface for all your generated tables in a short time.
+The goal of this project is that you design your database table and automatically get a user-friendly GUI interface for all your generated tables in a short time.
 
 This solution can be useful for research if you write your own specific algorithm that uses data from the database. 
 When first developing, you make your data available via an SQL interface such as phpMyAdmin or with a pure SQL-Client. After that, 

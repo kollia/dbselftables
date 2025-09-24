@@ -347,7 +347,10 @@ class STBaseTable
 	    $this->aCallbacks= array();
 	    // alex 09/06/2005:	limitieren von Rowanzahl aus der Datenbank
 	    $this->nFirstRowSelect= 0;
-	    $this->nMaxRowSelect= null;// null -> es werden alle Rows aufgelistet
+		// 17/09/2025 kollia:
+		// use now max row select from parent container
+		// impement new method clearMaxRowSelect()
+	    //$this->nMaxRowSelect= null;
 	    $this->nAktSelectedRow= 0;
 	    $this->bAlwaysIndex= true;
 	    $this->listArrangement= STHORIZONTAL;//bestimmt das Layout der STListBox
@@ -1125,6 +1128,10 @@ class STBaseTable
 	{
 		$this->dateIndex= array();
 		$this->nMaxRowSelect= $count;
+	}
+	public function clearMaxRowSelect()
+	{
+		$this->nMaxRowSelect= null;
 	}
 	function limit($start, $limit= null)
 	{
