@@ -20,7 +20,7 @@ class STDbDeleter extends STDbSqlWhereCases
 	{
 		$db= &$this->table->db;
 		$this->nErrorRowNr= null;
-		$this->table->where(null);
+		//$this->table->where(null);
 		//$table= new STDbTable($this->table);
 		$this->table->modifyQueryLimitation($this->bModify);
 		$fkLinks= $db->hasFkEntriesToTable($this->table->getName(), $this->oWhere);
@@ -68,7 +68,7 @@ class STDbDeleter extends STDbSqlWhereCases
 	    if(isset($this->aStatement['full']))
 	        return $this->aStatement['full'];
 	    
-	    $tableName= $this->table->getName();
+	    $tableName= $this->table->getDbTableName();
 		$tableName= $this->table->db->getDelimitedString($tableName, "field");
 	    $this->table->allowFkQueryLimitation(false);
 	    $whereStatement= $this->getWhereStatement(0);

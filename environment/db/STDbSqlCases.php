@@ -90,7 +90,8 @@ class STDbSqlCases
     {
         if(!$post_vars)
             return array();
-        $fields= $this->table->db->describeTable($this->table->Name);//hole Felder aus Datenbank
+        $tableName= $this->table->getDbTableName();
+        $fields= $this->table->db->describeTable($tableName);//hole Felder aus Datenbank
         
         $aRv= array();
         foreach($fields as $field)
@@ -103,7 +104,7 @@ class STDbSqlCases
     }
     protected function read_inFields($type)
     {
-        $fields= $this->table->db->describeTable($this->table->Name);
+        $fields= $this->table->db->describeTable($this->table->getDbTableName());
         $count= 0;
         $aRv= array();
         foreach($fields as $field)

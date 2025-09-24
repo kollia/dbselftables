@@ -555,7 +555,7 @@ class STItemBox extends STBaseBox
    		$table= &$this->asDBTable;
    		if(!isset($table))
    			return 0;
-   		$tableName= $table->getName();
+   		$tableName= $table->getDbTableName();
 		if(isset($table->aAuto_increment["value"]))
 			return $table->aAuto_increment["value"];
 
@@ -692,7 +692,13 @@ class STItemBox extends STBaseBox
     		//$oTable->clearFKs();// ich will die Spalten ohne verweiss auf eine N�chste Tabelle
     		//$oTable->clearSqlAliases();
     		//$oTable->clearAliases();// sowie alle orginal Spalten-Namen
-    		$oTable->andWhere($this->where);
+			if( isset($this->where) &&
+				(	typeof($this->where, "STDbWhere") ||
+					(	typeof($this->where, "string") &&
+						trim($this->where) != ""			)	)	)
+			{
+    			$oTable->andWhere($this->where);
+			}
     		$where= $oTable->getWhere();
     		Tag::alert(!($where && $where->isModified()), "STItemBox::makeBox()", "no where-clausel defined to display");
     		$statement= $oTable->getStatement();
@@ -1982,17 +1988,26 @@ class STItemBox extends STBaseBox
 			$oCallbackClass->rownum= 0;
 			$oCallbackClass->MessageId= "PREPARE";
 			if($this->asDBTable)
-			{
+			{				
 			    $this->asDBTable->modifyQueryLimitation();
 				$oCallbackClass->where= $this->asDBTable->getWhere();
 			}
 			$sErrorString= $this->makeCallback($this->action, $oCallbackClass, $this->action, 0);
-			if(is_bool($sErrorString))
+			if(	is_bool($sErrorString) &&
+				$sErrorString == true		)
 			{
-				if($this->asDBTable)
+				if( isset($oCallbackClass->where) &&
+					(	typeof($oCallbackClass->where, "STDbWhere") ||
+					  	(	is_string($oCallbackClass->where) &&
+							trim($oCallbackClass->where) != ""	)	)	)
 				{
 					$this->asDBTable->where($oCallbackClass->where);
-					$this->asDBTable->andWhere($this->where);
+					if(typeof($this->asDBTable, "STDbSelector"))
+					{
+						$tb= $this->asDBTable->getDbTableName();
+						$this->asDBTable->andWhere($tb, $this->where);
+					}else
+						$this->asDBTable->andWhere($this->where);
 					$where= $this->asDBTable->getWhere();
 				}else
 					$where= $this->where;

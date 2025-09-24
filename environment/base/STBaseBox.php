@@ -662,10 +662,6 @@ abstract class STBaseBox extends TableTag
 				return $nr;
 			}
 		}
-		function where($where)
-		{
-			$this->where= $where;
-		}
 		function searchByAlias($aliasName)
 		{
 		    return $this->asDBTable->searchByColumn($aliasName);

@@ -61,7 +61,7 @@ class STDbTable extends STBaseTable
 		    STCheck::paramCheck($Table, 1, "string", "STBaseTable", "null");
         else
             STCheck::paramCheck($Table, 1, "string", "STBaseTable");
-		STCheck::paramCheck($container, 2, "STObjectContainer", "string", "null");
+		STCheck::paramCheck($container, 2, "STObjectContainer", "STDbSelector", "string", "null");
 
 		$this->abOrigChoice= array();
 		$this->onError= $onError;
@@ -193,6 +193,19 @@ class STDbTable extends STBaseTable
     	    $column= $desc->getColumnName($this->Name, $column);
 	    }
 	    return STBaseTable::getColumnName($column);
+	}
+	/**
+	 * get name of table inside database
+	 * which is always the same name
+	 * like method <code>-&gt;getName()</code>
+	 * This method is only for the table container <code>STDbSelector</code>
+	 * see also <code>STDbSelector::getDbTableName()</code>
+	 * 
+	 * @return string name of table inside database
+	 */
+	public function getDbTableName() : string
+	{
+	    return $this->Name;
 	}
 	/**
 	 * inform whether content of parameter is an keyword.
@@ -1049,11 +1062,14 @@ class STDbTable extends STBaseTable
 	    $statement= "select ";
 	    if($this->isDistinct())
 	        $statement.= "distinct ";
-		if(isset($aTableAlias[$this->getName()]))
-	    	$aliasTable= $aTableAlias[$this->getName()];
-		else
+		if(!isset($aTableAlias[$this->getDbTableName()]))
+		{
 			$aliasTable= "uk";	// unknown - maybe table does not exist inside database
 								//			 this can occure when ask for list_table
+
+		}else
+	    	$aliasTable= $aTableAlias[$this->getDbTableName()];
+
 	    $statement.= $this->getSelectStatementA(!$bUseIdentifications, $this, $aliasTable, $aTableAlias, $aSubstitutionTables);
 	    $this->aStatement['select']= $statement;
 	    $this->aStatement['selectAlias']= $aTableAlias;
@@ -1087,8 +1103,7 @@ class STDbTable extends STBaseTable
             if(STCheck::isDebug("db.statements.select"))
                 $debugSess= "db.statements.select";
             if(STCheck::isDebug($debugSess))
-            {//st_print_r($this->identification,2);
-                //echo "<b>[</b>db.statements.select<b>]:</b> make select statement";
+            {
                 $dbgstr= "make select statement";
                 if(!$bFirstSelect)
                     $dbgstr.= " from identifColumns";
@@ -1096,7 +1111,7 @@ class STDbTable extends STBaseTable
                 if($bFirstSelect)
                     $dbgstr.= "main-Table ";
                 $dbgstr.= get_class($this)."/";
-                $tableName= $this->getName();
+                $tableName= $this->getDbTableName();
                 $displayName= $this->getDisplayName();
                 $dbgstr.= "<b>".$tableName."(</b>".$displayName."<b>)</b>";
                 $dbgstr.= " from container:<b>".$this->container->getName()."</b>";
@@ -1122,7 +1137,7 @@ class STDbTable extends STBaseTable
 			else
 				$singleColumnName= $columnName;
 			$tKeyword= $this->db->keyword($column["column"]);
-            STCheck::echoDebug("db.statements.select", "run for ".++$columnNr.". column $columnName inside table '{$this->getName()}'");
+            STCheck::echoDebug("db.statements.select", "run for ".++$columnNr.". column $columnName inside table '{$this->getDbTableName()}'");
 			if(	$tKeyword === false)
 			{// if column is an sql-keyword, it was prepered inside removeNoDbColumns()
                 $columnName= $this->db->getDelimitedString($columnName, "field");
@@ -1173,12 +1188,12 @@ class STDbTable extends STBaseTable
 					if($tKeyword === false)
 					{ // if column is an sql-keyword, it was prepered inside removeNoDbColumns()
                     	$fkTableName= $this->getFkTableName($column["column"]);
-						if($fkTableName == $this->getName())
+						if($fkTableName == $this->getDbTableName())
 							$fkTableName= null; // own table
 					}
                     if(STCheck::isDebug() && isset($fkTableName))
                     {
-                        STCheck::echoDebug("db.statements.select", "from ".get_class($this)." ".$this->getName()." for column ".$column["column"]." is Fk-Table \"".$fkTableName."\"");
+                        STCheck::echoDebug("db.statements.select", "from ".get_class($this)." ".$this->getDbTableName()." for column ".$column["column"]." is Fk-Table \"".$fkTableName."\"");
                     }
                 }
                 if(	!$fkTableName ) // if no FK table exist, the column can only be from the current table
@@ -1187,10 +1202,11 @@ class STDbTable extends STBaseTable
 						$aliasTable= null; // column is virtual
                     else
 					{
-						if($column['table'] == $this->getName())
-						{
+						if(	$column['table'] == $this->getDbTableName() ||
+							$column['table'] == $this->Name	)	// if own table object is a STDbSelector, the own name can be different to the real table name
+						{										// and by update and delete functionality the object name will be mostly used
 							$aliasTable= $sUseAliasForOwnTable;
-							$aUseAliases[$aliasTable]= $column['table'];
+							$aUseAliases[$aliasTable]= $this->getDbTableName();
 						}else
 						{
 							$aliasTable= $aTableAlias[$column["table"]];
@@ -1271,7 +1287,7 @@ class STDbTable extends STBaseTable
                     $newAlias= null;
                     STCheck::echoDebug("db.statements.select", "");
                     STCheck::echoDebug("db.statements.select", "need column from foreign table");
-                    if( $fkTableName == $this->getName() ||
+                    if( $fkTableName == $this->getDbTableName() ||
                         array_search($fkTableName, $aUseAliases) !== false  )
                     {
                         $subTableName= $fkTableName."_sub";
@@ -1324,7 +1340,7 @@ class STDbTable extends STBaseTable
                         $statement.= $fkStatement;
                         $singleStatement.= $fkStatement;
                     }
-                    Tag::echoDebug("db.statements.select", "back in Table <b>".$this->getName()."</b>");
+                    Tag::echoDebug("db.statements.select", "back in Table <b>".$this->getDbTableName()."</b>");
                 }
             }else
             {
@@ -1364,8 +1380,23 @@ class STDbTable extends STBaseTable
                 if( $tableName != "and" &&
                     $tableName != "or"      )
                 {
-                    $tabName= $this->db->getTableName($tableName);// search for original table name
-                    $aUseAliases[$aTableAlias[$tabName]]= $tabName;
+                    $orgTabName= $this->db->getTableName($tableName);// search for original table name
+					if(!isset($aTableAlias[$orgTabName]))
+					{
+						if($this->Name == $orgTabName)
+							$orgTabName= $this->getDbTableName();
+						elseif($whereClause->sForTable == $orgTabName)
+						{
+							if(!isset($whereClause->oTable))
+							{
+								$table= $this->container->getTable($orgTabName);
+								$orgTabName= $table->getDbTableName();
+							}else
+								$orgTabName= $whereClause->oTable->getDbTableName();
+						}
+					}else
+						$tabName= $orgTabName;
+                    $aUseAliases[$aTableAlias[$orgTabName]]= $tabName;
                 }
             }
         }
@@ -1396,9 +1427,6 @@ class STDbTable extends STBaseTable
                 STCheck::echoDebug("user", "where clause need for select statement");
                 st_print_r($whereClause,10, $space);
             }
-        }
-        if(STCheck::isDebug("db.statements.aliases"))
-        {
             $space= STCheck::echoDebug("db.statements.aliases", "need follow tables inside select-statement");
             st_print_r($aTableAlias, 1, $space);
         }
@@ -1429,7 +1457,7 @@ class STDbTable extends STBaseTable
 	    }
 		$fieldDelimiter= $this->db->getFieldDelimiter();
 	    $statement= "from ".$fieldDelimiter[0]['open']['delimiter'];
-		$statement.= $this->Name.$fieldDelimiter[0]['close']['delimiter'];
+		$statement.= $this->getDbTableName().$fieldDelimiter[0]['close']['delimiter'];
 	    if(count($aTableAlias) <= 1)
 	    {
 	        $this->aStatement['table']= $statement;
@@ -1437,8 +1465,9 @@ class STDbTable extends STBaseTable
 	        return $statement;
 	    }
 	    $maked= array();
-	    $maked[$this->Name]= "finished";
-	    $statement.= " as ".$aTableAlias[$this->Name]." ";
+		$tableName= $this->getDbTableName();
+	    $maked[$tableName]= "finished";
+	    $statement.= " as ".$aTableAlias[$tableName]." ";
 	    $statement.= $this->getTableStatementA($this, $aTableAlias, $maked, $aSubstitutionTables, /*first access*/true);
 	    $this->aStatement['table']= $statement;
 	    $this->aStatement['tableAlias']= $aTableAlias;
@@ -1448,7 +1477,7 @@ class STDbTable extends STBaseTable
 	{
 	    if(STCheck::isDebug())
 	    {
-	        $sMessage= "make table statement from table $this->Name which is";
+	        $sMessage= "make table statement from table {$this->Name} which is";
             if(!$bFirstAccess)
                 $sMessage.= " <b>not</b>";
             $sMessage.= " the main table";
@@ -1456,7 +1485,7 @@ class STDbTable extends STBaseTable
 	    }
 		$statement= "";
 		$tableStructure= $this->db->getTableStructure($this->container);
-		if($oMainTable->getName()!==$this->Name)
+		if($oMainTable->getDbTableName()!==$this->getDbTableName())
 			$oTable= $this;
 		else
 			$oTable= &$oMainTable;
@@ -1467,14 +1496,14 @@ class STDbTable extends STBaseTable
 		if( STCheck::isDebug("db.statements.table") &&
 		    $bFirstAccess /*columns only interrest by Maintable*/   )
 		{
-		    $space= STCheck::echoDebug("db.statements.table", "needed columns for table ".$oTable->getName());
+		    $space= STCheck::echoDebug("db.statements.table", "needed columns for table ".$oTable->getDbTableName());
 			echo "<pre>";
 			st_print_r($aNeededColumns, 2, $space);
 			STCheck::echoDebug("db.statements.table", "from table alias:");
 			st_print_r($aTableAlias, 1, $space);
 			echo "</pre><br />";
 		}
-		$tableName= $oTable->getName();
+		$tableName= $oTable->getDbTableName();
 		if(!isset($aTableAlias[$tableName]))
 		{
 			$tableName= $oTable->db->getDatabaseName().".".$tableName;
@@ -1492,7 +1521,7 @@ class STDbTable extends STBaseTable
         	    $msg= "found ";
         	else
         	    $msg= "do not need ";
-        	$msg.= "foreign Keys for table ".get_class($oTable).":'".$oTable->getName()."' with ID:".$oTable->ID;
+        	$msg.= "foreign Keys for table ".get_class($oTable).":'".$oTable->getDbTableName()."' with ID:".$oTable->ID;
         	$space= STCheck::echoDebug("db.statements.table", $msg);    	
         	if($exist > 0)
         	   st_print_r($fk,3,$space);
@@ -1501,7 +1530,7 @@ class STDbTable extends STBaseTable
     	{
     		foreach($content as $join)
     		{
-    			//$sTableName= $oTable->getName();
+    			//$sTableName= $oTable->getDbTableName();
     			$bNeedFkColumn= false;
     			foreach($aNeededColumns as $aColumn)
     			{
@@ -1629,7 +1658,7 @@ class STDbTable extends STBaseTable
 								$fromTable->container->getName() != $oMainTable->container->getName()			)
 							{// take the correct table from container
 								$fromOwnTable= $oMainTable->getTable($join['table']->Name);    				    
-								$fromTable= $oMainTable->container->getTable($fromTable->getName());
+								$fromTable= $oMainTable->container->getTable($fromTable->getDbTableName());
 								echo __FILE__.__LINE__."<br>";
 								echo "own getTable: ".$fromOwnTable->toString()." but use ".$fromTable->toString()."<br>";
 							}
@@ -1647,10 +1676,10 @@ class STDbTable extends STBaseTable
 								if(!preg_match("/^[ \t]*and/", $whereStatement))
 									$whereStatement= "and $whereStatement";
 									$statement.= " ".$whereStatement;
-									STCheck::echoDebug("db.statements.table", "get on condition '$whereStatement' from table '".$fromTable->getName()."(".$fromTable->ID.")'");
+									STCheck::echoDebug("db.statements.table", "get on condition '$whereStatement' from table '".$fromTable->getDbTableName()."(".$fromTable->ID.")'");
 							}
 						}
-						if($oMainTable->getName() != $fromTable->getName())
+						if($oMainTable->getDbTableName() != $fromTable->getDbTableName())
 						{
 							$whereStatement= $oMainTable->getWhereStatement("on", $fromTable, $aTableAlias, $aSubstitutionTables);
 							if($whereStatement)
@@ -1658,7 +1687,7 @@ class STDbTable extends STBaseTable
 								if(!preg_match("/^[ \t]*and/", $whereStatement))
 									$whereStatement= "and $whereStatement";
 									$statement.= " ".$whereStatement;
-									STCheck::echoDebug("db.statements.table", "get on condition '$whereStatement' from main table '".$oMainTable->getName()."(".$oMainTable->ID.")'");
+									STCheck::echoDebug("db.statements.table", "get on condition '$whereStatement' from main table '".$oMainTable->getDbTableName()."(".$oMainTable->ID.")'");
 							}
 						}
 		
@@ -1673,7 +1702,7 @@ class STDbTable extends STBaseTable
 		
 							$maked[$makedTable]= "finished";
 							$statement.= $fromTable->getTableStatementA($oMainTable, $aTableAlias, $maked, $aSubstitutionTables);
-							Tag::echoDebug("db.statements.table", "back in table <b>".$oTable->getName()."</b>");
+							Tag::echoDebug("db.statements.table", "back in table <b>".$oTable->getDbTableName()."</b>");
 						}
 					}// end of if(isset($aTableAlias[$table])	)
 				}// end of if($bNeedFkColumn)
@@ -1691,7 +1720,7 @@ class STDbTable extends STBaseTable
             $msg.= "foreign Keys (BackJoin's) ";
             if($exist == 0)
                 $msg.= "found ";
-            $msg.= "to own table '".$oTable->getName()."' with ID:".$oTable->ID." ";
+            $msg.= "to own table '".$oTable->getDbTableName()."' with ID:".$oTable->ID." ";
             if($exist > 0)
                 $msg.= "from follow tables:";
             $space= STCheck::echoDebug("db.statements.table", $msg);
@@ -1746,9 +1775,9 @@ class STDbTable extends STBaseTable
 					    if(!preg_match("/^[ \t]*and/", $whereStatement))
 					        $whereStatement= "and $whereStatement";
 					        $statement.= " ".$whereStatement;
-					        STCheck::echoDebug("db.statements.table", "get on condition '$whereStatement' from table '".$fromTable->getName()."(".$fromTable->ID.")'");
+					        STCheck::echoDebug("db.statements.table", "get on condition '$whereStatement' from table '".$fromTable->getDbTableName()."(".$fromTable->ID.")'");
 					}
-					if($oMainTable->getName() != $sBackTableName)
+					if($oMainTable->getDbTableName() != $sBackTableName)
 					{
 					    $whereStatement= $oMainTable->getWhereStatement("on", $BackTable, $aTableAlias, $aSubstitutionTables);
 					    if($whereStatement)
@@ -1756,7 +1785,7 @@ class STDbTable extends STBaseTable
 					        if(!preg_match("/^[ \t]*and/", $whereStatement))
 					            $whereStatement= "and $whereStatement";
 					            $statement.= " ".$whereStatement;
-					            STCheck::echoDebug("db.statements.table", "get on condition '$whereStatement' from main table '".$oMainTable->getName()."(".$oMainTable->ID.")'");
+					            STCheck::echoDebug("db.statements.table", "get on condition '$whereStatement' from main table '".$oMainTable->getDbTableName()."(".$oMainTable->ID.")'");
 					    }
 					}
     			}// end of if(!STCheck::is_warning(!$join))
@@ -1907,7 +1936,7 @@ class STDbTable extends STBaseTable
 		        STCheck::alert(count($maked) < count($aTableAlias), "STDbTable::getTableStatementA()", $msg, 2);
 		    }
 		}
-		STCheck::echoDebug("db.statements.table", "TableStatement - Result from table '".$oTable->getName()."'= '$statement'");
+		STCheck::echoDebug("db.statements.table", "TableStatement - Result from table '".$oTable->getDbTableName()."'= '$statement'");
 		return $statement;
 	}
 	public function getWhereAliases() : array
@@ -1915,7 +1944,7 @@ class STDbTable extends STBaseTable
 		if(isset($this->aStatement['whereAliases']))
 			return $this->aStatement['whereAliases'];
 	    $aRv= array();
-	    $aliasTables= $this->db->getAliasOrder();
+	    $aliasTables= $this->getAliasOrder();
 	    $ostwhere= $this->getWhere();
 	    $desc= null;
 	    if(isset($ostwhere))
@@ -1996,7 +2025,7 @@ class STDbTable extends STBaseTable
 	           
             if(STCheck::isDebug("db.statements.where"))
             {
-                $space= STCheck::echoDebug("db.statements.where", "stored where statement for table ".$this->getName());
+                $space= STCheck::echoDebug("db.statements.where", "stored where statement for table ".$this->getDbTableName());
                 st_print_r($this->oWhere, 5, $space);
             }
 	    }
@@ -2008,12 +2037,12 @@ class STDbTable extends STBaseTable
 	            if($condition == "where")
 	                $msg[]= "\"".$this->aStatement['where']."\"";
 	            else
-	                $msg[]= "\"".$this->aStatement['where'][$from->getName()]."\"";
+	                $msg[]= "\"".$this->aStatement['where'][$from->getDbTableName()]."\"";
 	            STCheck::echoDebug("db.statements.where", $msg);
 	        }
 	        if($condition == "where")
 	            return $this->aStatement['where'];
-            $tabName= $from->getName();
+            $tabName= $from->getDbTableName();
 	        if(isset($this->aStatement[$condition][$tabName]))
 	            return $this->aStatement[$condition][$tabName];
 	    }
@@ -2055,7 +2084,7 @@ class STDbTable extends STBaseTable
 	        STCheck::echoDebug("db.statements.where", "execute for own table <b>".$this->Name."</b>");
 	        $res= $ostwhere->getStatement($from, $condition, $aliases);
 	        $statement= $res['str'];
-	        $aMade[]= $this->getName();
+	        $aMade[]= $this->getDbTableName();
 	    }
 	    if(is_array($aliases))
 	    {
@@ -2068,7 +2097,7 @@ class STDbTable extends STBaseTable
 	                if(typeof($table, "STAlaisTable"))
 	                {
 	                    $ostwhere= $table->getWhere();
-	                    //echo "table:".$fromTable->getName()."<br />";
+	                    //echo "table:".$fromTable->getDbTableName()."<br />";
 	                    //st_print_r($fromTable->oWhere,10);
 	                    if(typeof($ostwhere, "STDbWhere"))
 	                    {
@@ -2094,7 +2123,7 @@ class STDbTable extends STBaseTable
 	            $message= "created where statement for ";
 	        else
 	            $message= "for object ";
-            $message.= get_class($this)."(<b>".$this->getName()."</b>)";
+            $message.= get_class($this)."(<b>".$this->getDbTableName()."</b>)";
             $message.= " from container <b>".$this->container->getName()."</b>";
             if(trim($statement) == "")
 	            $message.= " was no where statementd created";
@@ -2137,8 +2166,9 @@ class STDbTable extends STBaseTable
 		}
 		if(count($this->asOrder))
 		{
-			$aliasTables= $this->db->getAliasOrder();
-			$alias[$this->Name]= $aliasTables[$this->Name];
+			$aliasTables= $this->getAliasOrder();
+			$tableName= $this->getDbTableName();
+			$alias[$tableName]= $aliasTables[$tableName];
 			$aRv= array_merge($aRv, $alias);
 		}
 	    if( STCheck::isDebug("db.statements.order") &&
@@ -2357,7 +2387,7 @@ class STDbTable extends STBaseTable
             }
         }
         $statement= substr($statement, 0, strlen($statement)-1);
-        $tableName= $this->getName();
+        $tableName= $this->getDbTableName();
         $query= new STQueryString();
         $queryArr= $query->getArrayVars();
         if(isset($queryArr["stget"]["sort"][$tableName]))
@@ -2412,7 +2442,7 @@ class STDbTable extends STBaseTable
 	    $maxRows= $this->getMaxRowSelect();
 	    if($maxRows)
 	    {
-	        $tableName= $this->getName();
+	        $tableName= $this->getDbTableName();
 	        $from= $this->getFirstRowSelect();
 	        if(!$from)
 	            $from= 0;
@@ -2684,7 +2714,7 @@ class STDbTable extends STBaseTable
 		if(typeof($address, "STDbTable"))
 		{// ist die Addresse ein STDbTable
 		 // diesen abfangen und in einen Container verpacken
-		    $tabName= $address->getName();
+		    $tabName= $address->getDbTableName();
 		    $newContainerName= "dbtable ".$tabName;
 		    $address= new STDbTableContainer($newContainerName, $this->db);
 		    $address->needTable($tabName);

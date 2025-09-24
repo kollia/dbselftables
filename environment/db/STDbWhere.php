@@ -210,7 +210,7 @@ class STDbWhere
 			}
 		}else if(typeof($table, "STDbTable"))
 		{
-			$tableName= $table->getName();
+			$tableName= $table->getDbTableName();
 			$db= $table->getDatabase();
 			$dbName= $db->getDatabaseName();
 		}else if(typeof($table, "STBaseTable"))

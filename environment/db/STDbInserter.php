@@ -55,7 +55,7 @@ class STDbInserter extends STDbSqlCases
 	    $value_string= "";
 	    $result= $this->make_sql_values($this->columns[$nr]);
 	    $flags= $this->read_inFields("flags");
-		$table= $this->db->getDelimitedString($this->table->getName(), "field");
+		$table= $this->db->getDelimitedString($this->table->getDbTableName(), "field");
 	        
         if(STCheck::isDebug("db.statement.insert"))
         {

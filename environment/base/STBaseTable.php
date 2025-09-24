@@ -230,9 +230,6 @@ class STBaseTable
 	  */
 	function __construct($oTable= null)
 	{
-		global $__static_global_STBaseTable_Nr;
-	    global $__static_global_STBaseTable_ID;
-	    
 		STCheck::param($oTable, 0, "string", "STBaseTable", "null");
 
 
@@ -249,17 +246,10 @@ class STBaseTable
     	    else
     	        $this->Name= $oTable;
             $this->bCorrect= true;
+			$this->createGlobalTableID($this->Name);
     	}else
     	    $this->Name= null;
     
-		if(isset($__static_global_STBaseTable_ID[$this->Name]))
-			$__static_global_STBaseTable_ID[$this->Name]++;
-		else
-			$__static_global_STBaseTable_ID[$this->Name]= 0;
-		if(!in_array($this->Name, $__static_global_STBaseTable_Nr))
-			$__static_global_STBaseTable_Nr[]= $this->Name;
-		$this->Nr = array_search($this->Name, $__static_global_STBaseTable_Nr);
-		$this->ID= $__static_global_STBaseTable_ID[$this->Name];	
     	STCheck::increase("table");
         if( STCheck::isDebug() &&
             (   STCheck::isDebug("table") ||
@@ -311,6 +301,30 @@ class STBaseTable
             }
         }
 	}
+	protected function createGlobalTableID(string $tableName)
+	{
+	    global $__static_global_STBaseTable_Nr;
+	    global $__static_global_STBaseTable_ID;
+	    
+	    if( isset($__static_global_STBaseTable_Nr[$tableName]) )
+	    {
+	        $__static_global_STBaseTable_Nr[$tableName]++;
+	    }else
+	    {
+	        $__static_global_STBaseTable_Nr[$tableName]= 1;
+	    }
+	    $this->Nr= $__static_global_STBaseTable_Nr[$tableName];
+	    
+	    if( isset($__static_global_STBaseTable_ID[$tableName]) )
+	    {
+	        $__static_global_STBaseTable_ID[$tableName]++;
+	    }else
+	    {
+	        $__static_global_STBaseTable_ID[$tableName]= 1;
+	    }
+	    $this->ID= $__static_global_STBaseTable_ID[$tableName];
+	}
+	
 	function __clone()
 	{
 	    global $__static_global_STBaseTable_ID;
@@ -341,10 +355,6 @@ class STBaseTable
 	        $this->bLimitOwn= true;
 	        $this->bModifyFk= true;
 	    }
-	    // alex 08/06/2005:	nun koennen Werte auch Statisch in der
-	    //					STDbTable gesetzt werden
-	    $this->aSetAlso= array();
-	    $this->aCallbacks= array();
 	    // alex 09/06/2005:	limitieren von Rowanzahl aus der Datenbank
 	    $this->nFirstRowSelect= 0;
 		// 17/09/2025 kollia:
@@ -1516,7 +1526,7 @@ class STBaseTable
 		    st_print_r($this->aBackJoin, 2, $space);
 		}
 	}
-	public function getAliasOrder()
+	public function getAliasOrder() : array
 	{
 		return $this->db->getAliasOrder();
 	}
@@ -1528,7 +1538,7 @@ class STBaseTable
 	function isOrdered()
 	{
 		$aliases= array();
-		$aliases= $this->db->getAliasOrder();
+		$aliases= $this->getAliasOrder();
 		$order= $this->getOrderStatement($aliases, null, true);
 		if($order)
 			return true;
@@ -4023,6 +4033,8 @@ class STBaseTable
         {
             $tableName= $this->getName();
             $limitation= $query->getLimitation($tableName);
+			if(typeof($this, "STDbSelector")) // if own table is a selector
+				$tableName= $this->getDbTableName(); // maybe object-name differs from table name
             if(	isset($limitation) &&
                 is_array($limitation)	)
             {

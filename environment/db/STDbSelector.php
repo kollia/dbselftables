@@ -8,7 +8,26 @@ class STDbSelector extends STDbTable implements STContainerTempl
 {
 		var $selector= array();
 		//var $oMainTable= null;
+		/**
+		 * name of main table inside own table container
+		 * can be different to own original name
+		 * if selector should have an other name
+		 * @var string
+		 */
+		private $sMainTableName= null;
+		/**
+		 * all tables inside own table container
+		 * with name as key
+		 * @var array
+		 */
 		var $aoToTables= array();
+		/**
+		 * store the whole alias order
+		 * with alias of own Table/Container
+		 * if different to main table
+		 * @var array
+		 */
+		private $aHoleAliasOrder= null;
 		var	$aNewSelects= array();
 		var $columns= array();
 		var $SqlResult= null;
@@ -47,20 +66,56 @@ class STDbSelector extends STDbTable implements STContainerTempl
 		var	$bClearedByFirstSelect= false; // die selects in ->show werden gel�scht wenn ein anderer Select gew�nscht wird
 
 
-		function __construct(&$oTable, $defaultTyp= STSQL_ASSOC, $onError= onErrorStop)
+		/**
+		 * construct selector object from table or container
+		 * 
+		 * @param string|STDbTable|STObjectContainer $NameTable name of table if selector container (STDbSelector) should have an other name than any table inside,
+		 * 													or table object if selector should have the name of this first table,
+		 * 													or only a container object where selector first is unknown
+		 * @param STDbTable|STObjectContainer $oTable table object or container object
+		 * @param int $defaultTyp default type of fetch array STSQL_NUM, STSQL_ASSOC or STSQL_BOTH
+		 * @param int $onError error handling noErrorShow, onErrorShow or onErrorStop
+		 */
+		function __construct($NameTable, $oTable= null, $defaultTyp= STSQL_ASSOC, $onError= onErrorStop)
 		{
-			STCheck::param($oTable, 0, "STDbTable", "STObjectContainer");
-			STCheck::param($defaultTyp, 1, "check", $defaultTyp==STSQL_NUM || $defaultTyp==STSQL_ASSOC || $defaultTyp==STSQL_BOTH,
-														"STSQL_NUM, STSQL_ASSOC or STSQL_BOTH");
-			STCheck::param($onError, 2, "check", $onError==noErrorShow || $onError==onErrorShow || $onError==onErrorStop,
-														"noErrorShow", "onErrorShow", "onErrorStop");
+			if(STCheck::isDebug())
+			{
+				STCheck::param($NameTable, 0, "string", "STDbTable", "STObjectContainer");
+				STCheck::param($oTable, 1, "STDbTable", "STObjectContainer", "int", "null");
+				STCheck::param($defaultTyp, 2, "int");
+				STCheck::param($onError, 3, "int");
+				$nFirstNr_ofDefaultType= 2;
+			}
+
+			if(!is_string($NameTable))
+			{
+				$nArg= func_num_args();
+				if($nArg > 2)
+					$onError= $defaultTyp;
+				if($nArg > 1)
+					$defaultTyp= $oTable;
+				$oTable= $NameTable;
+				if(typeof($oTable, "STDbTable"))
+					$NameTable= $oTable->getName();
+				else
+					$NameTable= null;
+				$nFirstNr_ofDefaultType= 1;
+			}
+			if(STCheck::isDebug())
+			{
+				STCheck::param($defaultTyp, $nFirstNr_ofDefaultType, "check", $defaultTyp==STSQL_NUM || $defaultTyp==STSQL_ASSOC || $defaultTyp==STSQL_BOTH,
+															"STSQL_NUM, STSQL_ASSOC or STSQL_BOTH");
+				STCheck::param($onError, $nFirstNr_ofDefaultType+1, "check", $onError==noErrorShow || $onError==onErrorShow || $onError==onErrorStop,
+															"noErrorShow", "onErrorShow", "onErrorStop");
+			}
 
 			if(typeof($oTable, "STDbTable"))
 			{
-			    $container= null;
-			    $table= $oTable;
-			    $this->aoToTables[$oTable->getName()]= &$oTable;
-			    STCheck::echoDebug("table", "copy ".$oTable->toString()." into own ".$this->toString());
+			    $container= $oTable->container;
+				$container->db= $oTable->db;
+				$this->sMainTableName= $oTable->getName();
+			    $table= clone $oTable;
+			    STCheck::echoDebug("table", "copy ".$table->toString()." into own ".$this->toString());
 			}else
 			{
 			    $container= $oTable;
@@ -68,12 +123,29 @@ class STDbSelector extends STDbTable implements STContainerTempl
 			}
 			$this->defaultTyp= $defaultTyp;
 			$this->onError= $onError;
-			STDbTable::__construct($table, $container, $onError);			
+			STDbTable::__construct($table, $container, $onError);
+			if(	typeof($oTable, "STBaseTable") &&
+				$NameTable != $oTable->getName()	)
+			{
+				$this->Name= $NameTable;
+				$this->aoToTables[$this->sMainTableName]= &$this;
+				$this->createGlobalTableID($NameTable);
+			}
 		}
 		function __clone()
 		{
 		    STDbTable::__clone();
 		    STCheck::echoDebug("table", "clone STDbSelector::content ".$this->Name.":".$this->ID);
+		}
+		function copy($oTable)
+		{
+			STCheck::param($oTable, 0, "STDbTable");
+			
+			STBaseTable::copy($oTable);
+			if(typeof($oTable, "STDbSelector"))
+				$this->sMainTableName= $oTable->sMainTableName;
+			else
+				$this->sMainTableName= $oTable->Name;
 		}
 		public function getTableNumber(): string
 		{
@@ -85,6 +157,23 @@ class STDbSelector extends STDbTable implements STContainerTempl
 				$sRv.= $aliases[$tableName];
 			}
 			return $sRv;
+		}
+		public function getAliasOrder() : array
+		{
+			if(isset($this->aHoleAliasOrder))
+				return $this->aHoleAliasOrder;
+			$aliases= $this->db->getAliasOrder();
+			
+			// if STDbSelector container have an other name than the main table
+			// so this alias should be the same like the first correct table
+			if(	!isset($aliases[$this->Name]) &&
+				isset($this->sMainTableName) &&
+				isset($aliases[$this->sMainTableName])	)
+			{
+				//$aliases[$this->Name]= $aliases[$this->sMainTableName];
+			}
+			$this->aHoleAliasOrder= $aliases;
+			return $aliases;
 		}
 		function add($table)
 		{
@@ -165,8 +254,10 @@ class STDbSelector extends STDbTable implements STContainerTempl
 			foreach($this->aoToTables as $name=>$table)
 			{
 				if( $table &&
-				    $name != $this->Name    )
-				{
+				    $name != $this->Name &&		// clearSelects was made before for own table
+					(	!isset($this->sMainTableName) ||	// should not clear main table twice
+						$name != $this->sMainTableName	)   )	// and this clearing call only the method again
+				{												// and not the STDbTable::clearSelects()
 					$this->aoToTables[$name]->clearSelects();
 				}
 			}
@@ -313,8 +404,8 @@ class STDbSelector extends STDbTable implements STContainerTempl
 		{
 		    if(STCheck::isDebug())
 		    {
-		        STCheck::param($table, 0, "string", "STDbWhere", "STDbTable");
-		        STCheck::param($where, 1, "string", "STDbWhere", "null");
+		        STCheck::param($table, 0, "string", "empty(string)", "STDbWhere", "STDbTable");
+		        STCheck::param($where, 1, "string", "empty(string)", "STDbWhere", "null");
 		    }
 		    if(!isset($where))
 		    {
@@ -330,7 +421,11 @@ class STDbSelector extends STDbTable implements STContainerTempl
 		    }else 
 		    {
 		        if(is_string($where))
+				{
+					if(trim($where) == "")
+						return;
 		            $where= new STDbWhere($where);
+				}
 		        $where->table($table);
 		    }
 		    STDbTable::where($where, "and");
@@ -367,11 +462,18 @@ class STDbSelector extends STDbTable implements STContainerTempl
 		{//echo "function where(";st_print_r($table,0);echo ", ";st_print_r($where,0);echo ", ";st_print_r($operator,0);echo ")<br />";
 		    if(STCheck::isDebug())
 		    {
-    			STCheck::param($table, 0, "string", "STDbTable", "STDbWhere");
+    			STCheck::param($table, 0, "string", "STDbTable", "STDbWhere", "null");
     			STCheck::param($where, 1, "string", "STDbWhere", "null");
     			STCheck::param($operator, 2, "string", "empty(string)");
 		    }
 
+			if( !isset($table) &&
+				!isset($where) &&
+				$operator == ""		)
+			{
+				$this->oWhere= null;
+				return;
+			}
 		    if( !isset($where) ||
 		        (   is_string($where) &&
 		            (   $where == "" ||
@@ -937,7 +1039,20 @@ class STDbSelector extends STDbTable implements STContainerTempl
   			    $this->errorMessage= $this->db->getError();
   			}
 		}
-		function getStatement($limit= null, $withAlias= null)
+		/**
+		 * get name of table inside database.
+		 * Can be different to the name of this table/container object
+		 * 
+		 * @return string name of table inside database
+		 */
+		public function getDbTableName() : string
+		{
+			$tableName= $this->sMainTableName;
+			if(!isset($tableName))
+			    $tableName= $this->Name;
+			return $tableName;
+		}
+		public function getStatement($limit= null, $withAlias= null)
 		{
 			$statement= STDbTable::getStatement(false, $withAlias);
 			//$this->sqlStatement= $this->db->getStatement($this, false, $withAlias);
