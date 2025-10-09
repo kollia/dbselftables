@@ -83,12 +83,12 @@ There is also the possibility to select only the columns you want and give them 
 $country= $db->getTable("Country");
 $country->setDisplayName("existing Countries");
 $country->identifColumn("name", "Country"); // identify the table
-$country->select("name", "Name");
+$country->select("name", "Name"); // for normal table listing
 
 $state = $db->getTable("State");
 $state->setDisplayName("States");
 $state->select("name", "Name");
-$state->select("country", "from Country"); // <- FK column
+$state->select("country", "from Country"); // <- FK column to Country table
 ```
 You see now in table State as second position the name of the country as 'Country' (identif-column from table Country), altough you defined
 the FK in table as 'from Country'. This you see by updating row or by insert (clicking on button 'new Entry')
