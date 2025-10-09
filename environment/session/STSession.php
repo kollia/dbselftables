@@ -893,11 +893,11 @@ class STSession
 	 * @see getLoginError
 	 */
 	protected function getFromOtherConnections(string $user, string $password, string $access_domain= "unknown")
-	{// diese Funktion ist zum �berladen verschiedener �berpr�fungen
-	 // user sollte f�r die n�chste session gespeichert werden
-	 // und die ID muss in $this->userID eingetragen werden
+	{// This function is used to override various validation checks
+	 // The user should be stored for the next session
+	 // and the ID must be stored in $this->userID
 
-		// Fehler !!
+		// ERROR !!
 			// return 0: No Error User with Password found
             // Error  1: user not found for this other connection
             // Error  2: Wrong Password
@@ -1196,7 +1196,7 @@ class STSession
 			        !is_array($cluster_membership) ||
 			        !count($cluster_membership)       )
 				{
-					Tag::echoDebug("user", "read Cluster with ONLINE group staus from database");
+					Tag::echoDebug("user", "read all Cluster from database and which have ONLINE group staus");
 					$this->readCluster();
 					$this->setSessionVar("ST_CLUSTER_MEMBERSHIP", $this->aCluster);
 				}else

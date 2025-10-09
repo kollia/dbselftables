@@ -53,6 +53,7 @@ abstract class STLdapUserSession extends STUserSession
 	protected function getFromOtherConnections(string $user, string $password, string $access_domain= "unknown", array &$userData= null)
 	{// authentication check over LDAP-Server
 	
+		STCheck::echoDebug("user", "getFromOtherConnection: user='$user' from domain='$access_domain'");
 		if(!isset($this->sGroupType))
 		{
 			// Error: class object not prepared to login with an LDAP-user
@@ -63,7 +64,7 @@ abstract class STLdapUserSession extends STUserSession
 		{
             // Error  1: no user found for other connection
 			// Error 10: wrong access domain 
-			return STUserSession::getFromOtherConnections($ID, $user, $password, $access_domain);
+			return STUserSession::getFromOtherConnections($user, $password, $access_domain);
 		}
 
 		$ldapAuthentification= $this->getLDAP_AuthenticationObject();
@@ -113,7 +114,7 @@ abstract class STLdapUserSession extends STUserSession
 			// Error 10: wrong access domain
 		
 		if($result == 1)
-			return STUserSession::getFromOtherConnections($ID, $user, $password, $access_domain);
+			return STUserSession::getFromOtherConnections($user, $password, $access_domain);
 		return $result;
 	}
 	public function getErrorString(int $error_nr, string $domain= "unknown")

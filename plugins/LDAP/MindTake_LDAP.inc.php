@@ -103,7 +103,13 @@ class LDAPServer{
 		if( $this->con_ )
 			return true;		
 		if($this->debug_)
-			$space= STCheck::echoDebug("user", "entering function <b>initialize_connection()</b> for {$this->host_}:{$this->port_}");
+		{
+			$msg= array();
+			$msg[]= "entering function <b>initialize_connection()</b> for {$this->host_}:{$this->port_}";
+			$msg[]= " for follow protocols:";
+			$msg[]= $this->protocol_;
+			$space= STCheck::echoDebug("user", $msg);
+		}
 		
 		//$this->con_ = ldap_connect( $this->host_, $this->port_ );
 		$this->con_= ldap_connect( "{$this->protocol_}://{$this->host_}:{$this->port_}" );
@@ -156,6 +162,8 @@ class LDAPServer{
 	//--------------------------------------------------------------------
 	private function setLDAPoption(string $property, $option, $value) : bool
 	{
+		global $HTTP_SERVER_VARS;
+
 		$predefined_values= false; // whether need to know predefined values for debugging		
 	    if( $predefined_values &&
 			$this->debug_ &&
@@ -199,6 +207,18 @@ class LDAPServer{
 				substr($property, 0, 7) != "no_con_"	)
 			{
 				$con= $this->con_;
+			}
+			if(is_array($value))
+			{// if value is an array
+			 // take value for specific host in key
+				$host= strtolower($HTTP_SERVER_VARS['SERVER_NAME']);
+				if(!isset($value[$host]))
+				{
+					STCheck::echoDebug("user", "<b>WARNING:</b> option '$option' defined as array, but key of SERVER_NAME '$host' does not exist");
+					$value= reset($value);
+
+				}else
+					$value= $value[$host];
 			}
 	        $success= ldap_set_option($con, $option, $value);
 		}

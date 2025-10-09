@@ -929,9 +929,9 @@ class STUserSession extends STDbSession
 	}
 	var $countReadCluster= 0;
 	function readCluster()
-	{// hole alle Cluster,
-	 // zugeh�rig zum Projekt und User
-	 // aus der Datenbank
+	{// take all clusters,
+	 // dedicated to project and user
+	 // from database
 	 	/**/if(0)//Tag::isDebug())
 		{
 		    /**/Tag::echoDebug("user", "<b>entering readCluster..</b>");
@@ -991,23 +991,6 @@ class STUserSession extends STDbSession
 	    }
 		$projectCluster->where($groupWhere);
 		
-		
-		
-		//$projectWhere= new STDbWhere("ID=0", "Project");
-		//$projectCluster->orWhere($projectWhere);
-		/*$statement=  "select distinct c.".$this->asClusterTableColumns["ID"]["column"].",";
-		$statement.= "p.".$this->asProjectTableColumns["Name"]["column"].",";
-		$statement.= "c.".$this->asClusterTableColumns["ProjectID"]["column"]." ";
-		$statement.= "from ".$this->sProjectTable." as p ";
-		$statement.= "inner join ".$this->sClusterTable." as c on p.ID=c.ProjectID ";
-		$statement.= "inner join ".$this->sClusterGroupTable." as cg on c.ID=cg.ClusterID ";
-		$statement.= "inner join ".$this->sGroupTable." as g on cg.GroupID=g.ID ";
-		$statement.= "left join ".$this->sUserGroupTable." as ug on g.ID=ug.GroupID ";
-		$statement.= "where ";
-		if($this->userID)
-			$statement.= "ug.UserID=".$this->userID." or g.Name='LOGGED_IN' or ";
-		$statement.= "g.Name='ONLINE'";
-		echo "manuel statement:$statement<br/>";*/
 		if(STCheck::isDebug("user"))
 		{
 		    $statement= $projectCluster->getStatement();

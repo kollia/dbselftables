@@ -85,10 +85,17 @@ class LDAPServer_Connection extends LDAPServer {
             'LDAP_OPT_PROTOCOL_VERSION'     => array( LDAP_OPT_PROTOCOL_VERSION, 3),
         //    'LDAP_OPT_SSL'                  => array( LDAP_OPT_SSL, true),
             'LDAP_OPT_X_TLS_REQUIRE_CERT'   => array( LDAP_OPT_X_TLS_REQUIRE_CERT, LDAP_OPT_X_TLS_NEVER), //1),
-            'LDAP_OPT_X_TLS_CACERTFILE'           => array( LDAP_OPT_X_TLS_CACERTFILE, '/<path to ca file or bundle>/tls-ca-bundle.pem'),
-            'LDAP_OPT_X_TLS_CERTFILE'             => array( LDAP_OPT_X_TLS_CERTFILE, '/<path to ca file or bundle>/public_certificate.crt'),
-            'LDAP_OPT_X_TLS_KEYFILE'              => array( LDAP_OPT_X_TLS_KEYFILE, '/<path to ca file or bundle>/private.key'),
+            'LDAP_OPT_X_TLS_CACERTFILE'     => array( LDAP_OPT_X_TLS_CACERTFILE, '/<path to ca file or bundle>/tls-ca-bundle.pem'),
+            'LDAP_OPT_X_TLS_CERTFILE'       => array( LDAP_OPT_X_TLS_CERTFILE, '/<path to ca file or bundle>/public_certificate.crt'),
+            'LDAP_OPT_X_TLS_KEYFILE'        => array( LDAP_OPT_X_TLS_KEYFILE, '/<path to ca file or bundle>/private.key'),
             'LDAP_OPT_REFERRALS'            => array( LDAP_OPT_REFERRALS, 0)
+
+        // for more different existing domains on same host
+        // also different certificates possible
+        // as example:
+    //      'LDAP_OPT_X_TLS_CERTFILE'       => array( LDAP_OPT_X_TLS_CERTFILE, array( "example1.com" => '/<path to first ca file or bundle>/public_certificate1.crt',
+    //                                                                                "example2.com" => '/<path to second ca file or bundle>/public_certificate2.crt' ) )
+
         );
 }
 
