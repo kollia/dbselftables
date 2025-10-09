@@ -1,138 +1,136 @@
-* {
-    box-sizing: border-box;
-}
 
-html {
-    -webkit-text-size-adjust: 100%;
-    -ms-text-size-adjust: 100%;
-}
 
+/**
+ * General colors and fonts
+ ***********************************************************************************************************************************/
 body {
+    font-family: 'Segoe UI', 'Arial', sans-serif;
+    background-color: #ffffff;
     margin: 0;
     padding: 0;
-    font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
-    line-height: 1.4;
-}
+  }
+  
 
-fieldset
-{
-	border-width:2; 
-	border-style:groove; 
-	border-darkcolor:#000000; 
-	border-lightcolor:#ffffff;
-	background-color:#f3C999; 
-	color:#000000;
-}
+  /**
+   * Login-Box area
+   * for home page
+   *********************************************************************************************************************************/
 
-table.STItemBox,
-table.STSearchBox,
-table.OSTSearchBox
-{
- 		background-color:#999999;
-		font-family:Tahoma, Verdena;
-		font:13pt 'Times New Roman', Times, serif;
-		border-width:2;
-		border-style:groove;
-		border-darkcolor:#000000;
-		border-lightcolor:#ffffff
-}
+  .STLoginDiv,
+  .mobile-responsive {
+    background: linear-gradient(135deg, #ececec 60%, #f6f6f6 100%);
+    border-radius: 24px;
+    box-shadow: 0 4px 32px rgba(0,0,0,0.08), 0 1.5px 2.5px rgba(0,0,0,0.03);
+    padding: 32px 28px 24px 28px;
+    max-width: 350px;
+    margin-left: 200px;
+    margin-top: 32px;
+    margin-bottom: 32px;
+    border: 1.5px solid #e0e2e6;
+    transition: box-shadow 0.2s;
+  }
+  
+  .STLoginDiv:hover {
+    box-shadow: 0 8px 48px rgba(0,0,0,0.13), 0 2px 3px rgba(0,0,0,0.06);
+  }
+  
+  /* Überschrift und Beschreibung */
+  .loginDesc,
+  .mobile-login-desc {
+    margin-bottom: 22px;
+    color: #313131;
+    text-align: left;
+  }
+  
+  .loginDesc h1 {
+    font-size: 1.35em;
+    margin-bottom: 8px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+  
+  .fontBigger {
+    font-size: 1.07em;
+    color: #6b6b6b;
+  }
+  
+  /* Input-Felder */
+  .loginField,
+  .mobile-input-field {
+    margin-bottom: 18px;
+  }
+  
+  .loginInput,
+  .mobile-input {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 12px;
+    border: 1.5px solid #c0cad9;
+    background-color: #f8f9fa;
+    font-size: 1em;
+    transition: border 0.2s;
+    box-sizing: border-box;
+  }
+  
+  .loginInput:focus {
+    outline: none;
+    border-color: #7faaff;
+    background-color: #eef4ff;
+  }
+  
+  /* Label (unsichtbar, aber evtl. für Screenreader) */
+  .loginLabel,
+  .mobile-label {
+    display: none;
+  }
+  
+  /* Button */
+  .loginButton,
+  .mobile-submit-btn {
+    width: 100%;
+    background: linear-gradient(90deg,#4666ee 60%, #38b6ff 110%);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    padding: 11px 0;
+    font-size: 1.05em;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s, box-shadow 0.2s;
+    box-shadow: 0 1.5px 4px rgba(70,102,238,0.10);
+  }
+  
+  .loginButton:hover {
+    background: linear-gradient(90deg,#3855c5 60%, #2691cc 110%);
+    box-shadow: 0 2px 8px rgba(56,91,204,0.18);
+  }
+  
+  div.loginError
+  {
+    color:red;
+    font:13pt 'Times New Roman', Times, serif;
+  }
 
-table.STCategoryGroup
-{
- 		background-color:#999999;
-		font-family:Tahoma, Verdena;
-		font-size:8pt;
-		border-width:2;
-		border-darkcolor:#000000;
-		border-lightcolor:#ffffff
-}
-
-table.loginTable
-{
-	font-family:Tahoma Verdena; 
-	font-size:8pt; 
-	background-color:#999999;
-}
-
-input.field,
-input.button,
-input.loginInput
-{
-		font-family:Tahoma;
-		font-size:8pt;
-}
-
-table.OSTSearchBox td
-{
-	font:bold 15pt Verdena, Times, serif;
-}
-
-table.STListBox th
-{
-	background-color:#B6B5B5;
-}
-
-table.STListBox tr.Tr0
-{
-	background-color:#EDEBEB;
-	font:13pt 'Times New Roman', Times, serif;
-
-}
-
-table.STListBox tr.Tr1
-{
-	background-color:#DBD7D7;
-	font:13pt 'Times New Roman', Times, serif;
-}
-
-div.loginError
-{
-	color:red;
-	font:13pt 'Times New Roman', Times, serif;
-}
-
-.Td
-{
-	margin-top:0mm;
-	margin-bottom:0mm;
-	margin-left:3mm;
-	margin-right:3mm;
-}
-
-
-a:link {
-	font-family: Arial;
-	color:#FF7200;
-	text-decoration:underline;
-}
-
-a:hover {
-	color:#FFE600;
-	text-decoration:underline;
-}
-
-a:visited {
-	color:#FF4B00;
-	text-decoration:underline;
-}
-
-
-a.hline:link {
-	color:#000000;
-	text-decoration:none;
-}
-
-a.hline:hover {
-	color:#000000;
-	text-decoration:none;
-}
-
-a.hline:visited {
-	color:#000000;
-	text-decoration:none;
-}
+  /* Responsives Verhalten für Mobilgeräte */
+  @media (max-width: 600px) {
+    .STLoginDiv,
+    .mobile-responsive {
+      max-width: 97vw;
+      margin-left: 0;
+      margin-right: 0;
+      padding: 20px 7vw;
+      border-radius: 18px;
+    }
+  }
 
 
+  
+  /**
+   * Existing web applications
+   * for home page
+   *********************************************************************************************************************************/
+
+   
 	.AccessibleProjectList {
 		max-width: 700px;
 		margin: 4vh auto 0 auto;
@@ -161,7 +159,7 @@ a.hline:visited {
 	.AccessibleProjectList .projectLink {
 		font-size: 1.2em;
 		font-weight: bold;
-		color: #11a63c;
+		color: #f79c14;
 		text-decoration: none;
 		display: block;
 		margin-bottom: 0.3em;
@@ -192,411 +190,82 @@ a.hline:visited {
 		}
 	}
 
-	.STLoginDiv {
-		max-width: 450px;
-		margin: 8vh auto 0 auto;
-		padding: 2.5em 2em 2em 2em;
-		background: #fff;
-		border-radius: 12px;
-		box-shadow: 0 2px 16px rgba(0,0,0,0.10);
-		font-family: 'Segoe UI', Arial, sans-serif;
-	}
-	.STLoginDiv .loginTitle {
-		font-size: 1.7em;
-		font-weight: bold;
-		margin-bottom: 0.5em;
-		text-align: center;
-	}
-	.STLoginDiv .loginDesc {
-		font-size: 1.1em;
-		margin-bottom: 1.5em;
-		text-align: center;
-	}
-	.STLoginDiv .loginError {
-		color: #b00;
-		background: #ffeaea;
-		border-radius: 6px;
-		padding: 0.7em 1em;
-		margin-bottom: 1.2em;
-		font-size: 1em;
-		text-align: center;
-	}
-	.STLoginDiv .loginField {
-		margin-bottom: 1.2em;
-	}
-	.STLoginDiv .loginLabel {
-		display: block;
-		margin-bottom: 0.3em;
-		font-size: 1em;
-		font-weight: 500;
-	}
-	.STLoginDiv .loginInput {
-		width: 100%;
-		padding: 0.7em;
-		font-size: 1.1em;
-		border: 1px solid #bbb;
-		border-radius: 4px;
-		box-sizing: border-box;
-	}
-	.STLoginDiv .loginButton {
-		width: 100%;
-		padding: 0.9em;
-		font-size: 1.1em;
-		background: #11a63c;
-		color: #fff;
-		border: none;
-		border-radius: 4px;
-		margin-top: 0.5em;
-		cursor: pointer;
-		font-weight: bold;
-		transition: background 0.2s;
-	}
-	.STLoginDiv .loginButton:hover {
-		background: #007d31;
-	}
-	@media (max-width: 600px) {
-		.STLoginDiv {
-			max-width: 98vw;
-			padding: 1.5em 0.5em 2em 0.5em;
-		}
-	}
 
-	/* Mobile responsive styles for login and project list */
 
-/* Base mobile styles */
-@media screen and (max-width: 768px) {
-    /* Override body and basic elements for mobile */
-    body {
-        font-size: 14px !important;
-        -webkit-text-size-adjust: 100% !important;
-        -ms-text-size-adjust: 100% !important;
-    }
-    
-    /* Override existing login table styles for mobile */
-    table.loginTable,
-    .mobile-overview-table {
-        width: 100% !important;
-        font-size: 14px !important;
-        margin: 0 !important;
-        padding: 5px !important;
-    }
-    
-    /* Mobile responsive login container */
-    .STLoginDiv.mobile-responsive,
-    .STLoginDiv {
-        width: 95% !important;
-        max-width: 400px !important;
-        margin: 2vh auto !important;
-        padding: 15px !important;
-        box-sizing: border-box !important;
-        background: #fff !important;
-        border-radius: 8px !important;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.1) !important;
-    }
-    
-    /* Login form mobile styles */
-    .mobile-login-form,
-    form[name="loginform"] {
-        width: 100% !important;
-        margin: 0 !important;
-    }
-    
-    /* Login input fields - override existing styles */
-    .mobile-input-field,
-    .loginField {
-        width: 100% !important;
-        margin-bottom: 12px !important;
-        box-sizing: border-box !important;
-    }
-    
-    /* Login labels */
-    .mobile-label,
-    .loginLabel {
-        display: block !important;
-        width: 100% !important;
-        margin-bottom: 5px !important;
-        font-weight: bold !important;
-        font-size: 14px !important;
-        color: #333 !important;
-    }
-    
-    /* Login input elements - override existing input styles */
-    .mobile-input,
-    .loginInput,
-    input.loginInput,
-    input.field {
-        width: 100% !important;
-        height: 44px !important;
-        font-size: 16px !important;
-        padding: 12px !important;
-        border: 1px solid #ccc !important;
-        border-radius: 4px !important;
-        box-sizing: border-box !important;
-        -webkit-appearance: none !important;
-        -moz-appearance: none !important;
-        appearance: none !important;
-        font-family: inherit !important;
-    }
-    
-    /* Login button - override existing button styles */
-    .mobile-submit-btn,
-    .loginButton,
-    input.loginButton,
-    input.button,
-    input[type="submit"] {
-        width: 100% !important;
-        height: 44px !important;
-        font-size: 16px !important;
-        padding: 12px !important;
-        background-color: #11a63c !important;
-        color: white !important;
-        border: none !important;
-        border-radius: 4px !important;
-        cursor: pointer !important;
-        -webkit-appearance: none !important;
-        -moz-appearance: none !important;
-        appearance: none !important;
-        font-weight: bold !important;
-        margin-top: 8px !important;
-    }
-    
-    .mobile-submit-btn:hover,
-    .loginButton:hover,
-    input.loginButton:hover {
-        background-color: #007d31 !important;
-    }
-    
-    /* Error messages mobile */
-    .mobile-error,
-    .loginError,
-    div.loginError {
-        background-color: #ffebee !important;
-        color: #c62828 !important;
-        padding: 12px !important;
-        border-radius: 4px !important;
-        margin-bottom: 15px !important;
-        font-size: 14px !important;
-        text-align: center !important;
-    }
-    
-    /* Login description mobile */
-    .mobile-login-desc,
-    .loginDesc {
-        text-align: center !important;
-        margin-bottom: 20px !important;
-    }
-    
-    .mobile-login-desc h1,
-    .loginDesc h1 {
-        font-size: 22px !important;
-        margin-bottom: 10px !important;
-        color: #333 !important;
-    }
-    
-    /* Project list mobile - override existing styles */
-    .mobile-project-list,
-    .AccessibleProjectList {
-        width: 95% !important;
-        max-width: 600px !important;
-        margin: 20px auto !important;
-        padding: 15px !important;
-        box-sizing: border-box !important;
-        background: #fff !important;
-        border-radius: 8px !important;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.1) !important;
-    }
-    
-    /* Project title mobile */
-    .mobile-project-title,
-    .projectListTitle {
-        text-align: center !important;
-        margin-bottom: 20px !important;
-        font-size: 18px !important;
-        font-weight: bold !important;
-        color: #333 !important;
-    }
-    
-    .mobile-project-title h2,
-    .projectListTitle h2 {
-        font-size: 18px !important;
-        margin: 0 !important;
-        color: #333 !important;
-    }
-    
-    /* Project entries mobile */
-    .mobile-project-entry,
-    .projectEntry {
-        background-color: #f8f9fa !important;
-        border: 1px solid #e9ecef !important;
-        border-radius: 6px !important;
-        margin-bottom: 12px !important;
-        padding: 15px !important;
-        box-sizing: border-box !important;
-    }
-    
-    .mobile-project-entry:hover,
-    .projectEntry:hover {
-        background-color: #e9f4ff !important;
-    }
-    
-    /* Project links mobile */
-    .mobile-project-link,
-    .projectLink {
-        display: block !important;
-        font-size: 16px !important;
-        font-weight: bold !important;
-        color: #11a63c !important;
-        text-decoration: none !important;
-        margin-bottom: 8px !important;
-        word-break: break-word !important;
-        line-height: 1.3 !important;
-    }
-    
-    .mobile-project-link:hover,
-    .projectLink:hover,
-    .mobile-project-link:active,
-    .projectLink:active {
-        color: #007d31 !important;
-        text-decoration: underline !important;
-    }
-    
-    /* Project descriptions mobile */
-    .mobile-project-desc,
-    .projectDesc {
-        font-size: 14px !important;
-        color: #666 !important;
-        line-height: 1.4 !important;
-        margin: 0 !important;
-    }
-    
-    /* Overview images mobile */
-    .mobile-overview-container img,
-    .mobile-overview-table img {
-        max-width: 100% !important;
-        height: auto !important;
-        display: block !important;
-        margin: 0 auto !important;
-    }
-}
+  
+  /**
+   * Standard appearance for tables and forms
+   *********************************************************************************************************************************/
 
-/* Tablet styles */
-@media screen and (min-width: 769px) and (max-width: 1024px) {
-    .STLoginDiv.mobile-responsive,
-    .STLoginDiv {
-        max-width: 500px !important;
-        margin: 4vh auto !important;
-    }
-    
-    .mobile-project-list,
-    .AccessibleProjectList {
-        max-width: 650px !important;
-    }
-}
-
-/* Small mobile devices */
-@media screen and (max-width: 480px) {
-    .STLoginDiv.mobile-responsive,
-    .STLoginDiv {
-        width: 98% !important;
-        margin: 1vh auto !important;
-        padding: 12px !important;
-    }
-    
-    .mobile-project-list,
-    .AccessibleProjectList {
-        width: 98% !important;
-        margin: 15px auto !important;
-        padding: 12px !important;
-    }
-    
-    .mobile-input,
-    .loginInput,
-    input.loginInput {
-        font-size: 16px !important; /* Prevents zoom on iOS */
-    }
-}
-
-/* Overview Banner Styling */
-.OverviewBannerContainer {
-    width: 100%;
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    position: relative;
-}
-
-.OverviewHeader {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    width: 100%;
-    flex-wrap: wrap;
-    margin: 0;
-    padding: 0;
-}
-
-.OverviewBannerImage {
-    display: block;
-    margin: 0;
-    padding: 0;
-    vertical-align: top;
-}
-
-.OverviewLogoutContainer {
-    text-align: right;
-    font-size: 12px;
-    white-space: nowrap;
-    padding-top: 10px;
-}
-
-/* OverviewBannerLine entfernt - nicht mehr benötigt */
-
-/* Mobile responsive for banner */
-@media screen and (max-width: 768px) {
-    .OverviewHeader {
-        display: flex !important;
-        flex-direction: row !important;
-        justify-content: space-between !important;
-        align-items: flex-start !important;
-        flex-wrap: nowrap !important;
-        gap: 10px !important;
-    }
-    
-    .logo-container {
-        flex-shrink: 0 !important;
-        order: 1 !important;
-    }
-    
-    .OverviewLogoutContainer.mobile-logout,
-    .OverviewLogoutContainer {
-        text-align: right !important;
-        margin-left: auto !important;
-        padding-top: 5px !important;
-        flex-shrink: 0 !important;
-        font-size: 10px !important;
-        order: 2 !important;
-        white-space: nowrap !important;
-    }
-    
-    .OverviewBannerContainer {
-        padding: 5px !important;
-    }
-    
-    .OverviewBannerImage {
-        max-width: 80% !important;
-        height: auto !important;
-    }
-}
-
-/* Für sehr kleine Bildschirme */
-@media screen and (max-width: 480px) {
-    .OverviewLogoutContainer.mobile-logout,
-    .OverviewLogoutContainer {
-        font-size: 9px !important;
-        margin-left: 5px !important;
-    }
-    
-    .OverviewBannerImage {
-        max-width: 70% !important;
-    }
-}
+   input.field,
+   input.button,
+   input.loginInput
+   {
+       font-family:Tahoma;
+       font-size:8pt;
+   }
+   
+   table.OSTSearchBox td
+   {
+     font:bold 15pt Verdena, Times, serif;
+   }
+   
+   table.STListBox th
+   {
+     background-color:#B6B5B5;
+   }
+   
+   table.STListBox tr.Tr0
+   {
+     background-color:#EDEBEB;
+     font:13pt 'Times New Roman', Times, serif;
+   
+   }
+   
+   table.STListBox tr.Tr1
+   {
+     background-color:#DBD7D7;
+     font:13pt 'Times New Roman', Times, serif;
+   }
+   
+   .Td
+   {
+     margin-top:0mm;
+     margin-bottom:0mm;
+     margin-left:3mm;
+     margin-right:3mm;
+   }
+   
+   
+   table a:link {
+     font-family: Arial;
+     color:#FF7200;
+     text-decoration:underline;
+   }
+   
+   table a:hover {
+     color:#FFE600;
+     text-decoration:underline;
+   }
+   
+   table a:visited {
+     color:#FF4B00;
+     text-decoration:underline;
+   }
+   
+   
+   a.hline:link {
+     color:#000000;
+     text-decoration:none;
+   }
+   
+   a.hline:hover {
+     color:#000000;
+     text-decoration:none;
+   }
+   
+   a.hline:visited {
+     color:#000000;
+     text-decoration:none;
+   }
+   
