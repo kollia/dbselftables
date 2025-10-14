@@ -78,7 +78,7 @@ class STSiteCreator extends HtmlTag
 				$containerName= $container->getName();
 				$listContainer= &STBaseContainer::getContainer($containerName);
 				// alex 11/10/2022: if the container from list not the same as from parameter
-				//                  tooke the pareameter container
+				//                  took the parameter container
 				if( !isset($listContainer) ||
 				    $listContainer->getName() != $container->getName()  )
 				{

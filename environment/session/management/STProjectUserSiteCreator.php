@@ -162,8 +162,15 @@ class STProjectUserSiteCreator extends STUserSiteCreator
             $instance= $this->createSession($dbTablePrefix);
         if(isset($projectID))
         {
+            $bAccess= false;
             $bLoggedIn= $instance->verifyLogin($projectID, $loginEntryUrl);
-            if($bLoggedIn)
+            if(!$bLoggedIn)
+            {
+                $containerObj= STObjectContainer::getContainer($this->aProjects['ProjectOverview']['container']);
+                $bAccess= $containerObj->isProjectAvailable($projectID);
+            }else
+                $bAccess= true;
+            if($bAccess)
             {
                 if( !isset($show) ||
                     $show == "frame"    )

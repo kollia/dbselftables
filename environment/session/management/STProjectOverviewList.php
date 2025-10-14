@@ -209,7 +209,7 @@ class STProjectOverviewList extends STBackgroundImagesDbContainer
                 }
                 $this->accessableProjects[] =
                                         array(
-                                            'ID'   => $row[ 'ID' ],
+                                            'ID'   => (int)$row[ 'ID' ],
                                             'Name' => $row[ 'Name' ],
                                             'Path' => $row[ 'Path' ],
                                             'Target' => $row[ 'target' ],
@@ -313,11 +313,12 @@ class STProjectOverviewList extends STBackgroundImagesDbContainer
         $this->availableSite['error']= $error;
         return $this->availableSite;
     }
-    private function isProjectAvailable(int $projectID) : bool
+    public function isProjectAvailable(int $projectID) : bool
     {
+        $this->createContainer();
         foreach($this->accessableProjects as $project)
         {
-            if($project['ID'] === $projectID)
+            if((int)$project['ID'] === $projectID)
                 return true;
         }
         return false;
