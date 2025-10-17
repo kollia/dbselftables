@@ -230,9 +230,13 @@ class STObjectContainer extends STBaseContainer
                 //$this->table[$sTableName]= &$table;
             }
         }
+		$this->aAccessList[$orgTableName]= array(	"type"  =>	"table",
+													"choose"=>	true,
+													"name"  =>	$orgTableName,
+													"object"=>	&$table			);
         return $table;
 	}
-	public function &getTable(string $tableName= null, string|bool $sContainer= null, bool $bEmpty= false)
+	public function &getTable(string|null $tableName= null, string|bool|null $sContainer= null, bool $bEmpty= false)
 	{
 		$nullTable= null;
 		$nParams= func_num_args();
@@ -1184,12 +1188,13 @@ class STObjectContainer extends STBaseContainer
 			$table->oSearchBox->execute($table);
 			$this->addObjBehindProjectIdentif($table->oSearchBox);
 		}
-		
-		$div= new DivTag();
+			
 		$headline= &$this->getHeadline($get_vars);
-		$div->addObj($headline);
-		if($this->bChooseInTable)
-		    $div->add($this->getChooseTableTag($get_vars));
+		$chooseTable= $this->createChooseTableContent($get_vars);
+
+		$div= new DivTag();
+		$div->add($headline);
+		$div->add($chooseTable);
 		 
 		$result= "NOERROR";
 		if($tableName)
@@ -1403,18 +1408,6 @@ class STObjectContainer extends STBaseContainer
 			 // user can not choose any other actions in this table
 			 // so go back to last container
 
-
-				/*
-				 * undocumented because do not know why display this toDo-message
-				if(count($this->aContainer))
-				{
-					echo "file:".__file__." line:".__line__."<br />";
-					echo "toDo: first action for this container is ".$get_vars["action"]."<br />";
-					echo "      can also choose to other container<br />";
-					echo "      nothing is what to do?";
-					exit;
-				}
-				 */
 			 	$this->deleteQueryContainer($query);
 			}else
 			{
@@ -1503,55 +1496,413 @@ class STObjectContainer extends STBaseContainer
 			$this->addObj($box);
 			return $result;
 		}
-		function getChooseTableTag($get_vars)
-		{
-			$action= $this->getAction();
-			$aTables= &$this->getTables();
-			$aktTableName= $this->getTableName();
-			if(isset($this->oExternSideCreator))
-			{
-    			foreach($aTables as $name=>$table)
-    			{
-    				// do not ask with $name
-    				// because $name only in lower case
-    				$tableName= $table->getName();
-    				if(	!$table->hasAccess($action, false)
-    					or
-    					(	$name==$aktTableName
-    						and
-    						!$this->bDisblayedTable	)
-    					or
-    					isset($this->oExternSideCreator->aNoChoice[$tableName])		)
-    				{
-    					$this->aNoChoice[$tableName]= $tableName;
-    				}
-    			}
-			}
-			
+		protected function createChooseTableContent($get_vars)
+		{	
 			$chooseTable= new STChooseBox($this);
-			$chooseTable->align("center");
-			$chooseTable->setStartPage($this->oExternSideCreator->getStartPage());
-			$chooseTable->noChoise($this->aNoChoice);
-			$chooseTable->forwardByOne();
-    		$nExistTables= $chooseTable->execute();
-			if(!$nExistTables)
-			{// wenn auf garkeine Tabelle zugegriffen werden kann
-			 // erzeuge einen Fehler
-				$oTable= &$this->getTable();
-				if(	STCheck::isDebug()
-					&&
-					!$oTable	)
+			if($this->bChooseInTable)
+			{
+				$action= $this->getAction();
+				$aTables= &$this->getTables();
+				$aktTableName= $this->getTableName();
+				if(isset($this->oExternSideCreator))
 				{
-					STCheck::echoDebug(true, "no tables exist, install anyone before, or use STDbSiteCreator->install()");
-					exit;
-				}//else
-				//	$oTable->hasAccess($get_vars["action"], true);
+					foreach($aTables as $name=>$table)
+					{
+						// do not ask with $name
+						// because $name only in lower case
+						$tableName= $table->getName();
+						if(	!$table->hasAccess($action, false)
+							or
+							(	$name==$aktTableName
+								and
+								!$this->bDisblayedTable	)
+							or
+							isset($this->oExternSideCreator->aNoChoice[$tableName])		)
+						{
+							$this->aNoChoice[$tableName]= $tableName;
+						}
+					}
+				}
+								
+				$chooseTable->align("center");
+				$chooseTable->setStartPage($this->oExternSideCreator->getStartPage());
+				$chooseTable->noChoise($this->aNoChoice);
+				$chooseTable->forwardByOne();
+				$nExistTables= $chooseTable->execute();
+				if(!$nExistTables)
+				{// wenn auf garkeine Tabelle zugegriffen werden kann
+				// erzeuge einen Fehler
+					$oTable= &$this->getTable();
+					if(	STCheck::isDebug()
+						&&
+						!$oTable	)
+					{
+						STCheck::echoDebug(true, "no tables exist, install anyone before, or use STDbSiteCreator->install()");
+						exit;
+					}//else
+					//	$oTable->hasAccess($get_vars["action"], true);
+				}
 			}
-
-
 			return $chooseTable;
 		}
-		/*protected*/function &getListTable($tableName)
+		public function createBackButton(&$divTag, $get_vars)
+		{
+			global $HTTP_SERVER_VARS;
+
+			$HTTP_GET_VARS= new STQueryString();
+			$HTTP_GET_VARS= $HTTP_GET_VARS->getArrayVars();
+
+			// alex 16/06/2005: definition des BackButtons an den Anfang der Funktion gezogen,
+			//					da er bei der Parameter-Auswahl noch ver�ndert wird
+    		$sBackButtonName= $this->sBackButton;
+    		$sBackButtonContainerName= null;
+			if(	(	$this->oExternSideCreator->sFirstTableContainerName!=$this->getName() &&
+					$this->oExternSideCreator->bContainerManagement								) ||
+				(	isset($this->backButtonAddress) &&
+					trim($this->backButtonAddress) != ""	) ||
+				(	isset($get_vars["action"]) &&
+					(	$get_vars["action"]==STINSERT ||
+						$get_vars["action"]==STUPDATE		)		)										)
+			{// create BackButton
+
+				if(	!isset($this->backButtonAddress) ||
+					trim($this->backButtonAddress) == ""	)
+				{
+					$get= new STQueryString();//$get_vars);
+					if(STCheck::isDebug("containerChoice"))
+					{
+						STCheck::echoDebug("containerChoice", "no backButtonAddress be set,");
+						STCheck::echoDebug("containerChoice", "so create an Address for back-button.");
+						echo "<br />";
+						$space= STCheck::echoDebug("containerChoice", "incomming query fields before changing for back-Button");
+						st_print_r($get_vars,5, $space);
+					}
+
+					if(	(	isset($get_vars["action"]) &&
+							(	$get_vars["action"] == STLIST ||
+								$get_vars["action"] == STCHOOSE	)	) ||
+						typeof($this, "STFrameContainer")	)
+					{
+						if(STCheck::isDebug())
+						{
+							Tag::echoDebug("containerChoice", "action is STLIST/STCHOOSE or container is an STFrameContainer,");
+							$msgstr= "so delete the container and if it has also the first row (stget[firstrow][";
+							if(isset($get_vars["table"]))
+								$msgstr.= $get_vars["table"];
+							$msgstr.= "])";
+							Tag::echoDebug("containerChoice", $msgstr);
+						}
+						if(isset($get_vars["table"]))
+							$get->delete("stget[firstrow][".$get_vars["table"]."]");
+						if(	!isset($this->bBackButton) ||
+							$this->bBackButton == true		)
+						{
+							$this->bBackButton= $this->deleteQueryContainer($get);
+							if(!$this->bBackButton)
+							{
+								Tag::echoDebug("containerChoice", "the current container is the first,");
+								Tag::echoDebug("containerChoice", "or all before has set ->forwardByOneEntry()");
+								Tag::echoDebug("containerChoice", "and this tables have only one entry.");
+							}
+						}elseif(!$this->bBackButton)
+						{
+							Tag::echoDebug("containerChoice", "do not need Back-Button was set before");
+						}
+
+					}elseif(isset($get_vars["action"]) &&	
+							(	$get_vars["action"]==STINSERT ||
+								$get_vars["action"]==STUPDATE 	)	)
+					{
+						if($this->sFirstAction==$get_vars["action"])
+						{
+							$this->bBackButton= $this->deleteQueryContainer($get);
+						}else
+						{
+							$get->update("stget[action]=".STLIST);
+							//st_print_r($get->getArrayVars(),10);
+							$table= $this->getTable($get_vars["table"]);
+							// alex 2006/05/21:	delete limitation only
+							//					if the user wants
+							if($table->getDeleteLimitationOrder()=="true")
+							{
+								$get->removeLimitation();
+							}
+
+							$sBackButtonName= $this->sBackButton;
+							//$get->getParamString(STUPDATE, "stget[table]=".$get_vars["table"];
+						}
+					}elseif(	isset($get_vars["action"]) &&
+								$get_vars["action"]==STDELETE	)
+					{
+						$get->update("stget[action]=".STCHOOSE);
+						$get->delete("stget[table]");
+						$get->delete("stget[value]");
+					}/*elseif($get_vars["action"]==STCHOOSE)
+					{
+						$get->getParamString(STDELETE, "stget[action]");//=".STCHOOSE);
+						$get->getParamString(STDELETE, "stget[table]");
+						$get->getParamString(STDELETE, "stget[firstrow][".$get_vars["table"]."]");
+						$get->getParamString(STDELETE, "stget[container]");
+						}*/
+
+					$sBackButtonContainerName= $this->sBackContainer;
+					if(!$sBackButtonContainerName)
+						$sBackButtonContainerName= $this->sFirstTableContainerName;
+					//echo "BackButton:".$sBackButtonName."<br />";
+					//echo "BackContainer:".$sBackButtonContainerName."<br />";
+
+					$this->addParamsByButton($get, $sBackButtonContainerName);
+					$backAddress= "";
+					if(isset($this->starterPage))
+						$backAddress= $this->starterPage;
+					$backAddress.= $get->getStringVars();
+					if(STCheck::isDebug("containerChoice"))
+					{
+						echo "<br />";
+						$space= STCheck::echoDebug("containerChoice", "query after changing for back-Button");
+						st_print_r($get->getArrayVars(), 10, $space);
+						echo "<br />";
+					}
+
+				}else
+					$backAddress= $this->backButtonAddress;
+				if($this->bBackButton)
+				{
+					STCheck::test_tagClassAttributeLinks("back_tables", "###link", $backAddress);
+					if(!$backAddress)
+					{
+						$backAddress= $this->starterPage;
+						if(!$backAddress)
+							$backAddress= $HTTP_SERVER_VARS["SCRIPT_NAME"];
+					}
+					$backButton= new ButtonTag("backButton");
+						$backButton->add($sBackButtonName);
+						$backButton->onClick("javascript:location='".$backAddress."'");
+						$this->aContainerAdress[$sBackButtonContainerName]= $backAddress;
+					STCheck::echoDebug("containerChoice", "set back-button to container <b>".$sBackButtonContainerName.
+															"</b> with name \"".$sBackButtonName."\"");
+				}else
+					STCheck::echoDebug("containerChoice", "do not need any back-button");
+				STCheck::echoDebug("containerChoice", "---------------------------------------------------------------------------");
+			//}
+		}//end if(display backbutton)
+
+		$bNeededBackButton= false;
+		$containerButtons= array();
+		$tableName= $this->getTableName();
+		if(STCheck::isDebug())
+		{
+			$nContainer= count($this->aContainer);
+			if($nContainer==0)
+				$message= "no container";
+			elseif($nContainer==1)
+				$message= "one container";
+			elseif($nContainer==2)
+				$message= "two container are";
+			else
+				$message= $nContainer+" container are";
+			$message.= " be set to choose";
+			STCheck::echoDebug("containerChoice", $message);
+		}
+		//here should be an breakpoint
+		if(	0 ) //count($this->aContainer) )
+		{
+			if(STCheck::isDebug("containerChoice"))
+			{
+				STCheck::echoDebug("containerChoice", "exist container buttons:");
+				echo "<b>[</b>containerChoice<b>]:</b> ";
+				st_print_r($this->aContainer, 3, 19);
+				echo "<br />";
+				STCheck::echoDebug("containerChoice", "display for action <b>".$get_vars["action"]."</b>");
+			}
+			foreach($this->aContainer as $containerName=>$by)
+			{
+				STCheck::echoDebug("containerChoice", "<b>choice</b> for container ".$containerName);
+				if($containerName!=$sBackButtonContainerName)
+				{//echo "action:".$get_vars["action"];st_print_r($by,2);
+					Tag::echoDebug("containerChoice", "container is not the before created back-button");
+					// variable ->aContainer displays:
+					//  array([containerName]=> array( [tableName/all table]=> array( [action/all actions]=> boolean(true/false) ) ) )
+					if( $by===true
+						or
+						isset($by[STALLDEF][STALLDEF])
+						or
+						isset($by[STALLDEF][$get_vars["action"]])
+						or
+						isset($by[$tableName][STALLDEF])
+						or
+						isset($by[$tableName][$get_vars["action"]])	)
+					{
+						STCheck::echoDebug("containerChoice", "container should be notify");
+							$get= new STQueryString();
+							$this->addParamsByButton($get, $containerName);
+							// is button for an back-container
+							$older= null;
+							if(isset($HTTP_GET_VARS["stget"]["older"]))
+								$older= $HTTP_GET_VARS["stget"]["older"];
+							$olderButtons= 1;
+							$isBackButton= false;
+							while($older)
+							{
+								if(isset($older["stget"]["container"]))
+								{
+									++$olderButtons;
+									if($older["stget"]["container"]==$containerName)
+									{
+										$isBackButton= true;
+										break;
+									}
+								}else
+									break;
+								if(isset($older["stget"]["older"]))
+									$older= $older["stget"]["older"];
+								else
+									$older= null;
+							}
+
+							if($containerName==$this->oExternSideCreator->sFirstTableContainerName)
+							{
+								$isBackButton= true;
+								++$olderButtons;// now delete all container in get-vars
+							}
+							if($isBackButton)
+							{
+								Tag::echoDebug("containerChoice", "container is an older back-button,");
+								Tag::echoDebug("containerChoice", "so delete for address all before");
+								for($n=$olderButtons; $n>1; $n--)
+								{
+									$from= $new_get["stget"]["link"]["from"];
+									if(is_array($from))
+										foreach($from as $delete)
+											$get->delete("stget[".$delete."]");
+									$aktParams= $get->getArrayVars();
+									if(is_array($aktParams["stget"]["link"]["from"]))
+									{
+										$links= $aktParams["stget"]["link"]["from"];
+										foreach($links as $do)
+										{
+											foreach($do as $tableName=>$column)
+												$get->delete("stget[".$tableName."][".$column."]");
+										}
+									}
+									$this->bBackButton= $this->deleteQueryContainer($get);/*("stget[link][from]");
+									$get->delete("stget[table]");
+									$get->delete("stget[action]");
+									$get->delete("stget[container]");*/
+								}
+							}else
+							{
+								if($containerName!=$this->getName())
+								{
+									Tag::echoDebug("containerChoice", "container is not aktual container");
+									$oContainer= &STBaseContainer::getContainer($containerName);
+									$nLevel= $oContainer->getContainerLevel();
+									if(!$this->oExternSideCreator->bContainerManagement)
+									{
+										Tag::echoDebug("containerChoice", "but because the container-management is switched of,");
+										Tag::echoDebug("containerChoice", "make only an update to the aktual");
+										$make= STUPDATE;
+									}elseif($nLevel!==null)
+									{
+										Tag::echoDebug("containerChoice", "but he has the level ".$nLevel);
+										Tag::echoDebug("containerChoice", "so delete all container before to this level");
+										$make= STINSERT;
+										// 25/05/2006 alex: had a propblem with php Version 4.3.10-15
+										//					in an extendee class from STSubGalleryContainer
+										//					php does not found the method
+										//					so I sayed -> search in STBaseContainer
+										STBaseContainer::deleteQueryContainerToLevel($get, $nLevel);
+										//$make= STUPDATE;
+										//$get->deleteOlderByCase($this->getContainerLevel());
+
+									}else
+									{
+										Tag::echoDebug("containerChoice", "so shift the others back, because container-management be set");
+										$make= STINSERT;
+									}
+									$get->make($make, "stget[table]=");
+									$get->make($make, "stget[action]=");
+									$get->make($make, "stget[container]=".$containerName);
+									$get->make($make, "stget[link][from]=");
+								}else
+								{
+									Tag::echoDebug("containerChoice", "container is the aktual, delete stget[link][from]");
+									if(is_array($HTTP_GET_VARS["stget"]["link"]["from"]))
+									{
+										/*$linkParams= $HTTP_GET_VARS["stget"]["link"]["from"];
+										foreach($linkParams as $from)
+										{
+											$get->delete("stget[".$from."]");
+										}*/
+										$get->delete("stget[link][from]");
+									}
+								}
+							}
+							$sButtonAddress= $get->getStringVars();
+							$oContainer= &STBaseContainer::getContainer($containerName);
+							$sButtonName= $oContainer->getDisplayName();
+							if($oContainer->hasContainerAccess())
+							{
+								Tag::echoDebug("containerChoice", "user have access to container, so make button in list");
+								$button= new ButtonTag("backButton");
+									$button->add($sButtonName);
+									$button->onClick("javascript:location='".$sButtonAddress."'");
+								$containerButtons[]= $button;
+								$this->aContainerAdress[$oContainer->getName()]= $sButtonAddress;
+							}else
+								Tag::echoDebug("containerChoice", "user has no access for container to see");
+					}// end if($by===true)
+				}else
+				{
+					Tag::echoDebug("containerChoice", "container is the before created back-button");
+					$containerButtons[]= $backButton;
+					$bNeededBackButton= true;
+				}//end if($containerName!=$sBackButtonContainerName)
+			}//end foreach($this->aContainer)
+			STCheck::echoDebug("containerChoice", "---------------------------------------------------------------------------");
+		}//end if(	count($this->aContainer) )
+		STCheck::echoDebug("containerChoice", " ");
+
+
+		// f�ge die buttons geordnet in die Tabelle
+		$table= new TableTag();
+			$table->width("100%");
+		foreach($containerButtons as $button)
+		{
+			$tr= new RowTag();
+				$td= new ColumnTag(TD);
+					$td->align("right");
+					$td->add($button);
+				$tr->add($td);
+			$table->add($tr);
+		}
+		if(	!$bNeededBackButton &&
+			$sBackButtonContainerName &&
+			isset($backButton)				)
+		{
+			$tr= new RowTag();
+				$td= new ColumnTag(TD);
+					$td->align("right");
+					$td->add($backButton);
+				$tr->add($td);
+			$table->add($tr);
+			$this->aContainer[$sBackButtonContainerName]= STBaseContainer::getContainer($sBackButtonContainerName);
+		}
+		$divTag->addObj($table);
+
+		$this->aBehindHeadLineButtons= array_merge(	$this->oExternSideCreator->aBehindHeadLineButtons,
+													$this->aBehindHeadLineButtons);
+		$anz= count($this->aBehindHeadLineButtons);
+		if($anz)
+		{
+			for($n= 0; $n<$anz; $n++)
+			{
+				$tag= &$this->aBehindHeadLineButtons[$n];
+				$divTag->addObj($tag);
+			}
+		}
+	}
+		protected function &getListTable($tableName)
 		{
 			if(isset($this->oCurrentListTable))
 			{
@@ -1670,11 +2021,12 @@ class STObjectContainer extends STBaseContainer
 		Tag::paramCheck($byTable, 2, "string");
 		Tag::paramCheck($byAction, 3, "string");
 
-		$container= &STBaseContainer::needContainer($container, $byTable, $byAction);
+		$container= &STBaseContainer::needContainer($container);
 		$containerName= $container->getName();
-		if(!is_array($this->aContainer[$containerName]))
+		if( !isset($this->aContainer[$containerName]) || !is_array($this->aContainer[$containerName]))
 			$this->aContainer[$containerName]= array();
 		$this->aContainer[$containerName][$byTable][$byAction]= true;
+		$this->aAccessList[$containerName]['action'][$byTable][$byAction]= true;
 		return $container;
 	}
 	function &getOlderLinkedTable()

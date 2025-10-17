@@ -406,7 +406,15 @@ class STQueryString
 		public function removeContainer()
 		{
 		    if(!$this->defined("stget[older]"))
-		        return false;
+			{
+				if(!$this->defined("stget[container]"))
+		        	return false;
+				$this->delete("stget[container]");
+				$this->delete("stget[table]");
+				$this->delete("stget[action]");
+				//$this->removeLimitation(); // toDo: test how to remove last container limitation
+				return true;
+			}
 	        STCheck::echoDebug("query.limitation", "remove container");
 	        $this->restoreStgetOlder();
 		    $this->removeLimitation();
@@ -876,7 +884,16 @@ class STQueryString
 		 */
 		public function setLimitation(string $limitOrder, string $containerName, string $tableName, string $columnName= "", $value= null)
 		{
-		    STCheck::echoDebug("query.limitation", "create query limitation");
+			if(STCheck::isDebug())
+			{
+				STCheck::param($limitOrder, 1, "string");
+				STCheck::param($containerName, 2, "string");
+				STCheck::param($tableName, 3, "string");
+				STCheck::param($columnName, 4, "string", "empty(string)");
+				STCheck::param($value, 5, "int", "string", "empty(string)", "null");
+
+		    	STCheck::echoDebug("query.limitation", "create query limitation");
+			}
 		    if($limitOrder != STINSERT)
 		    {
 		        STCheck::paramCheck($columnName, 4, "string", "can only be an Name of column");

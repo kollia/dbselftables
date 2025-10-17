@@ -59,7 +59,29 @@ class STChooseBox extends TableTag
 		{
 			$this->aNoChoise= $array;
 		}
-		function execute($table= null)
+		protected function getContainerButton(string $containerName)
+		{
+			$oContainer= &STBaseContainer::getContainer($containerName);
+			if(!$oContainer || !$oContainer->hasContainerAccess())
+			{
+				return null;
+			}
+			
+			$get= new STQueryString();
+			$get->update("stget[action]=");
+			$get->update("stget[table]=");  
+			$get->update("stget[container]=".$containerName);
+			
+			$sButtonAddress= $this->startPage . $get->getStringVars();
+			$sButtonName= $oContainer->getDisplayName();
+			
+			$button= new ButtonTag("backButton");
+			$button->add($sButtonName);
+			$button->onClick("javascript:location='".$sButtonAddress."'");
+			
+			return $button;
+		}
+		public function execute($table= null)
 		{
 			if(Tag::isDebug())
 			{
@@ -87,30 +109,33 @@ class STChooseBox extends TableTag
 			//if(typeof($this->tableContainer, "OSTDatabase"))
 			{
 				$aktTable= $this->tableContainer->getTableName();
-				$aTables= array();
 				if(is_string($table))
-					$aTables[]= $this->tableContainer->getTable($table);
-				else
-					$aTables= &$this->tableContainer->getTables();
-				STCheck::test_tagClassAttributeLinks("table", "count", count($aTables));
+				{
+					$aAccessList= array();
+					$aAccessList[$table]= array(	"name"  => $table,
+													"type"  => "table",
+													"choose"=> true,
+													"object"=> $this->tableContainer->getTable($table)	);
+				}else
+					$aAccessList= &$this->tableContainer->aAccessList;
+				STCheck::test_tagClassAttributeLinks("table", "count", count($aAccessList));
 				
 				$get= new STQueryString();
-				foreach($aTables as $table)
+				foreach($aAccessList as $object)
 				{
-					if($table)
+					if($object['type'] == "table")
 					{
-    					$tableName= $table->getName();
+    					$tableName= $object['name'];
     					if(	array_value_exists($tableName, $this->aNoChoise)===false
 							and
 							$tableName!=$aktTable										)
     					{
     						$get->resetParams();
-							//echo "for table $tableName set Action ".$table->sFirstAction."<br />";
-    						$get->update("stget[action]=".$table->sFirstAction);
+    						$get->update("stget[action]=".$object['object']->sFirstAction);
 							$get->update("stget[table]=".$tableName);
     						$address=  $this->startPage;
     						$address.= $get->getStringVars();
-    						$sButton= $table->getDisplayName();
+    						$sButton= $object['object']->getDisplayName();
 							if(!$sButton)
 								$sButton= $tableName;
     						$this->makeButton("  ".$sButton."  ", $address);
@@ -120,6 +145,19 @@ class STChooseBox extends TableTag
 							$tr= new RowTag();
 								$td= new ColumnTag(TD);
 									$td->height(20);
+								$tr->add($td);
+							$this->add($tr);
+							++$nButtonCreated;
+						}
+					}else // object is container
+					{
+						$button= $this->getContainerButton($object['name']);
+						if($button)
+						{
+							$tr= new RowTag();
+								$td= new ColumnTag(TD);
+									$td->height(20);
+									$td->add($button);
 								$tr->add($td);
 							$this->add($tr);
 							++$nButtonCreated;
