@@ -2550,7 +2550,7 @@ class STListBox extends STBaseBox
 					$field= $this->asDBTable->searchByColumn($pk);
 					$value= $this->sqlResult[0][$field["alias"]];
 				}
-				$container= $this->asDBTable->container->getContainerName();
+				$container= $this->asDBTable->container->getCurrentContainerName();
 				$table= $this->asDBTable->getName();
 				if(	$this->asDBTable->canInsert() &&
 					$this->asDBTable->hasAccess(STINSERT)	)

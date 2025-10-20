@@ -687,15 +687,15 @@ abstract class STBaseContainer extends BodyTag implements STContainerTempl
 			$this->bInitialize= true;
 		}
 	}
-	function currentContainer()
+	public function currentContainer() : bool
 	{
-		$get= new STQueryString();
-		$get= $get->getArrayVars();
+		$query= new STQueryString();
+		$query= $query->getArrayVars();
 		$containerName= "";
-		if(	isset($get["stget"]) &&
-			isset($get["stget"]["container"])	)
+		if(	isset($query["stget"]) &&
+			isset($query["stget"]["container"])	)
 		{
-			$containerName= $get["stget"]["container"];
+			$containerName= $query["stget"]["container"];
 		}
 		if($this->name==$containerName)
 			return true;
@@ -776,7 +776,7 @@ abstract class STBaseContainer extends BodyTag implements STContainerTempl
 	 * 										if parameter a boolean of true, return object can be null if not exist, otherwise the same if not given
 	 * @param string|bool $className name of container class, if parameter a boolean of true, if parameter a boolean of true, return object can be null
 	 */
-	public static function &getContainer($containerName= null, string|bool $className= null, string $fromContainer= null) : object|null
+	public static function &getContainer($containerName= null, string|bool|null $className= null, string|null $fromContainer= null) : object|null
 	{
 		global	$global_st_pathdef_inc_location_path,
 				$global_first_objectContainerName,
@@ -802,7 +802,7 @@ abstract class STBaseContainer extends BodyTag implements STContainerTempl
 		{
 			$query= new STQueryString();
 			$containerName= $query->getArrayVars("stget", "container");
-			//$containerName= $get["stget"]["container"];
+			//$containerName= $query["stget"]["container"];
 			if(!$containerName)
 			{
 			    $containerName= $global_first_objectContainerName;
@@ -985,7 +985,7 @@ abstract class STBaseContainer extends BodyTag implements STContainerTempl
 		}
 		return false;
 	}
-	function getContainerName()
+	function getCurrentContainerName()
 	{
 		$container= &STBaseContainer::getContainer();
 		$containerName= null;

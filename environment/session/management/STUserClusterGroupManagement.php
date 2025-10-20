@@ -96,7 +96,7 @@ class STUserClusterGroupManagement extends STObjectContainer
 	}
 	function init(string $action, string $table)
 	{
-	    $container= $this->getContainerName();
+	    $container= $this->getCurrentContainerName();
 	    $currentTableName= $this->getTableName();
 	    $groupTableName= $this->getTableName("Group");
 	    $userTableName= $this->getTableName("User");

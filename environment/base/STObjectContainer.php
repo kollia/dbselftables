@@ -1262,7 +1262,7 @@ class STObjectContainer extends STBaseContainer
 					$get->noStgetNr("stget[".$tableName."][".$PK."]");
     				$script= new JavaScriptTag();
     					$function= new jsFunction("selftable_confirmLink", "action", "VALUE");
-        					$get->setLimitation("'+action+'", $this->getContainerName(), $tableName, $PK, "'+VALUE+'");
+        					$get->setLimitation("'+action+'", $this->getCurrentContainerName(), $tableName, $PK, "'+VALUE+'");
     						
 							$function->add("if(action=='update' || action=='delete')");
 							$function->add("    bUD= true;");
@@ -1341,7 +1341,7 @@ class STObjectContainer extends STBaseContainer
 				count($table->columns) > 0		)
 			{
 				$get= new STQueryString();
-				$get->setLimitation(STINSERT, $this->getContainerName(), $table->getName());
+				$get->setLimitation(STINSERT, $this->getCurrentContainerName(), $table->getName());
 				$params= $get->getStringVars();
 
 				$center= new CenterTag();

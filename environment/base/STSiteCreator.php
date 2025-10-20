@@ -727,7 +727,7 @@ class STSiteCreator extends HtmlTag
 				$this->aCallbacks[$action][$tableName]= array();
 			$this->aCallbacks[$action][$tableName][$columnName]= $callbackFunction;
 		}
-	function &getContainer(string $containerName= null, string $className= null, string $fromContainer= null)
+	function &getContainer(string|null $containerName= null, string|null $className= null, string|null $fromContainer= null)
 	{
 		global	$_selftable_first_main_database_name;
 
@@ -1018,7 +1018,7 @@ class STSiteCreator extends HtmlTag
 			 */
 
 			if(	$__global_finished_SiteCreator_result === "NOERROR" ||
-			$__global_finished_SiteCreator_result === "BOXDISPLAY"	) // ||
+				$__global_finished_SiteCreator_result === "BOXDISPLAY"	) // ||
 			//	$__global_finished_SiteCreator_result === "EMPTY_RESULT"	)
 			{
 				// Check if there are no back_tables or action links
