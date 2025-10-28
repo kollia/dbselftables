@@ -1035,9 +1035,11 @@ class STObjectContainer extends STBaseContainer
 		$this->initContainer();
 		$params= new STQueryString();
 		$get_vars= $params->getArrayVars();
-		if(isset($get_vars["stget"]))
+		if(	isset($get_vars["stget"]) &&
+			is_array($get_vars["stget"])	)
+		{
 			$get_vars= $get_vars["stget"];
-		else
+		}else
 			$get_vars= array();
 		if(	!isset($get_vars["action"]) ||
 			$get_vars["action"] == ""		)

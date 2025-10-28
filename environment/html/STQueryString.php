@@ -1249,6 +1249,11 @@ class STQueryString
 				$global_selftables_queryArray= $HTTP_GET_VARS;
 			}
 			$this->param_vars= $global_selftables_queryArray;
+			if(	isset($this->param_vars["stget"]) &&
+				!is_array($this->param_vars["stget"])	)
+			{
+				unset($this->param_vars["stget"]);
+			}
 			$session= STSession::getSessionUrlParameter();
 			if($session == "")
 			{

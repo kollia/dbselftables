@@ -391,6 +391,8 @@ class STSiteCreator extends HtmlTag
 			// alex 18/05/2005:	wenn die Aktion für choose (Auswahl) steht
 			//					kontrolliere ob eine Tabelle schon als erstes
 			//					aufgelistet werden soll
+			if(is_string($get_vars))
+				$get_vars= array();
 			$get_vars["action"]= $this->getAction();
 			if(	(	!isset($get_vars["table"]) ||
 					$get_vars["table"] == ""		) &&
@@ -865,7 +867,7 @@ class STSiteCreator extends HtmlTag
 	 * which last entry was inserted
 	 * @var array $aTestTypes
 	 */
-	private array $aTestTypes= array("back_tables", "edit", "table", "action", "container_back");
+	private array $aTestTypes= array("back_tables", "edit", "table", "action", "container_back", "container");
 	private string $reportFilename= "selftable_test_report.txt";
 	/**
 	 * testing all containers and tables
@@ -915,23 +917,10 @@ class STSiteCreator extends HtmlTag
 				reset($sorted_selftable_test_links);
 				$type= key($sorted_selftable_test_links);						
 				reset($sorted_selftable_test_links[$type]);
-				$step= 0;
-				$action= $query->getParameterValue("stget", "action");
-				if( isset($action) &&
-					$action != ""	)
-				{
-					$step= 1;
-				}
 
 				$testdebug= array();
 				$testdebug['start']= time();
 				$testdebug['status']= "running";
-				$testdebug['step']= $step;
-				$testdebug['container']= $this->getContainerName();
-				$testdebug['table']= $this->getTableName();
-				$testdebug['oupval']= array(); // old update values
-				$testdebug['tables']= $global_selftable_test_links['table']['count'];
-				$testdebug['count']= $step; // on beginning step define also whether the first shows an table or table listing
 				$testdebug['link-type']= $type;
 				$testdebug['link-class']= "STChoose-menue-button"; //should be first link class
 				$testdebug['last-insert']= null;
@@ -944,11 +933,8 @@ class STSiteCreator extends HtmlTag
 													'secondRun' => "false"	);
 
 				$testdebug['faults']= false;
-				$testdebug['progress']= array();
-				$testdebug['progress']['onTableTagCount']= -1;
-				$testdebug['progress']['backbutton-test']= "false";
-				$testdebug['progress']['onEditLinkCount']= -1;
-				$testdebug['progress']['onEditDeleteCount']= -1;
+				$this->resetDebugValues($testdebug);
+
 				$report= "\n\n";
 				$report.= " ****************************************\n";
 				$report.= " ***  new DBSelfTables test started\n";
@@ -957,8 +943,9 @@ class STSiteCreator extends HtmlTag
 				$report.= " ***\n";
 				$report.= " ***\n";
 				$report.= "\n";
-			}
-			
+
+			}elseif(trim($testdebug['containers']) == "")
+				$this->resetDebugValues($testdebug);
 
 			// report testing steps forcast
 			// if debugging step was (4) - insert new entry
@@ -978,7 +965,7 @@ class STSiteCreator extends HtmlTag
 				if(trim($table) != "")
 				{
 					$testdebug['step']= 1;
-					++$testdebug['count'];
+					++$testdebug['tab_count'];
 				}
 			}
 			/**
@@ -1058,13 +1045,25 @@ class STSiteCreator extends HtmlTag
 				}
 				if	($testdebug['table'] != $this->report['table'] ||
 					(	$testdebug['step'] >= 11 &&
-						$testdebug['count'] >= $testdebug['tables']	)	)
+						$testdebug['tab_count'] >= $testdebug['tables']	)	)
 				{ // new next table
 					$testdebug['table']= $this->report['table'];
-					if($testdebug['count'] >= $testdebug['tables'])
-						$bFinished= true;
-					else
-						++$testdebug['count'];
+					if($testdebug['tab_count'] >= $testdebug['tables'])
+					{
+						if(	$testdebug['containers'] > 0 &&
+							$testdebug['cont_count'] < $testdebug['containers']	)
+						{ // more containers to test
+							$testdebug['step']= 0; // go to first table listing of next container
+							$testdebug['link-type']= "link";
+							$link= $sorted_selftable_test_links['container']['###link'][$testdebug['cont_count']];
+							$testdebug['cont_count']++;
+							$this->pushDebugToOlder($testdebug);
+							$testdebug['containers']= null;
+							
+						}else
+							$bFinished= true;
+					}else
+						++$testdebug['tab_count'];
 				}
 				// to get last inserted PK, write containr report after localize new values
 				$sErrorOutput= STCheck::end_outputBuffer("test");
@@ -1180,6 +1179,66 @@ class STSiteCreator extends HtmlTag
 			exit();
 		}
 	}
+	private array $aDebugShiftVars= array(	"step", "container", "table", "oupval", "tables",
+											"containers", "cont_count", "tab_count", "progress", "older"	);
+	/**
+	 * reset all debug related values from parameter array
+	 */
+	private function resetDebugValues(array &$testdebug)
+	{
+		global $global_selftable_test_links;
+
+		$query= new STQueryString();
+		$step= 0;
+		$action= $query->getParameterValue("stget", "action");
+		if( isset($action) &&
+			$action != ""	)
+		{
+			$step= 1;
+		}
+		$testdebug['step']= $step;
+		$testdebug['container']= $this->getContainerName();
+		$testdebug['table']= $this->getTableName();
+		$testdebug['oupval']= array(); // old update values
+		$testdebug['tables']= $global_selftable_test_links['table']['count'];
+		$containers= 0;
+		if(isset($global_selftable_test_links['container']))
+			$containers= $global_selftable_test_links['container']['count'];
+		$testdebug['containers']= $containers;
+		$testdebug['cont_count']= 0; // on beginning step define also whether the first shows an container or container listing
+		$testdebug['tab_count']= $step; // on beginning step define also whether the first shows an table or table listing
+		$testdebug['progress']= array();
+		$testdebug['progress']['onTableTagCount']= -1;
+		$testdebug['progress']['backbutton-test']= "false";
+		$testdebug['progress']['onEditLinkCount']= -1;
+		$testdebug['progress']['onEditDeleteCount']= -1;
+	}
+	/**
+	 * push debug content to new parameter layer
+	 * 
+	 * @param bool $bOnlyLimitation push only limitation link up to older container.<br />
+	 *                                (default is to push all beside limit and link values)
+	 */
+	private function pushDebugToOlder(array &$testdebug)
+	{
+		$older= array();
+		foreach($testdebug as $param => $value)
+		{
+			if(!in_array($param, $this->aDebugShiftVars))
+				$older[$param]= $value;
+		}
+		$testdebug['older']= $older;
+		$this->resetDebugValues($testdebug);			
+	}
+	private function restoreDebugOlder(array &$testdebug)
+	{
+		$older= $testdebug['older'];
+		foreach($this->aDebugShiftVars as $param)
+		{
+			unset($testdebug[$param]);
+			$testdebug[$param]= $older[$param];
+		}
+	}
 	private function makeNextTableContainer_Test(array &$testdebug, array $sorted_selftable_test_links, STQueryString &$query) : string
 	{
 		// ( 0) - go to first table listing (only table-buttons are displayed)
@@ -1211,9 +1270,13 @@ class STSiteCreator extends HtmlTag
 				$type= "link";
 			}else
 			{ // no more table-button found, so test is finished
-				$bFinished= true;
 				$link= "";
-				$testdebug['status']= "finished";
+				if($testdebug['containers'] == 0 ||
+				   $testdebug['cont_count'] >= $testdebug['containers']	)
+				{
+					$bFinished= true;
+					$testdebug['status']= "finished";
+				}
 			}
 		}else
 		{

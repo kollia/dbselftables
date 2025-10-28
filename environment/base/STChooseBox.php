@@ -78,6 +78,8 @@ class STChooseBox extends TableTag
 			$button= new ButtonTag("backButton");
 			$button->add($sButtonName);
 			$button->onClick("javascript:location='".$sButtonAddress."'");
+			if(STCheck::isDebug("test"))
+				STCheck::test_tagClassAttributeLinks("container", "###link", $sButtonAddress);
 			
 			return $button;
 		}
@@ -118,7 +120,17 @@ class STChooseBox extends TableTag
 													"object"=> $this->tableContainer->getTable($table)	);
 				}else
 					$aAccessList= &$this->tableContainer->aAccessList;
-				STCheck::test_tagClassAttributeLinks("table", "count", count($aAccessList));
+				$nTables= 0;
+				$nContainers= 0;
+				foreach($aAccessList as $object)
+				{
+					if($object['type'] == "table")
+						$nTables++;
+					else
+						$nContainers++;
+				}
+				STCheck::test_tagClassAttributeLinks("table", "count", $nTables);
+				STCheck::test_tagClassAttributeLinks("container", "count", $nContainers);
 				
 				$get= new STQueryString();
 				foreach($aAccessList as $object)

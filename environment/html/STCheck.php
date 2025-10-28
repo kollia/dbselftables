@@ -1138,28 +1138,5 @@ class STCheck
 	}
 }
 
-/*
- *
- * 			******************************************
- * 			 *   STCheck::debug("<definitions>");   *
- * 			  *************************************
- *
- * true					-	if this boolean be set
- * 							STCheck checks all methods with params
- * 							and the html-output by the client is calibrated.
- * 							This boolean is also be set by defining the following strings
- *
- * db.statment			-	show all statments sending to database
- * db.statments.time	-	show time of waiting on database
- * db.statments.aliases	-	creating of aliases for table
- * db.statments.select	-	creating of select-statment which columns are needed
- * db.statments.table	-	creating join statment
- * db.statments.where	-	creating where statment
- *
- * performance			-	see start- and endtime by creating page
- * table				-	creating of table objects (STDbTable)
- * container			-	creating of container objects (STObjectContainer / STBaseContainer)
- *
- */
 
 ?>
