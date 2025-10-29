@@ -199,9 +199,17 @@ class STObjectContainer extends STBaseContainer
 	public function needTableObject(&$table)
 	{
 	    $orgTableName= $table->getName();
-	    // not all databases save the tables case sensetive
-	    $sTableName= strtolower($orgTableName);
+	    // not all databases save the tables case sensitive		
+		if($this->db->hasLowerCaseTableNames())
+	    	$sTableName= strtolower($orgTableName);
+		else
+			$sTableName= $orgTableName;
 	    $this->tables[$sTableName]= &$table;
+		
+		$this->aAccessList[$sTableName]= array(	"type"  =>	"table",
+													"choose"=>	true,
+													"name"  =>	$orgTableName,
+													"object"=>	&$table			);
 	}
 	public function &needTable(string $sTableName, bool $bEmpty= false) : STBaseTable|null
 	{  
@@ -214,8 +222,9 @@ class STObjectContainer extends STBaseContainer
         else
             $orgTableName= $sTableName;
         STCheck::echoDebug("table", "need table <b>$sTableName</b> in container <b>".$this->getName()."</b>");
-        // not all databases save the tables case sensetive
-        $sTableName= strtolower($sTableName);
+        // not all databases save the tables case sensitive
+		if($this->db->hasLowerCaseTableNames())
+        	$sTableName= strtolower($sTableName);
         $table= null;
         if(isset($this->tables[$sTableName]))
             $table= &$this->tables[$sTableName];
@@ -302,7 +311,8 @@ class STObjectContainer extends STBaseContainer
 		else
 		// not all databases save the tables case sensetive
 			$orgTableName= $tableName;
-		$tableName= strtolower($tableName);
+		if($this->db->hasLowerCaseTableNames())
+		    $tableName= strtolower($tableName);
 		// ----------------------------------------------------------------------------------------------------
 		
 		// kollia 11/02/2025: 	remove alert if table has same name as table in database
@@ -1141,7 +1151,7 @@ class STObjectContainer extends STBaseContainer
 	}
 	function makeChooseTags($get_vars)
 	{
-		$chooseTable= $this->getChooseTableTag($get_vars);
+		$chooseTable= $this->createChooseTableContent($get_vars);
 		// alex 18/05/2005:	die Weiterleitung ist jetzt in den STChooseBox verschoben
 		//					und muss von aussen angegeben werden
 		/*{
@@ -1451,7 +1461,7 @@ class STObjectContainer extends STBaseContainer
 
 			if($table->sFirstAction!==STLIST)
 			{
-				$chooseTable= $this->getChooseTableTag($get_vars);
+				$chooseTable= $this->createChooseTableContent($get_vars);
 				$this->addObj($chooseTable);
 			}
     		$this->addObj($center);
