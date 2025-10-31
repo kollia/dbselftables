@@ -1009,7 +1009,7 @@ class STSiteCreator extends HtmlTag
 			//	$__global_finished_SiteCreator_result === "EMPTY_RESULT"	)
 			{
 				// Check if there are no back_tables or action links
-				if(	!isset($sorted_selftable_test_links['back_tables']) &&
+				if(	!isset($sorted_selftable_test_links['back_tables']['###action']) &&
 					!isset($sorted_selftable_test_links['action'])			)
 				{
 					if( $testdebug['step'] == 0 ||		//  0	- go to first table listing (only table-buttons are displayed)
@@ -1543,9 +1543,16 @@ class STSiteCreator extends HtmlTag
 	 */
 	private function updateQueryLimitation(STQueryString &$query, array $testdebug) : void
 	{
+		if( !isset($testdebug['last-insert']) ||
+			!is_array($testdebug['last-insert']) || 
+			empty($testdebug['last-insert']) 		)
+		{
+			// if no last-insert defined, cannot set limitation
+			// mostly in this case backbutton on step 2 was tested
+			// and it need no limitation
+			return;
+		}
 		$table= $query->getParameterValue("stget", "table");
-		if( !isset($testdebug['last-insert']) || empty($testdebug['last-insert']) )
-			st_print_r($testdebug, 4);
 		$column= array_key_first($testdebug['last-insert']);
 		$stget= array( "stget" => array( "limit" => array( $table => array())));
 		$stget['stget']['limit'][$table][$column]= $testdebug['last-insert'][$column];
@@ -1559,7 +1566,7 @@ class STSiteCreator extends HtmlTag
 		{// STItemBox should test first back-button
 			$type= "back_tables";
 			$testdebug['progress']['backbutton-test']= "true";
-			$link= $this->updateQueryLink($query, $sorted_selftable_test_links[$type]['###link']);
+			$link= $this->updateQueryLink($query, $sorted_selftable_test_links[$type]['###action']);
 			STCheck::warning(is_bool($link), "no correct back link found", 1);
 			$testdebug['step']++;// only for type link or edit steps will be increase later
 			$query->update(array( 'testdebug' => $testdebug ));

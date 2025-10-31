@@ -1620,9 +1620,10 @@ class STObjectContainer extends STBaseContainer
 						{
 							Tag::echoDebug("containerChoice", "do not need Back-Button was set before");
 						}
+						$list_type= "###container";
 
-					}elseif(isset($get_vars["action"]) &&	
-							(	$get_vars["action"]==STINSERT ||
+					}elseif( isset($get_vars["action"]) &&	
+							 (	$get_vars["action"]==STINSERT ||
 								$get_vars["action"]==STUPDATE 	)	)
 					{
 						if($this->sFirstAction==$get_vars["action"])
@@ -1643,25 +1644,20 @@ class STObjectContainer extends STBaseContainer
 							$sBackButtonName= $this->sBackButton;
 							//$get->getParamString(STUPDATE, "stget[table]=".$get_vars["table"];
 						}
+						$list_type= "###action";
+
 					}elseif(	isset($get_vars["action"]) &&
 								$get_vars["action"]==STDELETE	)
 					{
 						$get->update("stget[action]=".STCHOOSE);
 						$get->delete("stget[table]");
 						$get->delete("stget[value]");
-					}/*elseif($get_vars["action"]==STCHOOSE)
-					{
-						$get->getParamString(STDELETE, "stget[action]");//=".STCHOOSE);
-						$get->getParamString(STDELETE, "stget[table]");
-						$get->getParamString(STDELETE, "stget[firstrow][".$get_vars["table"]."]");
-						$get->getParamString(STDELETE, "stget[container]");
-						}*/
+						$list_type= "###remove";
+					}
 
 					$sBackButtonContainerName= $this->sBackContainer;
 					if(!$sBackButtonContainerName)
 						$sBackButtonContainerName= $this->sFirstTableContainerName;
-					//echo "BackButton:".$sBackButtonName."<br />";
-					//echo "BackContainer:".$sBackButtonContainerName."<br />";
 
 					$this->addParamsByButton($get, $sBackButtonContainerName);
 					$backAddress= "";
@@ -1680,7 +1676,7 @@ class STObjectContainer extends STBaseContainer
 					$backAddress= $this->backButtonAddress;
 				if($this->bBackButton)
 				{
-					STCheck::test_tagClassAttributeLinks("back_tables", "###link", $backAddress);
+					STCheck::test_tagClassAttributeLinks("back_tables", $list_type, $backAddress);
 					if(!$backAddress)
 					{
 						$backAddress= $this->starterPage;
