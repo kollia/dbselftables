@@ -191,7 +191,13 @@ class STBaseTable
      */
 	protected $sDeleteLimitation= "true";
 	var $asAccessIds= array();
-	var $sAcessClusterColumn= array(); // in den angegebenen Columns wird ein Cluster f�r den Zugriff gespeichert
+	/**
+	 * all access cluster
+	 * for specific columns
+	 * inside table
+	 * @var array
+	 */
+	public $aAccessClusterColumns= array();
 	var	$aUnlink= array(); 	// wenn die Upgelodete Datei nicht gel�scht werden soll
 							// ist hier der Alias-Name der Spalte eingetragen
 	var	$nDisplayColumns= 1; // in wieviel Hauptspalten die Aufgelistete Tabelle angezeigt werden soll
@@ -223,11 +229,67 @@ class STBaseTable
 	 */
 	var $null= null;
 
-	 /**
-	  * Constructor of normal table object
-	  * 
-	  * @param {table object, string, null} $oTable exist other table, new tablename or null to create symbolic null table
-	  */
+	/**
+	 * copy content from other table object
+	 * and reset some environment variables
+	 * to default values for beginning
+	 * @param STBaseTable $other other table object
+	 */
+	function copy(STBaseTable $other)
+	{
+		STCheck::param($other, 0, "STBaseTable");
+		
+		$this->bOrder= NULL;
+     	$this->error= $other->error;
+    	$this->errorText= $other->errorText;
+    	$this->Name= $other->Name;
+    	if( $other->bModifiedByQuery &&
+    	    (  !$other->bLimitOwn ||
+    	        !$other->bModifyFk   )   )
+    	{   
+    	    $this->bLimitOwn= !$other->bLimitOwn;
+    	    $this->bModifyFk= !$other->bModifyFk;
+    	    $this->bModifiedByQuery= false;
+    	}else
+    	{
+        	$this->bLimitOwn= true;
+        	$this->bModifyFk= true;
+        	$this->bModifiedByQuery= $other->bModifiedByQuery;
+    	}
+		$this->aAttributes= $other->aAttributes;
+		$this->aAccessClusterColumns= $other->aAccessClusterColumns;
+     	//---------------------------------------------------------------------------------
+     	// foreign keys and backjoins should always same like in first database table
+     	// so make an direct link from copied table
+    	$this->FK= &$other->FK;
+		$this->aFks= &$other->aFks;
+		$this->aBackJoin= &$other->aBackJoin;
+		//---------------------------------------------------------------------------------
+    	$this->identification= $other->identification;
+    	$this->showTypes= $other->showTypes;
+		$this->aActiveLink= $other->aActiveLink;
+		$this->nFirstRowSelect= $other->nFirstRowSelect;
+		$this->nMaxRowSelect= $other->nMaxRowSelect;
+		if(is_object($other->oWhere))
+    		$this->oWhere= clone $other->oWhere;
+    	$this->asOrder= $other->asOrder;
+    	$this->sPKColumn= $other->sPKColumn;
+		$this->show= $other->show;
+    	$this->columns= $other->columns;
+		$this->bDistinct= $other->bDistinct;
+		$this->aSetAlso= $other->aSetAlso;
+		$this->asForm=$other->asForm;
+		$this->bDisplaySelects= $other->bDisplaySelects;
+		$this->bDisplayIdentifs= $other->bDisplayIdentifs;
+		$this->bIsNnTable= $other->bIsNnTable;
+		$this->oTinyMCE= &$other->oTinyMCE;
+		$this->aInputSize= $other->aInputSize;
+	}
+	/**
+	 * Constructor of normal table object
+	* 
+	* @param {table object, string, null} $oTable exist other table, new tablename or null to create symbolic null table
+	*/
 	function __construct($oTable= null)
 	{
 		STCheck::param($oTable, 0, "string", "STBaseTable", "null");
@@ -484,54 +546,6 @@ class STBaseTable
 			return false;
 		}
 		return true;
-	}
-	function copy($Table)
-	{
-		STCheck::param($Table, 0, "STBaseTable");
-		
-		$this->bOrder= NULL;
-     	$this->error= $Table->error;
-    	$this->errorText= $Table->errorText;
-    	$this->Name= $Table->Name;
-    	if( $Table->bModifiedByQuery &&
-    	    (  !$Table->bLimitOwn ||
-    	        !$Table->bModifyFk   )   )
-    	{   
-    	    $this->bLimitOwn= !$Table->bLimitOwn;
-    	    $this->bModifyFk= !$Table->bModifyFk;
-    	    $this->bModifiedByQuery= false;
-    	}else
-    	{
-        	$this->bLimitOwn= true;
-        	$this->bModifyFk= true;
-        	$this->bModifiedByQuery= $Table->bModifiedByQuery;
-    	}
-     	//---------------------------------------------------------------------------------
-     	// foreign keys and backjoins should always same like in first database table
-     	// so make an direct link from copied table
-    	$this->FK= &$Table->FK;
-		$this->aFks= &$Table->aFks;
-		$this->aBackJoin= &$Table->aBackJoin;
-		//---------------------------------------------------------------------------------
-    	$this->identification= $Table->identification;
-    	$this->showTypes= $Table->showTypes;
-		$this->aActiveLink= $Table->aActiveLink;
-		$this->nFirstRowSelect= $Table->nFirstRowSelect;
-		$this->nMaxRowSelect= $Table->nMaxRowSelect;
-		if(is_object($Table->oWhere))
-    		$this->oWhere= clone $Table->oWhere;
-    	$this->asOrder= $Table->asOrder;
-    	$this->sPKColumn= $Table->sPKColumn;
-		$this->show= $Table->show;
-    	$this->columns= $Table->columns;
-		$this->bDistinct= $Table->bDistinct;
-		$this->aSetAlso= $Table->aSetAlso;
-		$this->asForm=$Table->asForm;
-		$this->bDisplaySelects= $Table->bDisplaySelects;
-		$this->bDisplayIdentifs= $Table->bDisplayIdentifs;
-		$this->bIsNnTable= $Table->bIsNnTable;
-		$this->oTinyMCE= &$Table->oTinyMCE;
-		$this->aInputSize= $Table->aInputSize;
 	}
 	function getColumnName($column)
 	{
@@ -950,7 +964,7 @@ class STBaseTable
 	        $aRv= array_merge($aRv, $this->asAccessIds[$action]);
 		if( STUserSession::sessionGenerated()
 		    and
-			count($this->sAcessClusterColumn) )
+			count($this->aAccessClusterColumns) )
 		{
 		    $session= &STUserSession::instance();
 			$created= $session->getDynamicClusters($this);
@@ -4242,29 +4256,29 @@ class STBaseTable
 		return $this->enumField;
 	}
 	// deprecated
-    function noInsert()
+    public function noInsert()
     {
     	$this->bInsert= false;
     }
 	// deprecated
-    function noUpdate()
+    public function noUpdate()
     {
     	$this->bUpdate= false;
     }
 	// deprecated
-    function noDelete()
+    public function noDelete()
     {
     	$this->bDelete= false;
     }
-    function doInsert($do= true)
+    public function doInsert($do= true)
     {
     	$this->bInsert= $do;
     }
-    function doUpdate($do= true)
+    public function doUpdate($do= true)
     {
     	$this->bUpdate= $do;
     }
-    function doDelete($do= true)
+    public function doDelete($do= true)
     {
     	$this->bDelete= $do;
     }
@@ -4274,7 +4288,7 @@ class STBaseTable
      * 
      * @param boolean $do whether should sort
      */
-    function doHeadLineSort($do)
+    public function doHeadLineSort($do)
     {
     	$this->doTableSorting= $do;
     }
@@ -4282,7 +4296,7 @@ class STBaseTable
      * do not sort the Table
      * by clicking of one of the head-names
      */
-    function noHeadLineSort()
+    public function noHeadLineSort()
     {
     	$this->doTableSorting= false;
     }
@@ -4343,11 +4357,11 @@ class STBaseTable
 				return $this->bDynamicAccessIn;
 
 			$checked= array();
-			if( count($this->sAcessClusterColumn)
+			if( count($this->aAccessClusterColumns)
 				and
 				STUserSession::sessionGenerated()   )
 			{
-			    //st_print_r($table->sAcessClusterColumn,2);
+			    //st_print_r($table->aAccessClusterColumns,2);
 			    $session= &STUserSession::instance();
 				$aAccess= &$session->getDynamicClusters($this);
 				if(count($aAccess))
@@ -4360,7 +4374,7 @@ class STBaseTable
 					$bFounded= false;
 					$aktAccess= "";
 					//$accessTo= array();
-    				foreach($this->sAcessClusterColumn as $info)
+    				foreach($this->aAccessClusterColumns as $info)
     				{
     				    if($info["cluster"]!=$aktAccess)
     					{

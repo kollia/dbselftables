@@ -6,8 +6,6 @@ require_once($_stdbwhere);
 
 class STDbSelector extends STDbTable implements STContainerTempl
 {
-		var $selector= array();
-		//var $oMainTable= null;
 		/**
 		 * name of main table inside own table container
 		 * can be different to own original name
@@ -29,7 +27,6 @@ class STDbSelector extends STDbTable implements STContainerTempl
 		 */
 		private $aHoleAliasOrder= null;
 		var	$aNewSelects= array();
-		var $columns= array();
 		var $SqlResult= null;
 		var $onError;
 		private $errorID= 0;
@@ -66,6 +63,49 @@ class STDbSelector extends STDbTable implements STContainerTempl
 		var	$bClearedByFirstSelect= false; // die selects in ->show werden gel�scht wenn ein anderer Select gew�nscht wird
 
 
+		/**
+		 * copy content from other table object
+		 * and reset some environment variables
+		 * to default values for beginning
+		 * @param STBaseTable $other other table object
+		 */
+		public function copy(STBaseTable $other)
+		{
+			STCheck::param($other, 0, "STDbTable");
+			
+			STDbTable::copy($other);
+			if(!typeof($other, "STDbSelector"))
+			{
+				$this->sMainTableName= $other->Name;
+				return;
+			}
+			$sMainTableName= $other->sMainTableName;
+			$aoToTables= $other->aoToTables;
+			$aHoleAliasOrder= $other->aHoleAliasOrder;
+			$aNewSelects= $other->aNewSelects;
+			$columns= array(); // not copy, because if em
+			$SqlResult= null; // not copy, because should be build new
+			$onError;
+			$errorID= 0;
+			$errorMessage= "No Error occured";
+			$search= array();
+			$fetchArrayCount= 0;
+			$count= 0;
+			$dbCount;
+			$defaultTyp;
+			$bClearSelects= false;
+			$bClearIdendifColumns= false;
+			$bNnTableColumnSelected= false;
+			$bAddedTabels= false;
+			$bAddedFkTables= false;
+			$aClearIdentifColumns= array();
+			$bClearedByFirstSelect= false; 
+		}
+		public function __clone()
+		{
+		    STDbTable::__clone();
+		    STCheck::echoDebug("table", "clone STDbSelector::content ".$this->Name.":".$this->ID);
+		}
 		/**
 		 * construct selector object from table or container
 		 * 
@@ -131,21 +171,6 @@ class STDbSelector extends STDbTable implements STContainerTempl
 				$this->aoToTables[$this->sMainTableName]= &$this;
 				$this->createGlobalTableID($NameTable);
 			}
-		}
-		function __clone()
-		{
-		    STDbTable::__clone();
-		    STCheck::echoDebug("table", "clone STDbSelector::content ".$this->Name.":".$this->ID);
-		}
-		function copy($oTable)
-		{
-			STCheck::param($oTable, 0, "STDbTable");
-			
-			STBaseTable::copy($oTable);
-			if(typeof($oTable, "STDbSelector"))
-				$this->sMainTableName= $oTable->sMainTableName;
-			else
-				$this->sMainTableName= $oTable->Name;
 		}
 		public function getTableNumber(): string
 		{

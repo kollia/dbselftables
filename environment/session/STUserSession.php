@@ -413,10 +413,10 @@ class STUserSession extends STDbSession
 	    $clusters= $this->getSessionVar("ST_USER_DEFINED_VARS", "dynamic", $table->getName());
     	if(!is_array($clusters))
   		{//echo __file__.__line__."<br />";
-   		    //st_print_r($this->sAcessClusterColumn,3);
+   		    //st_print_r($this->aAccessClusterColumns,3);
   		    $table->clearSelects();
   		    $table->select($table->getPkColumnName());
-  		    foreach($table->sAcessClusterColumn as	$clusterInfo)
+  		    foreach($table->aAccessClusterColumns as	$clusterInfo)
   		    {
   		        $table->select($clusterInfo["column"]);
   				$table->andWhere($clusterInfo["column"]." is not null");
@@ -428,7 +428,7 @@ class STUserSession extends STDbSession
 			$clusters= array();
   		    foreach($result as $row)
   		    {
-  		        foreach($table->sAcessClusterColumn as	$key=>$clusterInfo)
+  		        foreach($table->aAccessClusterColumns as	$key=>$clusterInfo)
   				    {
   				        $clusters[$clusterInfo["action"]][$row[0]]= $row[$key+1];
   				    }

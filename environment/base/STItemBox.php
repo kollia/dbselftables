@@ -2027,7 +2027,7 @@ class STItemBox extends STBaseBox
 				$_instance= null;
 				if(	STUserSession::sessionGenerated()
 					and
-					count($this->asDBTable->sAcessClusterColumn))
+					count($this->asDBTable->aAccessClusterColumns))
 				{
     				$_instance= &STUserSession::instance();
                     $identification= "";
@@ -2050,7 +2050,7 @@ class STItemBox extends STBaseBox
     				}
 					$tableName= $this->asDBTable->getDisplayName();
 					//st_print_r($showpost);
-   					foreach($this->asDBTable->sAcessClusterColumn as $aColumnCluster)
+   					foreach($this->asDBTable->aAccessClusterColumns as $aColumnCluster)
    					{
    						if(!$showpost[$aColumnCluster["column"]])
    						{

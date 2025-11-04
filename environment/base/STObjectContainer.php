@@ -1940,14 +1940,14 @@ class STObjectContainer extends STBaseContainer
   					    $table->doUpdate(false);
   						$table->doDelete(false);
   					}
-  				}elseif(isset($table->sAcessClusterColumn[STUPDATE]))
+  				}elseif(isset($table->aAccessClusterColumns[STUPDATE]))
   				{
   				    if($checked[STUPDATE])
   					    $this->oCurrentListTable->callback($this->msgBox->getMessageContent("UPDATE"), "st_list_table_changing_access", STLIST);
   					else
   					    $table->doUpdate(false);
 
-  				}elseif(isset($table->sAcessClusterColumn[STDELETE]))
+  				}elseif(isset($table->aAccessClusterColumns[STDELETE]))
   				{
   				    if($checked[STDELETE])
   					    $this->oCurrentListTable->callback($this->msgBox->getMessageContent("DELETE"), "st_list_table_changing_access", STLIST);

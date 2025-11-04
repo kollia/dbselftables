@@ -208,7 +208,7 @@ abstract class STBaseBox extends TableTag
 			$oCallbackClass->clear();
 			if(is_array($this->sqlResult))
 				$oCallbackClass->setOldValues($this->sqlResult);
-			$oCallbackClass->aAcessClusterColumns= &$this->asDBTable->sAcessClusterColumn;
+			$oCallbackClass->aAcessClusterColumns= &$this->asDBTable->aAccessClusterColumns;
 			if(!$oCallbackClass->aTables)
 			{
 				$aliases= $this->asDBTable->getAliasOrder();

@@ -4,8 +4,6 @@ require_once($_stbasetable);
 
 class STDbTable extends STBaseTable
 {
-    private $onError;
-    private $aOtherTableWhere= array();
     /**
      * current database from where table
      * @var object
@@ -17,44 +15,79 @@ class STDbTable extends STBaseTable
 	 * @var object
 	 */
     public $container= null;
-	var $aAuto_increment= array(); // um ein Feld mit Autoincrement vor dem eigentlichen Insert zu holen
-	var	$password= array(); // all about to set an password in database
+	/**
+	 * STDbSelector to create selection on database
+	 * @var STDbSelector
+	 */
+	private $selector= null;
+	/**
+	 * prepared statements for this table
+	 * @var array
+	 */
+	public $aStatement= array();
+	/**
+	 * definition of error handling (default: onErrorStop)
+	 * @var enum noErrorShow, onDebugErrorShow, onErrorMessage, onErrorShow, onErrorStop
+	 */
+    private $onError;
+	/**
+	 * Need to define an auto_increment field
+	 * before make an insert
+	 * @var array
+	 */
+	var $aAuto_increment= array();
+    private $aOtherTableWhere= array();
+	/**
+	 * all about to set an password in database
+	 * @var array
+	 */
+	var	$password= array();
 
-	protected function createFirstOwnTable($Table)
+	/**
+	 * copy content from other table object
+	 * and reset some environment variables
+	 * to default values for beginning
+	 * @param STBaseTable $other other table object
+	 */
+	public function copy(STBaseTable $other)
 	{
-	    STCheck::param($Table, 0, "STDbTable", "string");
-	    
-	    if(typeof($Table, "string"))
-	    {
-	        Tag::echoDebug("describeTable", "table constructor file:".__file__." line:".__line__);
-	        $fieldArray= $this->db->describeTable($Table, $this->onError);
-	        $this->columns= &$fieldArray;
-	        $this->error= $this->db->isError();
-	        foreach($fieldArray as $field)
-	        {
-	            if(	preg_match("/pri_key/i", $field["flags"]) ||
-	                preg_match("/primary_key/i", $field["flags"])		)
-	            {
-	                $this->sPKColumn= $field["name"];
-	            }
-	            if(preg_match("/multiple_key/i", $field["flags"]))
-	            {
-					$aFK= $this->db->getForeignKeyLink($Table, $field["name"]);
-					if($aFK !== NULL)
-					{
-						$sTable= $aFK['table'];
-						if($this->db->getDatabaseName() != $aFK['database'])
-							$sTable= $aFK['database'].".$sTable";
-	                    $this->fk($field["name"], $sTable, $aFK['column'], /*join'*/null, /*where*/null, $aFK['cascade']);
-					}
-	            }
-	        }
-	    }else
-	    {
-	        $this->copy($Table);
-	        $this->columns= $Table->columns;
-	    }
+		STCheck::param($other, 0, "STDbTable");
+		
+		STBaseTable::copy($other);
+		unset($this->db);
+		unset($this->container);
+		$this->selector= null; // object should create new selection with new properties
+		$this->aStatement= array(); // statements should be new prepared for new table object
+		if(!typeof($other, "STDbTable"))
+		{
+			$this->container= STBaseContainer::getContainer();
+			$this->db= $this->container->getDatabase();
+		    return;
+		}
+		// 08/09/2006 alex:	db and container should be change in constructor,
+		//					because before changed here and if an other db or container
+		//					witch is change again in the constructor,
+		//					it will be change all db/container in this session
+		// 16/03/2017 alex:	try now with unset before 
+		$this->db= &$other->db;
+		$this->container= $other->container;
+		$this->onError= $other->onError;
+		$this->aAuto_increment= $other->aAuto_increment;
+		$this->password= $other->password;
 	}
+    public function __clone()
+    {
+        STBaseTable::__clone();
+        STCheck::echoDebug("table", "clone STDbTable::content ".$this->Name.":".$this->ID);
+        		
+	    //---------------------------------------------------------------------------------
+	    // foreign keys and backjoins should always same like in first database table
+	    // so make an direct link from copied table
+		$main= $this->db->getTable($this->Name);
+		$this->FK= &$main->FK;
+		$this->aFks= &$main->aFks;
+		$this->aBackJoin= &$main->aBackJoin;
+    }
     public function __construct($Table, $container= null, $onError= onErrorStop)
     {
         if(typeof($this, "STDbSelector"))
@@ -115,19 +148,41 @@ class STDbTable extends STBaseTable
 		if(isset($Table))
 		    $this->createFirstOwnTable($Table);
     }
-    public function __clone()
-    {
-        STBaseTable::__clone();
-        STCheck::echoDebug("table", "clone STDbTable::content ".$this->Name.":".$this->ID);
-        		
-	    //---------------------------------------------------------------------------------
-	    // foreign keys and backjoins should always same like in first database table
-	    // so make an direct link from copied table
-		$main= $this->db->getTable($this->Name);
-		$this->FK= &$main->FK;
-		$this->aFks= &$main->aFks;
-		$this->aBackJoin= &$main->aBackJoin;
-    }
+	protected function createFirstOwnTable($Table)
+	{
+	    STCheck::param($Table, 0, "STDbTable", "string");
+	    
+	    if(typeof($Table, "string"))
+	    {
+	        Tag::echoDebug("describeTable", "table constructor file:".__file__." line:".__line__);
+	        $fieldArray= $this->db->describeTable($Table, $this->onError);
+	        $this->columns= &$fieldArray;
+	        $this->error= $this->db->isError();
+	        foreach($fieldArray as $field)
+	        {
+	            if(	preg_match("/pri_key/i", $field["flags"]) ||
+	                preg_match("/primary_key/i", $field["flags"])		)
+	            {
+	                $this->sPKColumn= $field["name"];
+	            }
+	            if(preg_match("/multiple_key/i", $field["flags"]))
+	            {
+					$aFK= $this->db->getForeignKeyLink($Table, $field["name"]);
+					if($aFK !== NULL)
+					{
+						$sTable= $aFK['table'];
+						if($this->db->getDatabaseName() != $aFK['database'])
+							$sTable= $aFK['database'].".$sTable";
+	                    $this->fk($field["name"], $sTable, $aFK['column'], /*join'*/null, /*where*/null, $aFK['cascade']);
+					}
+	            }
+	        }
+	    }else
+	    {
+	        $this->copy($Table);
+	        $this->columns= $Table->columns;
+	    }
+	}
 	public function getTableNumber() : string
 	{
 		$dbName= $this->db->getDatabaseName();
@@ -138,25 +193,6 @@ class STDbTable extends STBaseTable
 		else
 			$sRv.= STBaseTable::getTableNumber();
 		return $sRv;
-	}
-	function copy($oTable)
-	{
-		STCheck::param($oTable, 0, "STDbTable");
-		
-		STBaseTable::copy($oTable);
-		// 08/09/2006 alex:	db and container should be change in constructor,
-		//					because before changed here and if an other db or container
-		//					witch is change again in the constructor,
-		//					it will be change all db/container in this session
-		// 16/03/2017 alex:	try now with unset before 
-		unset($this->db);
-		$this->db= &$oTable->db;
-		unset($this->container);
-		$this->container= $oTable->container;
-		$this->onError= $oTable->onError;
-		$this->sAcessClusterColumn= $oTable->sAcessClusterColumn;
-		$this->password= $oTable->password;
-		$this->aStatement= $oTable->aStatement;
 	}
 	public function toString(bool $htmlTags= true) : string
 	{
@@ -372,7 +408,7 @@ class STDbTable extends STBaseTable
 			$accessInfoString= preg_replace("/'/", $accessInfoString, "\'");
 
 
-		$this->sAcessClusterColumn[]= array(	"action"=>	$action,
+		$this->aAccessClusterColumns[]= array(	"action"=>	$action,
 												"column"=>	$column,
 												"parent"=>	$parentCluster,
 												"cluster"=>	$clusterfColumn,
@@ -722,23 +758,32 @@ class STDbTable extends STBaseTable
 	{
 		return $this->db->getDatabaseName();
 	}
-	function getResult($sqlType= null)
+	private function checkSelectorResult($sqlType= null)
 	{
-		$selector= new STDbSelector($this);
-		$selector->execute($sqlType);
-		return $selector->getResult();
+		if(!isset($this->selector))
+		{
+			$this->selector= new STDbSelector($this);
+			$this->selector->execute($sqlType);
+		}
 	}
-	function getRowResult($sqlType= null)
+	public function getResult($sqlType= null)
 	{
-		$selector= new STDbSelector($this);
-		$selector->execute($sqlType);
-		return $selector->getRowResult();
+		$this->checkSelectorResult($sqlType);
+		return $this->selector->getResult();
 	}
-	function getSingleResult($sqlType= null)
+	public function getRowResult($sqlType= null)
 	{
-		$selector= new STDbSelector($this);
-		$selector->execute($sqlType);
-		return $selector->getSingleResult();
+		$this->checkSelectorResult($sqlType);
+		return $this->selector->getRowResult();
+	}
+	public function getSingleResult($sqlType= null)
+	{
+		$this->checkSelectorResult($sqlType);
+		return $this->selector->getSingleResult();
+	}
+	public function resetSelector()
+	{
+		$this->selector= null;
 	}
 	public function getStatement(bool $bFromIdentifications= false)
 	{
