@@ -1053,15 +1053,24 @@ class STSiteCreator extends HtmlTag
 						if(	$testdebug['containers'] > 0 &&
 							$testdebug['cont_count'] < $testdebug['containers']	)
 						{ // more containers to test
-							$testdebug['step']= 0; // go to first table listing of next container
-							$testdebug['link-type']= "link";
-							$link= $sorted_selftable_test_links['container']['###link'][$testdebug['cont_count']];
 							$testdebug['cont_count']++;
 							$this->pushDebugToOlder($testdebug);
 							$testdebug['containers']= null;
+							$testdebug['step']= 0; // go to first table listing of next container
+							$testdebug['link-type']= "link";
+							$link= $sorted_selftable_test_links['container']['###link'][$testdebug['cont_count']];
 							
 						}else
-							$bFinished= true;
+						{
+							if(isset($sorted_selftable_test_links['back_tables']['###container']))
+							{ // go back to older container
+								$this->restoreDebugOlder($testdebug);
+								$testdebug['step']= 10; // go to table listing for next table
+								$testdebug['link-type']= "link";
+								$link= $sorted_selftable_test_links['back_tables']['###container'];
+							}else
+								$bFinished= true;
+						}
 					}else
 						++$testdebug['tab_count'];
 				}
@@ -1224,7 +1233,7 @@ class STSiteCreator extends HtmlTag
 		$older= array();
 		foreach($testdebug as $param => $value)
 		{
-			if(!in_array($param, $this->aDebugShiftVars))
+			if(in_array($param, $this->aDebugShiftVars))
 				$older[$param]= $value;
 		}
 		$testdebug['older']= $older;
@@ -1235,8 +1244,10 @@ class STSiteCreator extends HtmlTag
 		$older= $testdebug['older'];
 		foreach($this->aDebugShiftVars as $param)
 		{
-			unset($testdebug[$param]);
-			$testdebug[$param]= $older[$param];
+			if(isset($testdebug[$param]))
+				unset($testdebug[$param]);
+			if(isset($older[$param]))
+				$testdebug[$param]= $older[$param];
 		}
 	}
 	private function makeNextTableContainer_Test(array &$testdebug, array $sorted_selftable_test_links, STQueryString &$query) : string
