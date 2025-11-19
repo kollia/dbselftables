@@ -3,6 +3,13 @@
 require_once($_stusersitecreator);
 
     /**
+     * debugging strings to add
+     * for STProjectUserFrame project only
+     * @var array
+     */
+    $__global_stprojectusersitecreator_dbgStrings= array();
+
+    /**
      * All registered projects.<br />
      * Beginning always with the 'Login' var which point to 'Registration' or 'ProjectOverview'.
      * The project key 'var' have to be always the same than the array key.
@@ -384,8 +391,37 @@ class STProjectUserSiteCreator extends STUserSiteCreator
                 $this->tableContainer->useAdminActivation();
         }
     }
+    /**
+     * add debug string to debug output
+     * only while display a project inside the frame
+     * 
+     * @param string|bool $dbg_str debug string to add, if true add only main debug information
+     */
+    public static function debug(bool|string $dbg_str= true, int $from= null, int $to= null)
+    {
+        global $__global_stprojectusersitecreator_dbgStrings;
+
+        $__global_stprojectusersitecreator_dbgStrings[]= array( "dbg_str" => $dbg_str, "from" => $from, "to" => $to );
+    }
+    public function setDebugStrings()
+    {
+        global $__global_stprojectusersitecreator_dbgStrings;
+        
+        if(count($__global_stprojectusersitecreator_dbgStrings))
+        {
+            $query= new STQueryString();
+            if($query->getParameterValue("show") == "project")
+            {
+                foreach($__global_stprojectusersitecreator_dbgStrings as $dbgEntry)
+                    STCheck::debug($dbgEntry['dbg_str'], $dbgEntry['from'], $dbgEntry['to']);
+            }
+            $__global_stprojectusersitecreator_dbgStrings= array(); // clear after use
+        }
+        
+    }
     public function execute($onError= onErrorMessage)
     {
+        $this->setDebugStrings();       
         $this->initialPredefinedStates();
         STUserSiteCreator::execute($onError);
     }
