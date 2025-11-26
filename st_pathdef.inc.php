@@ -88,6 +88,11 @@
 	// to beginning with an empty log-file
 	$global_logfile_dataname= "develop.log";
 	$global_last_backtrace= array();
+	/**
+	 * global string validation pattern array
+	 * to validate strings for sql statements
+	 */
+	$__static_global_string_validation_pattern= array();
 	// for save one item of STSession object
 	// php can not send only an object in an global var,
 	// so it is packed in an array

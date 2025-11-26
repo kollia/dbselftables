@@ -8,7 +8,7 @@ require_once( $_stclustergroupassignment );
 
 $__global_UserClusterGroup_CALLBACK= array();
 
-function permissionCallback(&$callbackObject, $columnName, $rownum)
+function permissionCallback(STCallbackClass &$callbackObject, string $columnName, int $rownum)
 {//st_print_r($callbackObject->sqlResult[$rownum]);
     //$callbackObject->echoResult();
     global $__global_UserClusterGroup_CALLBACK;
@@ -61,7 +61,7 @@ function permissionCallback(&$callbackObject, $columnName, $rownum)
     }*/
 }
 
-function disableCallback(&$callbackObject, $columnName, $rownum)
+function disableCallback(STCallbackClass &$callbackObject, string $columnName, int $rownum)
 {
     $session= STUSerSession::instance();
     $domain= $session->getCustomDomain();
@@ -126,7 +126,8 @@ class STUserClusterGroupManagement extends STObjectContainer
 	    $domain->identifColumn("Name", "Domain");
 	    
 	    $group= $this->needTable("Group");
-	    $group->identifColumn("Name", "Group");
+	    $group->identifColumn("Group", "Name", "Group");
+		
 	    $group->distinct();
 	    $group->select("AccessDomain", "Name", "domain");
 	    $group->select("Group", "Name", "group");
@@ -174,12 +175,16 @@ class STUserClusterGroupManagement extends STObjectContainer
 	        $query= new STQueryString();
 	        $url= $query->getUrlParamString();
 	        $selected= null;
-	        if($post->getValue("User") != "")	            
-	            $selected= $post->getValue("User");
-            elseif($query->getValue("User") != "")
-                $selected= $query->getValue("User");
-            else
-	            $selected= $users[0][0];
+			$postValue= $post->getValue("User");
+	        if($postValue == "")
+			{
+				$queryValue= $query->getParameterValue("User");
+				if($queryValue != "")
+					$selected= $queryValue;
+				else
+					$selected= $users[0][0];
+			}else
+				$selected= $postValue;
 	        $query->update("User=$selected");
 	        $query->synchronize();
 	        

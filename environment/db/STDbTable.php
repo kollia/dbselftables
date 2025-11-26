@@ -77,13 +77,14 @@ class STDbTable extends STBaseTable
 	}
     public function __clone()
     {
+		$tableName= $this->getDbTableName();
         STBaseTable::__clone();
-        STCheck::echoDebug("table", "clone STDbTable::content ".$this->Name.":".$this->ID);
+        STCheck::echoDebug("table", "clone STDbTable::content $tableName:".$this->ID);
         		
 	    //---------------------------------------------------------------------------------
 	    // foreign keys and backjoins should always same like in first database table
 	    // so make an direct link from copied table
-		$main= $this->db->getTable($this->Name);
+		$main= $this->db->getTable($tableName);
 		$this->FK= &$main->FK;
 		$this->aFks= &$main->aFks;
 		$this->aBackJoin= &$main->aBackJoin;
@@ -116,7 +117,7 @@ class STDbTable extends STBaseTable
 		
 		if(typeof($Table, "STBaseTable"))
 		{
-			$tableName= $Table->Name;
+			$tableName= $Table->getDbTableName();
 		}elseif(isset($this->container) && typeof($Table, "string"))
 		{
 		    if(!isset($this->db))
@@ -141,7 +142,7 @@ class STDbTable extends STBaseTable
 			if(typeof($Table, "string"))
 				Tag::echoDebug("table", "create new object for table <b>".$Table."</b>");
 			elseif(typeof($Table, "STBaseTable"))
-				Tag::echoDebug("table", "make copy from table-object <b>".$Table->Name."</b> for an new one");
+				Tag::echoDebug("table", "make copy from table-object <b>".$Table->getDbTableName()."</b> for an new one");
 			else // own table should be a STDbSelector container
 			    STCheck::echoDebug("table", "create an empty STDbSelector object");
 		}
@@ -183,13 +184,17 @@ class STDbTable extends STBaseTable
 	        $this->columns= $Table->columns;
 	    }
 	}
+	/**
+	 * table number for testing purpose
+	 */
 	public function getTableNumber() : string
 	{
 		$dbName= $this->db->getDatabaseName();
 		$sRv= "D".substr(md5($dbName), 0, 4)."T";
 		$aliases= $this->getAliasOrder();
-		if(isset($aliases[$this->Name]))
-			$sRv.= $aliases[$this->Name];
+		$tableName= $this->getDbTableName();
+		if(isset($aliases[$tableName]))
+			$sRv.= $aliases[$tableName];
 		else
 			$sRv.= STBaseTable::getTableNumber();
 		return $sRv;
@@ -226,7 +231,7 @@ class STDbTable extends STBaseTable
 	    if(!is_int($column))
 	    {
     	    $desc= STDbTableDescriptions::instance($this->db->getDatabaseName());
-    	    $column= $desc->getColumnName($this->Name, $column);
+    	    $column= $desc->getColumnName($this->getDbTableName(), $column);
 	    }
 	    return STBaseTable::getColumnName($column);
 	}
@@ -257,7 +262,6 @@ class STDbTable extends STBaseTable
 	{
 	    return $this->db->keyword($column);
 	}
-	//function select($tableName, $column, $alias= null, $nextLine= true, $add= false)
 	public function select(string $column, $alias= null, $fillCallback= null, $nextLine= null, $add= false)
 	{
 		if(STCheck::isDebug())
@@ -275,10 +279,10 @@ class STDbTable extends STBaseTable
 			if(STCheck::isDebug())
 			{
 				STCheck::warning(!$this->validColumnContent($column), "STBaseTable::selectA()",
-											"column '$column' not exist in table ".$this->Name.
+											"column '$column' not exist in table ".$this->getDbTableName().
 											"(".$this->getDisplayName().")");
 			}//else
-			//	echo "column '$column' not exist in table ".$this->Name.
+			//	echo "column '$column' not exist in table ".$this->getDbTableName().
 			//								"(".$this->getDisplayName().")";
     	}
 		STBaseTable::select($column, $alias, $fillCallback, $nextLine);
@@ -362,20 +366,22 @@ class STDbTable extends STBaseTable
 	}
 	function addAccessClusterColumn($column, $parentCluster, $clusterfColumn, $accessInfoString, $addGroup= true, $action= STALLDEF)
 	{
-		Tag::paramCheck($column, 1, "string");
-		Tag::paramCheck($parentCluster, 2, "string", "null");
-		Tag::paramCheck($accessInfoString, 3, "string", "empty(string)");
-		Tag::paramCheck($clusterfColumn, 4, "string", "null");
-		Tag::paramCheck($addGroup, 5, "boolean");
-		Tag::paramCheck($action, 6, "string", "int");
-		//Tag::paramCheck($parentCluster, 7, "string", "null");
-		Tag::alert(!$this->columnExist($column), "STBaseTable::addAccessClusterColumn()",
-											"column $column not exist in table ".$this->Name.
-											"(".$this->getDisplayName().")", 1);
-		Tag::alert(!$this->columnExist($clusterfColumn), "STBaseTable::addAccessClusterColumn()",
-											"column for cluster $clusterfColumn not exist in table ".$this->Name.
-											"(".$this->getDisplayName().")", 1);
-
+		if(STCheck::isDebug())
+		{
+			Tag::paramCheck($column, 1, "string");
+			Tag::paramCheck($parentCluster, 2, "string", "null");
+			Tag::paramCheck($accessInfoString, 3, "string", "empty(string)");
+			Tag::paramCheck($clusterfColumn, 4, "string", "null");
+			Tag::paramCheck($addGroup, 5, "boolean");
+			Tag::paramCheck($action, 6, "string", "int");
+			//Tag::paramCheck($parentCluster, 7, "string", "null");
+			Tag::alert(!$this->columnExist($column), "STBaseTable::addAccessClusterColumn()",
+												"column $column not exist in table ".$this->Name.
+												"(".$this->getDisplayName().")", 1);
+			Tag::alert(!$this->columnExist($clusterfColumn), "STBaseTable::addAccessClusterColumn()",
+												"column for cluster $clusterfColumn not exist in table ".$this->Name.
+												"(".$this->getDisplayName().")", 1);
+		}
 
 		$this->getColumn($column);
 		if($action==STACCESS)
@@ -1017,7 +1023,7 @@ class STDbTable extends STBaseTable
 			$mainTableName= null;
 			if($bFromIdentifications)
 			{
-				if(strtolower($this->Name) == "x")
+				if(strtolower($this->getDbTableName()) == "x")
 					$mainTableName= "y";
 				else
 					$mainTableName= "x";
@@ -1781,6 +1787,7 @@ class STDbTable extends STBaseTable
     	}
 		//look for tables which have an BackJoin
 		$ownDatabaseName= $this->db->getDatabaseName();
+		$ownTableName= $oTable->getDbTableName();
 		foreach($oTable->aBackJoin as $sBackTableName)
 		{
 		    if( isset($aTableAlias[$sBackTableName]) && // need table inside statement
@@ -1793,8 +1800,8 @@ class STDbTable extends STBaseTable
     			$dbName= $BackTable->db->getDatabaseName();
     			$database= "";
     			$fks= $BackTable->getForeignKeys();
-    			$join= $fks[$this->Name][0];
-				STCheck::is_warning(!$join, "STDatabase::getStatement()", "no foreign key be set from backward table $sBackTableName to table $this->Name");
+    			$join= $fks[$ownTableName][0];
+				STCheck::is_warning(!$join, "STDatabase::getStatement()", "no foreign key be set from backward table $sBackTableName to table $ownTableName");
     			if($join)
     			{
     			    $oBackTable= $oTable->getTable($sBackTableName);
@@ -2272,7 +2279,15 @@ class STDbTable extends STBaseTable
             $alias= "";
             if($bAlias)
             {
-                $alias= $aTableAlias[$sortArray['table']];
+				$sortTableName= $sortArray['table'];
+				if(!isset($aTableAlias[$sortTableName]))
+				{
+					// maybe Tablename not exist inside alias array,
+					// because Tablename is from a STDbSelector which has other name than in database
+					$selectorTable= $this->container->getTable($sortTableName);
+					$sortTableName= $selectorTable->getDbTableName();
+				}
+                $alias= $aTableAlias[$sortTableName];
                 $alias.= ".";
             }
             $statement.= $alias.$sortArray['column']." ".$sortArray['sort'];

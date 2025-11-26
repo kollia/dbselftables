@@ -82,7 +82,7 @@ function usermanagement_email_replacement(bool $html, string &$string, array $re
 	}
 	return $nChanged;
 }
-function usermanagement_main_passwordCheckCallback(STCallbackClass &$callbackObject, $columnName, $rownum)
+function usermanagement_main_passwordCheckCallback(STCallbackClass &$callbackObject, string $columnName, int $rownum)
 {
 	global $__global_defined_password_callback_function;
 

@@ -168,32 +168,47 @@ class STObjectContainer extends STBaseContainer
 		$this->bShowNoTables= true;
 	}
 	/**
-	 * create N to N table with checkboxes which connect between fixTable and joinTable
+	 * create N to N table with checkboxes which connect between fixTable and joinTable.<br />
+	 * The new table name is from nnTable or can be defined with newTableName.
+	 * If newTableName is defined with an table name from database and this table have a defined prefix,
+	 * the prefix will be set also for this new virtual table.
 	 * 
+	 * @param string $newTableName name of new table which should be created, otherwise the name from nnTable is taken
+	 * @param string $fixTable fix table which should be manifested with where statement
+	 * @param string $nnTable connection table between joinTable and fixTable 
 	 * @param string $joinTable table which can connect by clicking the checkbox
-	 * @param string $nnTable connection table between joinTable and fixTable
-	 * @param string $fixTable fix table which should be manifested with where statement 
 	 * @return STDbSelector return STDbSelector object with table name from joinTable
 	 */
-	public function &needNnTable(string $joinTable, string $nnTable, string $fixTable)
+	public function &needNnTable(string $newTableName, string $fixTable, string $nnTable, string|null $joinTable= null) : STDbSelector
 	{
-	    // not all databases save the tables case sensetive
-	    $sTableName= strtolower($this->getTableName($joinTable));
-	    if(!isset($this->tables[$sTableName]))
+		if(!isset($joinTable))
+		{
+			$joinTable= $nnTable;
+			$nnTable= $fixTable;
+			$fixTable= $newTableName;
+			$newTableName= $fixTable;
+		}
+	    $newTableName= $this->getTableName($newTableName);
+	    if(!isset($this->tables[$newTableName]))
 	    {
-    	    $table= $this->getTable($joinTable);
-    	    $selector= new STDbSelector($table);
-    	    $selector->setNnTable($nnTable, $fixTable);
-    	    //$selector->joinOver($fixTable);
-    	    //$selector->joinOver($nnTable);
+    	    $table= $this->getTable($fixTable);
+    	    $selector= new STDbSelector($newTableName, $table);
     	    $this->needTableObject($selector);
     	    
 	    }else
 	    {
-	        $selector= $this->tables[$sTableName];
-	        STCheck::alert(!typeof($selector, "STDbSelector") || !$selector->bIsNnTable, "STObjectContainer::needNnTable()",
-	            "the joinTable '$joinTable' (third parameter) was selected before, but not as N to N table");
+	        $oTable= $this->tables[$newTableName];
+	        if(!typeof($selector, "STDbSelector"))
+				$selector= new STDbSelector($oTable);
+			else
+				$selector= $oTable;
 	    }
+		if(!$selector->bIsNnTable)
+		{
+    	    $selector->setNnTable($nnTable, $joinTable);
+    	    //$selector->joinOver($joinTable);
+    	    //$selector->joinOver($nnTable);
+		}
 	    return $selector;
 	}
 	public function needTableObject(&$table)
@@ -401,6 +416,11 @@ class STObjectContainer extends STBaseContainer
 						if(!STCheck::isDebug("table"))
 							$msg.= " For more information set STCheck debug mode to 'table'";
 						STCheck::warning(true, "STDbSelector::getTable()", $msg);
+						if(STCheck::isDebug("table"))
+						{
+							echo "<br />";
+							showBackTrace();
+						}
 					}
 				}else
 					$table= $nullTable;
@@ -872,7 +892,8 @@ class STObjectContainer extends STBaseContainer
 		if(isset($this->aNoChoice[$table]))
 			return false;
 		$tables= &$this->getTables();
-		if($tables[strtolower($table)])
+		$orgName= $this->getTableName($table);
+		if(isset($tables[$orgName]))
 			return true;
 		return false;
 	}

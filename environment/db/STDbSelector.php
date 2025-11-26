@@ -195,7 +195,7 @@ class STDbSelector extends STDbTable implements STContainerTempl
 				isset($this->sMainTableName) &&
 				isset($aliases[$this->sMainTableName])	)
 			{
-				//$aliases[$this->Name]= $aliases[$this->sMainTableName];
+				$aliases[$this->Name]= $aliases[$this->sMainTableName];
 			}
 			$this->aHoleAliasOrder= $aliases;
 			return $aliases;
@@ -499,6 +499,18 @@ class STDbSelector extends STDbTable implements STContainerTempl
 				$this->oWhere= null;
 				return;
 			}
+			if(typeof($table, "STDbWhere"))
+		    {
+		        STCheck::warning( (   isset($where) &&
+                    		            (   !is_string($where) ||
+                    		                (   $where != "and" &&
+                    		                    $where != "or"      )   )   ), "STDbSelector::where()",
+		            "if first parameter the where statement, the second can only be 'and' or 'or'", 1         );
+                if(!isset($where))
+                    $where= "";
+                STDbTable::where($table, $where);
+                return;
+		    }
 		    if( !isset($where) ||
 		        (   is_string($where) &&
 		            (   $where == "" ||
@@ -511,7 +523,35 @@ class STDbSelector extends STDbTable implements STContainerTempl
 		            $operator= $where;
 		        
 	            $where= $table;
-		        STDbTable::where($where, $operator);
+				$pos= strrpos($where, ".", -1);// last position of "."
+				if($pos)
+				{
+					$table= substr($where, 0, $pos);
+					$where= substr($where, $pos+1);
+				}else
+					$table= $this->getDbTableName();
+			}
+			if($table != $this->getDbTableName())
+			{
+				$oTable= $this->getTable($table);
+				$oTable->where($where, $operator);
+			}else
+				STDbTable::where($where, $operator);
+			return;
+			$pos= strrpos($table, "."); // first position of "."
+		    if($pos)
+			{
+				$dbName= substr($where, 0, $pos);
+				$table= substr($where, $pos+1);
+			}else
+				$dbName= $this->getDatabaseName();
+
+			$ownTable= $this->getDbTableName();
+			$ownDbName= $this->getDatabaseName();
+		    if(	$table != $ownTable ||
+				$dbName != $ownDbName	)
+		    {
+				STDbTable::where($where, $operator);
 		        return;
 		    }
 		    
@@ -522,20 +562,6 @@ class STDbSelector extends STDbTable implements STContainerTempl
 		            "table '$sTable' first parameter, do not exist inside database", 1);
 		        $table= $this->getTable($sTable);
 		        
-		    }elseif(typeof($table, "STDbWhere"))
-		    {
-		        STCheck::warning( (   isset($where) &&
-                    		            (   !is_string($where) ||
-                    		                (   $where != "and" &&
-                    		                    $where != "or"      )   )   ), "STDbSelector::where()",
-		            "if first parameter the where statement, the second can only be 'and' or 'or'", 1         );
-                if(!isset($where))
-                    $where= "";
-                //echo __FILE__.__LINE__."<br>";
-                    //st_print_r($table);st_print_r($where);
-                    showLine();
-                STDbTable::where($table, $where);
-                return;
 		    }
 		    
 		    if(is_string($where))
@@ -681,6 +707,25 @@ class STDbSelector extends STDbTable implements STContainerTempl
 		    $column= $field['column'];
 		    STDbTable::groupByI($tableName, $column, $warnFuncOutput+1);
 		}
+		/**
+		 * This column, along with perhaps others, 
+		 * is used to describe the entire table.
+		 * 
+		 * @param string $table name of table for which column used
+		 * @param string $column name of column
+		 * @param string|null $alias optional alias name for the column
+		 */
+		public function identifColumn(string $table, string|null $column= null, string|null $alias= null)
+		{
+			$tableName= $this->getTableName($table);
+			if($tableName == $this->getDbTableName())
+			{
+				STDbTable::identifColumn($column, $alias);
+				return;
+			}
+			$table= $this->getTable($tableName);
+			$table->identifColumn($column, $alias);
+		}
 		function select(string $tableName, $column= "", $alias= null, $nextLine= true, $add= false)
 		{
 			if(STCheck::isDebug())
@@ -756,27 +801,26 @@ class STDbSelector extends STDbTable implements STContainerTempl
 		    else
 		        $table->preSelect($columnName, $value, $action);
 		}
-		public function setNnTable(string $nnTableName, string $fixTableName)
+		public function setNnTable(string $nnTableName, string $joinTableName)
 		{
 		    $bfixFk=  false;
 		    $bJoinFk= false;
 		    $this->noInsert();
 		    $this->noUpdate();
 		    $this->noDelete();		    
-		    $fixTableName= $this->db->getTableName($fixTableName);
+		    $joinTableName= $this->db->getTableName($joinTableName);
 		    $nnTableName= $this->db->getTableName($nnTableName);
 		    $nnTable= $this->getTable($nnTableName);
 		    STCheck::alert(!$this->sPKColumn, "STBaseTable::nnTableColumn()", "primary key for function ::nnTableColumn() must be set in table $nnTableName");
 		    $this->bIsNnTable= true;
 		    $this->aNnTableColumn= array( "table" => $nnTableName,
 		                                  "column" => $nnTable->sPKColumn    );
-		    //$pkColumnName= $this->getPkColumnName();
-		    //$this->getColumn($this->Name, $pkColumnName, "nnPK@".$this->Name."@$pkColumnName");
 		    
 			// search where the foreign keys are pointed
 			// to set it  all to left joins
 			// and also insert getColumns to foreign keys
 		    // for new inserts
+			$fixTableName= $this->getDbTableName();
 			$sOwnDbName= $this->db->getDatabaseName();
 		    $fks= &$nnTable->getForeignKeys();
 			foreach($fks as $table=>$content)
@@ -784,14 +828,14 @@ class STDbSelector extends STDbTable implements STContainerTempl
 				foreach($content as $key=>$column)
 				{
 				    $toTable= "no";
-				    if(	$table == $fixTableName ||
-						(	preg_match("/\./", $fixTableName) &&
-							$column['table']->getDatabaseName().".".$table == $fixTableName	)	)
+				    if(	$table == $joinTableName ||
+						(	preg_match("/\./", $joinTableName) &&
+							$column['table']->getDatabaseName().".".$table == $joinTableName	)	)
 				    {
 				        $bfixFk= true;
 				        $toTable= "fix";
 				        
-				    }elseif($table == $this->Name)
+				    }elseif($table == $fixTableName)
 				    {
 				        $bJoinFk= true;
 				        $toTable= "join";
@@ -806,7 +850,7 @@ class STDbSelector extends STDbTable implements STContainerTempl
 				    }
 				}
 			}
-			STCheck::alert(!$bJoinFk, "STBaseTable::setNnTable()", "the N to N table $nnTableName have no foreign key to table ".$this->Name, 2);
+			STCheck::alert(!$bJoinFk, "STBaseTable::setNnTable()", "the N to N table $nnTableName have no foreign key to table ".$joinTableName, 2);
 			STCheck::alert(!$bfixFk, "STBaseTable::setNnTable()", "the N to N table $nnTableName have no foreign key to table $fixTableName", 2);
 		}
 		/**

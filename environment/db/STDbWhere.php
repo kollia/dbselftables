@@ -544,7 +544,7 @@ class STDbWhere
 	            $this->aValues= $aNewArray;
 		    return $bNew;
 		}
-		private function createStringContent(string $content, string $aliasName) : string
+		private function createStringContent(string $content, string $aliasName, $aAliases= null) : string
 		{
 		    $comparison= $this->validComparison($this->sForTable, $content);
 		    if(STCheck::isDebug("db.statements.where"))
@@ -603,6 +603,10 @@ class STDbWhere
 		        {
 		            if($aliasName !== "")
 		            {
+						// check before wheter aliasName is the correct one
+						// because incomming aliasName is only from current table
+						if(isset($aAliases[$field['content']['table']]))
+							$aliasName= $aAliases[$field['content']['table']];
     		            $result.= $aliasName.".";
     		            STCheck::echoDebug("db.statements.where",
     		                "field '{$field['content']['column']}' become to column('$aliasName.{$field['content']['column']}')");
@@ -648,8 +652,20 @@ class STDbWhere
 		    }
 		    return $result;
 		}
+		/**
+		 * pattern to search operators in comparison string,
+		 * will be build from all operators of database
+		 * at first use
+		 * @var string|null
+		 */
+		private $aOperatorPattern= null;
+		/**
+		 * validate comparison string and split it in fields, operators and values
+		 */
 		private function validComparison($table, string $content) : array
 		{
+			global $__static_global_string_validation_pattern;
+
 		    STCheck::param($table, 0, "string", "STBaseTable");
 		    
 		    $aRcomparison= array();
@@ -675,17 +691,23 @@ class STDbWhere
 		    
 		    // second search extra for operators, because otherwise find not always the right one
 		    //--------------------------------------------------------------------------------------------
-		    $operators= $this->oDb->getOperatorArray();
-		    $pattern_op= "(";
-		    foreach($operators as $op)
-		    {
-		        if(isset($op))
-		        {
-		            $str= preg_replace("/[ \\t]+/", "[ \\t]+", $op);
-		            $pattern_op.= "$str|";
-		        }
-		    }
-		    $pattern_op= substr($pattern_op, 0, -1).")";
+			$dbType= $this->oDb->getDatabaseType();
+			if(!isset($__static_global_string_validation_pattern[$dbType]['operatorPattern']))
+			{
+				$operators= $this->oDb->getOperatorArray();
+				$pattern_op= "(";
+				foreach($operators as $op)
+				{
+					if(isset($op))
+					{
+						$str= preg_replace("/[ \\t]+/", "[ \\t]+", $op);
+						$pattern_op.= "$str|";
+					}
+				}
+				$pattern_op= substr($pattern_op, 0, -1).")";
+				$__static_global_string_validation_pattern[$dbType]['operatorPattern']= $pattern_op;
+			}else
+				$pattern_op= $__static_global_string_validation_pattern[$dbType]['operatorPattern'];
 		    
 		    $preg= array();
 		    $str_before= "";
@@ -901,7 +923,7 @@ class STDbWhere
 		            {
 		                if($bMakeStatement)
 		                {
-		                    $newStatement= $this->createStringContent($content, $aliasName);
+		                    $newStatement= $this->createStringContent($content, $aliasName, $aliases);
 		                    if($case > 0)
 		                        $statement.= $plusContent;
 		                    $statement.= $newStatement;

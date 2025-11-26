@@ -50,17 +50,20 @@ class STDbMySql extends STDatabase
 	 */
 	private $existTypes= array();
 	private $columnTypes= array();
-
-  /**
-	*  Konstruktor für Zugriffs-deffinition
-	*
-	*/
-	function __construct($identifName= "main-menue", $defaultTyp= MYSQL_NUM, $DBtype= "MYSQL")
+ 
+	/**
+     *  constructor for access-definition
+     *  (currently the same class as STDbMysql)
+     * 
+     * @param string $identifName identification name of object container
+     * @param int    $defaultTyp  default fetch type (MYSQL_NUM, MYSQL_ASSOC, MYSQL_BOTH)
+     */
+	function __construct($identifName= "main-menue", $defaultTyp= MYSQL_NUM)
    	{
 		STDatabase::__construct($identifName, $defaultTyp, "MYSQL");
   	}
 	/**
-	*  Verbindungs-Aufbau zur Datenbank
+	*  connection to database
 	*
 	*  @param string:$host hostname for connection
 	*  @param string:$user username for connection
@@ -690,8 +693,12 @@ class STDbMySql extends STDatabase
 	}
 	public function getFieldDelimiter() : array
 	{
+		$aPd= array();
 	    $aRv= array();
-	    // whether delimiter sign character need to be escaped
+		// whether table to field delimiter need to be escaped for regex
+		$aPd['regex']= true;
+		$aPd['delimiter']= ".";
+	    // whether string delimiter sign character need to be escaped
 	    $esc= array(   'regex'  => true,
 	        'reg-br' => false     );// inside brackets  [...]
 	    $open= array(  'delimiter' => "`",
@@ -699,6 +706,7 @@ class STDbMySql extends STDatabase
 	    $close= array( 'delimiter' => "`",
 	        'ESC' => $esc       );
 	    $aRv[]= array('open'=> $open, 'close'=> $close);
+		$aRv['partDelimiter']= $aPd;
 	    return $aRv;
 	}
 	public function getStringDelimiter() : array

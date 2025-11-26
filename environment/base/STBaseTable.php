@@ -2230,6 +2230,8 @@ class STBaseTable
 		 */		
 		public function validColumnContent($content, &$abCorrect= null, bool $bAlias= false, $aKeyword= null) : bool
 		{
+			global $__static_global_string_validation_pattern;
+
 		    STCheck::param(trim($content), 0, "string");
 		    STCheck::param($abCorrect, 1, "array", "bool", "null");
 		    
@@ -2252,22 +2254,82 @@ class STBaseTable
 		        }
 		        return true;
 		    }
-			$stringDelimiter= $this->db->getStringDelimiter();
-			$pattern= "/^([";
-			foreach($stringDelimiter as $deli)
-				$pattern.= $deli['open']['delimiter'];
-			$pattern.= "])(.*)[";			
-			foreach($stringDelimiter as $deli)
-				$pattern.= $deli['close']['delimiter'];
-			$pattern.= "]$/";
+
+			$dbType= $this->db->getDatabaseType();
+			if(!isset($__static_global_string_validation_pattern[$dbType]['strValidationDelimiterPattern']))
+			{
+				$stringDelimiter= $this->db->getStringDelimiter();
+				$fieldDelimiter= $this->db->getFieldDelimiter();
+				$pattern= "/^([";
+				foreach($stringDelimiter as $deli)
+					$pattern.= $deli['open']['delimiter'];
+				foreach($fieldDelimiter as $key=>$deli)
+				{
+					if($key != "partDelimiter")
+						$pattern.= $deli['open']['delimiter'];
+				}
+				$pattern.= "])(.*)[";			
+				foreach($stringDelimiter as $deli)
+					$pattern.= $deli['close']['delimiter'];	
+				foreach($fieldDelimiter as $key=>$deli)
+				{
+					if($key != "partDelimiter")
+						$pattern.= $deli['close']['delimiter'];
+				}
+				$pattern.= "]$/";
+				$__static_global_string_validation_pattern[$dbType]['strValidationDelimiterPattern']= $pattern;
+				$openDelimiter= $stringDelimiter[0]['open']['delimiter'];
+				$openFieldDelimiter= $fieldDelimiter[0]['open']['delimiter'];
+				$partDelimiter= $fieldDelimiter['partDelimiter']['delimiter'];
+				if($fieldDelimiter['partDelimiter']['regex'] == true)
+					$partDelimiter= preg_quote($partDelimiter, "/");
+				$__static_global_string_validation_pattern[$dbType]['openStringDelimiter']= $openDelimiter;
+				$__static_global_string_validation_pattern[$dbType]['openFieldDelimiter']= $openFieldDelimiter;
+				$__static_global_string_validation_pattern[$dbType]['partFieldDelimiter']= $partDelimiter;
+			}else
+			{
+				$pattern= $__static_global_string_validation_pattern[$dbType]['strValidationDelimiterPattern'];
+				$openDelimiter= $__static_global_string_validation_pattern[$dbType]['openStringDelimiter'];
+				$openFieldDelimiter= $__static_global_string_validation_pattern[$dbType]['openFieldDelimiter'];
+				$partDelimiter= $__static_global_string_validation_pattern[$dbType]['partFieldDelimiter'];
+			}
+			$matches= preg_split("/{$partDelimiter}/", $content);
+			$n= count($matches);
+			if($n > 1)
+			{
+				if($n == 3)
+				{
+					$dbName= $matches[0];
+					$db= STBaseContainer::getDatabase($dbName);
+					$tableName= $matches[1];
+					$content= $matches[2];
+
+				}elseif($n == 2)
+				{
+					$db= $this->getDatabase();
+					$tableName= $matches[0];
+					$content= $matches[1];
+				}
+				$table= $db->getTable($tableName);
+				STCheck::alert(!isset($table), "STBaseTable::validColumnContent()",
+											"table $tableName not exist in database ".$db->getDatabaseName());
+				$sRv= $table->validColumnContent($content, $abCorrect, $bAlias);
+				if(	$sRv &&
+					isset($dbName)	)
+				{
+					$abCorrect['database']= $dbName;
+				}
+				return $sRv;
+			}
 			$bString= preg_match($pattern, $content, $preg);
-		    if($bString)
+		    if(	$bString &&
+				$preg[1] != $openFieldDelimiter	)
 		    {// column is maybe only an string content		        
 		        if(is_array($abCorrect))
 		        {
 					$value= $preg[2];
 					// replace always the first delimiter, should be the one delimited on end-product
-					$value= preg_replace("/{$stringDelimiter[0]['open']['delimiter']}/", "\\{$stringDelimiter[0]['open']['delimiter']}", $value);
+					$value= preg_replace("/{$openDelimiter}/", "\\{$openDelimiter}", $value);
 		            $abCorrect['keyword']= "@value";
 		            $abCorrect['content']= $value;
 		            $abCorrect['type']= "string";
@@ -2284,8 +2346,8 @@ class STBaseTable
 		        $abCorrect['type']= "string";
 		        $abCorrect['len']= strlen($content) - 2;
 		    }
-		    if( substr($content, 0, 1) == "`" &&
-		        substr($content, -1) == "`"       )
+		    if( $bString &&
+				preg[1] == $openFieldDelimiter	)
 		    {
 		        $content= substr($content, 1, -1);
 		    }
@@ -2937,9 +2999,17 @@ class STBaseTable
 			}
 			$this->show= $show;
 		}
-		public function identifColumn(string $column, string $alias= null)
+		/**
+		 * This column, along with perhaps others, 
+		 * is used to describe the entire table.
+		 * 
+		 * @param string $column name of column (STBaseTable is only for overloading methods)
+		 * @param string|null $alias optional alias name for the column
+		 * @param void $add additional parameter for overloaded methods
+		 */
+		public function identifColumn(string $column, string|null $alias= null, string|null $add= null)
 		{
-			Tag::alert(!$this->validColumnContent($column), "STBaseTable::identifColumn()", "column '$column' not exist in table ".$this->Name, 1);
+			STcheck::alert(!$this->validColumnContent($column), "STBaseTable::identifColumn()", "column '$column' not exist in table ".$this->Name, 1);
 
 			$column= $this->getDbColumnName($column);
 			if(	!isset($this->abOrigChoice["identif"]) ||
