@@ -1018,6 +1018,7 @@ class STListBox extends STBaseBox
 				}
 			}
 		}
+		private $aContainerLines= array();
 		/**
 		 *	create a Html-Code from the list box table
 		 *
@@ -1526,7 +1527,12 @@ class STListBox extends STBaseBox
 					//echo "extraField:$extraField<br />";
 							$file.= $query->getStringVars();
 							$file.= "'";
-							
+						if(!isset($this->aContainerLines[$createdColumn]))
+						{
+							$this->aContainerLines[$createdColumn]= true;
+							STCheck::echoDebug("query.limitation", "create link address: $file");
+							STCheck::test_tagClassAttributeLinks("edit", "###link_container", $file);
+						}	
 
           			}else
           			{

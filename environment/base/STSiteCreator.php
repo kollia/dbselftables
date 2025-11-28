@@ -1057,7 +1057,7 @@ class STSiteCreator extends HtmlTag
 							$this->pushDebugToOlder($testdebug);
 							$testdebug['containers']= null;
 							$testdebug['step']= 0; // go to first table listing of next container
-							$testdebug['link-type']= "link";
+							$testdebug['link-type']= "container_link";
 							$link= $sorted_selftable_test_links['container']['###link'][$testdebug['cont_count']];
 							
 						}else
@@ -1120,7 +1120,7 @@ class STSiteCreator extends HtmlTag
 						echo "<br /><br />";
 					echo "next stget query string:";
 					$stget= $query->getArrayVars("stget");
-					st_print_r($stget, 2);
+					st_print_r($stget, 8);
 					if(!is_array($stget))
 						echo "<br /><br />";
 					echo "</pre>";
@@ -1146,9 +1146,11 @@ class STSiteCreator extends HtmlTag
 				{
 					$params= array( 'testdebug' => $testdebug );
 					$query->update($params);
-					if($type == "link")
+					if(	$type == "link" ||
+						$type == "container_link"	)
+					{
 						$link= "window.location='$link".$query->getUrlParamString()."'";
-					elseif($type == "edit")
+					}elseif($type == "edit")
 					{
 						$link= $query->update($link);
 						$link= "window.location='$link".$query->getUrlParamString()."'";
@@ -1217,10 +1219,11 @@ class STSiteCreator extends HtmlTag
 		$testdebug['cont_count']= 0; // on beginning step define also whether the first shows an container or container listing
 		$testdebug['tab_count']= $step; // on beginning step define also whether the first shows an table or table listing
 		$testdebug['progress']= array();
-		$testdebug['progress']['onTableTagCount']= -1;
 		$testdebug['progress']['backbutton-test']= "false";
+		$testdebug['progress']['onTableTagCount']= -1;
 		$testdebug['progress']['onEditLinkCount']= -1;
 		$testdebug['progress']['onEditDeleteCount']= -1;
+		$testdebug['progress']['onContainerLinkCount']= -1;
 	}
 	/**
 	 * push debug content to new parameter layer
@@ -1254,6 +1257,19 @@ class STSiteCreator extends HtmlTag
 	{
 		// ( 0) - go to first table listing (only table-buttons are displayed)
 		// (11) - go to table listing for next table
+		if( $testdebug['step'] == 11 &&
+			isset($sorted_selftable_test_links['edit']['###link_container'][$testdebug['progress']['onContainerLinkCount']+1])	)
+		{
+			$testdebug['last-insert']= null;
+			$testdebug['progress']['onContainerLinkCount']++;
+			$link= $sorted_selftable_test_links['edit']['###link_container'][$testdebug['progress']['onContainerLinkCount']];
+			$link= $this->updateQueryLink($query, $link);
+			$this->pushDebugToOlder($testdebug);
+			$testdebug['containers']= null;
+			$testdebug['step']= -1; // go to first table listing of next container
+			$testdebug['link-type']= "container_link";
+			return $link;
+		}
 		$type= "table";
 		$testdebug['last-insert']= null;
 		$testdebug['progress']['backbutton-test']= "false";
