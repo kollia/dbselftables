@@ -23,7 +23,7 @@ class STDbDeleter extends STDbSqlWhereCases
 		//$this->table->where(null);
 		//$table= new STDbTable($this->table);
 		$this->table->modifyQueryLimitation($this->bModify);
-		$fkLinks= $db->hasFkEntriesToTable($this->table->getName(), $this->oWhere);
+		$fkLinks= $db->hasFkEntriesToTable($this->table->getDbTableName(), $this->oWhere);
 		$fkTables= array();
 		if(is_array($fkLinks))
 		{

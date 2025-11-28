@@ -2885,8 +2885,24 @@ class STItemBox extends STBaseBox
 			if($callback === true)
 			{
 			    $where= $oCallbackClass->getWhere();
-			    if(isset($where))
-			        $this->where($where);
+			    if(!isset($where))
+				{	// if callback has not set a new where condition,
+					// create a new own one
+					$query= new STQueryString();
+					$limit= $query->getLimitation($this->asDBTable->getName());
+					$where= new STDbWhere();					
+					foreach($limit as $column=>$value)
+					{
+					    $whereStr= "$column=";
+						if(!is_numeric($value))
+						{
+							$whereStr.= $this->db->getDelimitedString($column);
+						}else
+						    $whereStr.= $value;
+						$where->andWhere($whereStr);
+					}
+				}
+			    $del->where($where);
 			    $error= $del->execute();
 			}
 			if($error !== 0)
