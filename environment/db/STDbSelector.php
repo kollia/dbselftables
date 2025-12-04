@@ -523,7 +523,8 @@ class STDbSelector extends STDbTable implements STContainerTempl
 		            $operator= $where;
 		        
 	            $where= $table;
-				$pos= strrpos($where, ".", -1);// last position of "."
+				$partDelimiter= $this->db->getFieldDelimiter()['partDelimiter']['delimiter'];
+				$pos= strrpos($where, $partDelimiter, -1);// last position of "."
 				if($pos)
 				{
 					$table= substr($where, 0, $pos);
@@ -538,37 +539,6 @@ class STDbSelector extends STDbTable implements STContainerTempl
 			}else
 				STDbTable::where($where, $operator);
 			return;
-			$pos= strrpos($table, "."); // first position of "."
-		    if($pos)
-			{
-				$dbName= substr($where, 0, $pos);
-				$table= substr($where, $pos+1);
-			}else
-				$dbName= $this->getDatabaseName();
-
-			$ownTable= $this->getDbTableName();
-			$ownDbName= $this->getDatabaseName();
-		    if(	$table != $ownTable ||
-				$dbName != $ownDbName	)
-		    {
-				STDbTable::where($where, $operator);
-		        return;
-		    }
-		    
-		    if( is_string($table) )
-		    {
-		        $sTable= $this->container->getTableName($table);
-		        STCheck::alert(!$this->db->isDbTable($sTable), "STDbSelector::where()",
-		            "table '$sTable' first parameter, do not exist inside database", 1);
-		        $table= $this->getTable($sTable);
-		        
-		    }
-		    
-		    if(is_string($where))
-                $where= new STDbWhere($where);
-            $where->table($table);
-            //$where->setDatabase($table->db);
-            STDbTable::where($where);
 		}
 		/**
 		 * prepare inner join foreign key between tables

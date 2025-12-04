@@ -1827,7 +1827,7 @@ class STDbTable extends STBaseTable
 					    if(!preg_match("/^[ \t]*and/", $whereStatement))
 					        $whereStatement= "and $whereStatement";
 					        $statement.= " ".$whereStatement;
-					        STCheck::echoDebug("db.statements.table", "get on condition '$whereStatement' from table '".$fromTable->getDbTableName()."(".$fromTable->ID.")'");
+					        STCheck::echoDebug("db.statements.table", "get on condition '$whereStatement' from table '".$BackTable->getDbTableName()."(".$BackTable->ID.")'");
 					}
 					if($oMainTable->getDbTableName() != $sBackTableName)
 					{
