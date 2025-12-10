@@ -706,11 +706,10 @@ class STDbSelector extends STDbTable implements STContainerTempl
 				STCheck::param($nextLine, 3, "bool");
 				STCheck::param($nextLine, 4, "bool");
 				STCheck::echoDebug("selector", $this->Name.": select column $column($alias) for table $tableName");
-				$orgName= $this->db->getTableName($tableName);
-				STCheck::warning(!$this->db->isTable($orgName), "STDbSelector::select()", "first parameter '$tableName' isn't any table", 1);
 			}
 			$desc= STDbTableDescriptions::instance($this->db->getDatabaseName());
-			$tableName= $desc->getTableName($tableName);
+			$parts= $desc->getDbTableField($tableName, "table");			
+			$tableName= $parts['table'];
 			$orgColumn= $desc->getColumnName($tableName, $column, /*warnFuncOutput*/1);// if tableName is original function must not search
 			if(!isset($this->Name))
 			{
@@ -743,7 +742,9 @@ class STDbSelector extends STDbTable implements STContainerTempl
 			    $alias= $orgColumn;
 			
 			$select= array(	"type"=>	"select",
-			    "column"=>	$orgColumn,
+							"db"=>		$parts['database'],
+							"table"=>	$tableName,
+			    			"column"=>	$orgColumn,
 							"alias"=>	$alias,
 							"next"=>	$nextLine	);
 			$this->aNewSelects[$tableName][]= $select;
@@ -1203,6 +1204,22 @@ class STDbSelector extends STDbTable implements STContainerTempl
 			STCheck::param($alias, 2, "string", "null", "bool");
 			STCheck::param($add, 3, "bool");
 
+			if($table == "*")
+				$tableName= $this->Name;
+			else if(typeof($table, "STBaseTable"))
+				$tableName= $table->getName();
+			else
+				$tableName= $this->container->getTableName($table);
+			$select= array(	"type"=>	"select",
+			    			"column"=>	$column,
+							"alias"=>	$alias,
+							"next"=>	true	);
+			$this->aNewSelects[$tableName][]= $select;
+			if(!$this->bClearedByFirstSelect)
+			{
+				$this->clearSelects();
+				$this->bClearedByFirstSelect= true;
+			}
 			if($table == "*")
 			{
 			    if($column == "*")

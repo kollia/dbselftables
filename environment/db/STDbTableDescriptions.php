@@ -64,7 +64,7 @@ class STDbTableDescriptions
 		STCheck::alert(true, "STDbTableDescription::instance()", "no instance of <b>$dbName</b> STDbTableDescription be created");
 		return null;
 	}
-	public function getDatabaseName()
+	public function getDatabaseName(string $name= null)
 	{
 		return $this->dbName;
 	}
@@ -85,9 +85,100 @@ class STDbTableDescriptions
 		}
 		return $name;
 	}
-	/*public*/function getTableName(string $name)
+	/**
+	 * splits a name into database, table and field parts
+	 * beginning from behind as part
+	 * 
+	 * @param string $name full defined name (e.g. "UserManagement.User" or "UserManagement.User.id")
+	 * @param enum $last whether the last part is 'field', 'table' or 'database' (default: 'field')
+	 * @param boolean $backward whether splitting should be done from behind (default: true)
+	 * @return array parts of structure [database, table, field] - only filled keys that exist
+	 */
+	public function getDbTableField(string $name, string $last= null, bool $backward= true) : array
+	{
+		$deli= $this->db->getFieldDelimiter();
+		$aParts= explode($deli['partDelimiter']['delimiter'], $name);
+		$result= array();
+		
+		// Bestimme welche Teile erwartet werden basierend auf $last
+		// und wie viele Teile wir von $aParts zuweisen sollen
+		$numParts= count($aParts);
+		
+		if(!isset($last))
+			$last= "field";
+		
+		// Definiere welche Keys basierend auf $last erwartet werden
+		if($backward)
+		{
+			// Von hinten: letztes Element ist $last
+			switch($last)
+			{
+				case "field":
+					$expectedKeys= array("database", "table", "field");
+					break;
+				case "table":
+					$expectedKeys= array("database", "table");
+					break;
+				case "database":
+					$expectedKeys= array("database");
+					break;
+				default:
+					STCheck::is_error(true, "STDbTableDescription::getDbTableField()", "unknown last part '$last'");
+					return $result;
+			}
+			// Von hinten zuweisen
+			$keyCount= count($expectedKeys);
+			for($i= $numParts - 1, $k= $keyCount - 1; $i >= 0 && $k >= 0; $i--, $k--)
+			{
+				$result[$expectedKeys[$k]]= $aParts[$i];
+			}
+		}else
+		{
+			// Von vorne: erstes Element ist $last
+			switch($last)
+			{
+				case "database":
+					$expectedKeys= array("database", "table", "field");
+					break;
+				case "table":
+					$expectedKeys= array("table", "field");
+					break;
+				case "field":
+					$expectedKeys= array("field");
+					break;
+				default:
+					STCheck::is_error(true, "STDbTableDescription::getDbTableField()", "unknown last part '$last'");
+					return $result;
+			}
+			// Von vorne zuweisen
+			$keyCount= count($expectedKeys);
+			for($i= 0, $k= 0; $i < $numParts && $k < $keyCount; $i++, $k++)
+			{
+				$result[$expectedKeys[$k]]= $aParts[$i];
+			}
+		}
+		if(	isset($result["database"]) &&
+			$result["database"] !== $this->dbName	)
+		{
+			$desc= STDbTableDescriptions::instance($result["database"]);
+		}else
+		{
+			$desc= $this;
+			$result["database"]= $this->dbName;
+		}
+		if(isset($result["table"]))
+			$result["table"]= $desc->getTableName($result["table"]);
+		if(	isset($result["field"]) &&
+			isset($result["table"])	)
+		{			
+			$result["field"]= $desc->getColumnName($result["table"], $result["field"]);
+		}
+		return $result;
+	}
+	public function getTableName(string $name)
 	{
 		STCheck::param($name, 0, "string");
+
 		if($this->nLowerCaseTableNames == 1)
 			$name= strtolower($name);
 		if(isset($this->aExistTables))
