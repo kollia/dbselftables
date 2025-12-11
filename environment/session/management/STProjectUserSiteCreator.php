@@ -397,13 +397,20 @@ class STProjectUserSiteCreator extends STUserSiteCreator
      * 
      * @param string|bool $dbg_str debug string to add, if true add only main debug information
      */
-    public static function debug(bool|string $dbg_str= true, int $from= null, int $to= null)
+    public static function debug(bool|string $dbg_str= true, int $from= null, int $to= null, string|null $file= null, int|null $line= null)
     {
         global $__global_stprojectusersitecreator_dbgStrings;
 
-        $__global_stprojectusersitecreator_dbgStrings[]= array( "dbg_str" => $dbg_str, "from" => $from, "to" => $to );
+        $backTrace= stTools::getBackTraceArray(1, 1);
+        $row= array( "dbg_str" => $dbg_str, "from" => $from, "to" => $to );
+        if(isset($backTrace[0]['file']))
+        {
+            $row['file']= $backTrace[0]['file'];
+            $row['line']= $backTrace[0]['line'];
+        }
+        $__global_stprojectusersitecreator_dbgStrings[]= $row;
     }
-    public function setDebugStrings()
+    private function setDebugStrings()
     {
         global $__global_stprojectusersitecreator_dbgStrings;
         
@@ -413,7 +420,7 @@ class STProjectUserSiteCreator extends STUserSiteCreator
             if($query->getParameterValue("show") == "project")
             {
                 foreach($__global_stprojectusersitecreator_dbgStrings as $dbgEntry)
-                    STCheck::debug($dbgEntry['dbg_str'], $dbgEntry['from'], $dbgEntry['to']);
+                    STCheck::debug($dbgEntry['dbg_str'], $dbgEntry['from'], $dbgEntry['to'], $dbgEntry['file'], $dbgEntry['line']);
             }
             $__global_stprojectusersitecreator_dbgStrings= array(); // clear after use
         }

@@ -540,8 +540,10 @@ class STCheck
 		 * @param boolean|string $dbg_str general debugging state by (true), or by explicit string, see: st_pathdef.inc.php
 		 * @param integer $from output string "db.statement" only since the statement creation growing to this number
 		 * @param integer $to do not output after this number occured
+		 * @param string $file file where the debugging was set if defined, otherwise it will be detected by backtrace
+		 * @param integer $line line where the debugging was set if defined, otherwise it will be detected by backtrace
 		 */
-		public static function debug(bool|string $dbg_str= true, int $from= null, int $to= null)
+		public static function debug(bool|string $dbg_str= true, int $from= null, int $to= null, string|null $file= null, int|null $line= null)
 		{
 			global	$HTTP_POST_VARS,
 					$HTTP_POST_FILES,
@@ -599,9 +601,14 @@ class STCheck
 					@unlink($global_logfile_dataname);
 				if(!$global_set_DEBUG_onLine_byFirst)
 				{
-					$backtrace= debug_backtrace();
-					$global_set_DEBUG_onLine_byFirst= array("file" => $backtrace[0]['file'],
-															"line" => $backtrace[0]['line'],
+					if(!isset($file))
+					{
+						$backtrace= debug_backtrace();
+						$file= $backtrace[0]['file'];
+						$line= $backtrace[0]['line'];
+					}
+					$global_set_DEBUG_onLine_byFirst= array("file" => $file,
+															"line" => $line,
 															"dbg"  => $dbg_str	);
 				}
 			}

@@ -359,74 +359,114 @@ function phpVersionNeed($needVersion, $functionName= null)
 
 class stTools
 {
-	public static function getBackTrace(int $from= 0, int $much= -3) : array
-    {
-        global $_dbselftable_root;
-        
-        $aRv= array();
+	public static function getBackTraceArray(int $from= 0, int $much= -3) : array
+	{
+		global $_htdocs_root;
+		global $_dbselftable_root;
+		
+		$aRv= array();
 		$split= preg_split("|[/\\\\]|", $_dbselftable_root);
 		$nopath_len= strlen($_dbselftable_root) - strlen($split[count($split)-1]);
+		// htdocs Pfad aus DOCUMENT_ROOT ermitteln (nur einmal berechnen)
+		// realpath() auflösen, falls DOCUMENT_ROOT ein symbolischer Link ist
+		if(!isset($_htdocs_root))
+		{
+			$_htdocs_root= "";
+			if(isset($_SERVER['DOCUMENT_ROOT']) && $_SERVER['DOCUMENT_ROOT'])
+			{
+				$realpath= realpath($_SERVER['DOCUMENT_ROOT']);
+				$_htdocs_root= ($realpath !== false ? $realpath : $_SERVER['DOCUMENT_ROOT'])."/";
+			}
+		}
+		$htdocs_split= preg_split("|[/\\\\]|", $_htdocs_root);
+		$htdocs_nopath_len= strlen($_htdocs_root) - strlen($htdocs_split[count($htdocs_split)-1]);
 		$backTrace= debug_backtrace();
 		$nTrace= count($backTrace);
 		if($nTrace <= $from)
 		    $from= $nTrace-1;
-        foreach($backTrace as $function)
-        {
-			if($from<1)
-			{
-			    $line= "";				
-    			if(	isset($function["function"]) &&
-    				isset($function["class"]) &&
-					$function["function"]=="__construct"	)
+		foreach($backTrace as $function)
+		{
+			if($from < 1)
+			{				
+				if(isset($function["file"]))
 				{
-					$sFunc= "constructor";
-					$function["class"]= "";
-					$function["type"]= "";
-					
-				}elseif(isset($function["class"]))
-				    $sFunc= "     method";
-				else
-				    $sFunc= "   function";
-                $line.= "<b>$sFunc</b> ";
-                if(isset($function["class"]))
-                	$line.= $function["class"];
-                if(isset($function["type"]))
-                	$line.= $function["type"];
-                if(isset($function["function"]))
-                	$line.= $function["function"];
-                $line.= "<b>(</b>";
-                $params= "";
-                foreach($function["args"] as $param)
-                {
-                    if(is_string($param))
-                            $params.= "\"$param\", ";
-                    elseif(is_numeric($param))
-                            $params.= "$param, ";
-                    elseif(is_object($param))
-                            $params.= get_class($param)."(), ";
-                    elseif(is_array($param))
-                            $params.= "array(), ";
-                }
-                $line.= substr($params, 0, strlen($params)-2)."<b>)</b>";
-                $line.= " <b>file</b> ";
-                if(isset($function["file"]))
-                {
-                    $file= substr($function["file"], $nopath_len);
-                    $line.= ".../$file";
-                }else
-                    $line.= "no file";
-                
-                $line.= " <b>line:</b>";
-                if(isset($function["line"]))
-                    $line.= $function["line"];
-                else
-                    $line.= "no line";
-                $aRv[]= $line;
+					$paths= preg_split("|[/\\\\]|", $function["file"]);
+					if(count($paths)>1)
+					{
+						$path= "";
+						for($n= 0; $n < count($paths)-1; $n++)
+							$path.= $paths[$n]."/";
+						if(substr($path, 0, strlen($_dbselftable_root)) == $_dbselftable_root)
+							$function['path']= ".../".substr($path, $nopath_len);
+						elseif($_htdocs_root && substr($path, 0, strlen($_htdocs_root)) == $_htdocs_root)
+							$function['path']= "/".substr($path, $htdocs_nopath_len);
+						else
+							$function['path']= ".../no path found/";
+						$function['file']= $paths[count($paths)-1];
+					}
+				}
+				$aRv[]= $function;
 				--$much;
 				if($much==0)
 					break;
+			}else
+				--$from;
+		}
+		return $aRv;
+	}
+	public static function getBackTrace(int $from= 0, int $much= -3) : array
+    {
+        $aRv= array();
+		$backTrace= stTools::getBackTraceArray(++$from, $much);
+        foreach($backTrace as $function)
+        {
+			$line= "";				
+			if(	isset($function["function"]) &&
+				isset($function["class"]) &&
+				$function["function"]=="__construct"	)
+			{
+				$sFunc= "constructor";
+				$function["class"]= "";
+				$function["type"]= "";
+				
+			}elseif(isset($function["class"]))
+				$sFunc= "     method";
+			else
+				$sFunc= "   function";
+			$line.= "<b>$sFunc</b> ";
+			if(isset($function["class"]))
+				$line.= $function["class"];
+			if(isset($function["type"]))
+				$line.= $function["type"];
+			if(isset($function["function"]))
+				$line.= $function["function"];
+			$line.= "<b>(</b>";
+			$params= "";
+			foreach($function["args"] as $param)
+			{
+				if(is_string($param))
+						$params.= "\"$param\", ";
+				elseif(is_numeric($param))
+						$params.= "$param, ";
+				elseif(is_object($param))
+						$params.= get_class($param)."(), ";
+				elseif(is_array($param))
+						$params.= "array(), ";
 			}
-			--$from;
+			$line.= substr($params, 0, strlen($params)-2)."<b>)</b>";
+			$line.= " <b>file</b> ";
+			if(isset($function["file"]))
+			{
+				$line.= $function['path'].$function['file'];
+			}else
+				$line.= "no file";
+			
+			$line.= " <b>line:</b>";
+			if(isset($function["line"]))
+				$line.= $function["line"];
+			else
+				$line.= "no line";
+			$aRv[]= $line;
         }
         return $aRv;
     }
