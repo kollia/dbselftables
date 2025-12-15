@@ -428,6 +428,9 @@ class STProjectUserSiteCreator extends STUserSiteCreator
     }
     public function execute($onError= onErrorMessage)
     {
+        $query= new STQueryString();
+        $projectID= $query->getParameterValue("ProjectID");
+        $show= $query->getParameterValue("show");
         $this->setDebugStrings();       
         $this->initialPredefinedStates();
         STUserSiteCreator::execute($onError);

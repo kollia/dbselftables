@@ -1450,11 +1450,12 @@ class STObjectContainer extends STBaseContainer
 			}
 			$getParameter= $query->getStringVars();
 			$box->onOKGotoUrl($this->oExternSideCreator->getStartPage().$getParameter);
+			$defaultTitle= $this->oExternSideCreator->getTitle();
 			if($get_vars["action"]==STINSERT)
 			{
 				$box->table($table);
 				$this->setAllMessagesContent(STINSERT, $box);
-				$head= &$this->getHead($this->msgBox->getMessageContent("newENTRY")." in ".$table->getDisplayName());
+				$head= &$this->getHead($defaultTitle);
 				$result= $box->insert();
 			}else
 			{
@@ -1467,7 +1468,7 @@ class STObjectContainer extends STBaseContainer
 				//$whereStatement.= "=".$get_vars["link"]["VALUE"];
 				//$where= new STDbWhere($whereStatement);
 				//$box->where($where);
-				$head= &$this->getHead("Eintrag aktualisieren in ".$table->getDisplayName());
+				$head= &$this->getHead($defaultTitle);
 				$result= $box->update();
 			}
 			$this->oMainTable= &$box;

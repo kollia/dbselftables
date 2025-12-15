@@ -20,6 +20,11 @@ class STProjectUserFrame extends STFrameContainer
      * @var STObjectContainer
      */
     private $fromContainer;
+    /**
+     * cached project data from database (Name, Path)
+     * @var array|null
+     */
+    private $projectData= null;
 
 	public function __construct(string $name, STBaseContainer $fromContainer)
 	{
@@ -44,6 +49,12 @@ class STProjectUserFrame extends STFrameContainer
             // do not produce any real content for this
             return;
         }
+        
+        // fetch project data (Name and Path) from database in single query
+        $this->loadProjectData($projectID);
+        if(isset($this->projectData['Name']))
+            $this->title($this->projectData['Name']);
+        
         $this->framesetRows("$firstFrameHeight,*");
         $file= $HTTP_SERVER_VARS["SCRIPT_NAME"];
         if($file == "/") // calling from vscode
@@ -51,21 +62,30 @@ class STProjectUserFrame extends STFrameContainer
         $this->setFramePath("$file?show=navigation&ProjectID=$projectID");
         $this->setFramePath($this->getProjectLink($query));
 	}
+    /**
+     * Load project data (Name and Path) from database
+     * 
+     * @param int $projectID the ID of the project
+     */
+    protected function loadProjectData(int $projectID) : void
+    {
+        $project= $this->fromContainer->getTable("Project");
+        $selector= new STDbSelector($project);
+        $selector->select("Project", "Name", "Name");
+        $selector->select("Project", "Path", "Path");
+        $selector->where("ID=$projectID");
+        $selector->execute();
+        $result= $selector->getResult();
+        if(isset($result[0]))
+            $this->projectData= $result[0];
+    }
     protected function getProjectLink(STQueryString $query) : string
     {
         global $HTTP_SERVER_VARS;
 
-        $projectID= $query->getParameterValue("ProjectID");
-
-        $project= $this->fromContainer->getTable("Project");
-        $selector= new STDbSelector($project);
-        $selector->select("Project", "Path", "Path");
-        $selector->where("ID=$projectID");
-        $selector->execute();
-        $projectAddress= $selector->getSingleResult();
-        if(!isset($projectAddress))
-            $projectAddress= "";
-        elseif($projectAddress == "X")
+        // use cached project data instead of new database query
+        $projectAddress= $this->projectData['Path'] ?? "";
+        if($projectAddress == "X")
             $projectAddress= $HTTP_SERVER_VARS["SCRIPT_NAME"];
     
         if(preg_match("/^\//", $projectAddress))

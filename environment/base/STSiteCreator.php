@@ -26,7 +26,7 @@ class STSiteCreator extends HtmlTag
 		var	$project;
 		var	$sFirstTableContainerName;
 		var	$tableContainer;
-		var	$chooseTable;
+		var	$defaultTitle= "Db SelfTables";
 		var	$startPage= null;
 		var	$sBackButton= "";
 		var	$oMainTable;
@@ -288,10 +288,18 @@ class STSiteCreator extends HtmlTag
 				$project= $this->project;
 			return $project;
 		}
-		function chooseTitle($title)
+		public function chooseTitle($title)
 		{
 			Tag::deprecated("STSiteCreator::title()", "STSiteCreator::chooseTitle()");
 			$this->chooseTitle= $title;
+		}
+		public function title(string $title)
+		{
+			$this->defaultTitle= $title;
+		}
+		public function getTitle()
+		{
+			return $this->defaultTitle;
 		}
 		function setStartPage($file)
 		{
@@ -458,7 +466,7 @@ class STSiteCreator extends HtmlTag
 				$this->tableContainer->appendObj($endScript);
 
 				if($result!="FORWARDTtoADDRESS")
-					$this->addObj($this->tableContainer->getHead("Unknown"));
+					$this->addObj($this->tableContainer->getHead($this->getTitle()));
 				$this->addObj($this->tableContainer);
 			}else
 			{

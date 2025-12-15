@@ -264,21 +264,26 @@ abstract class STBaseContainer extends BodyTag implements STContainerTempl
 		}else
 			$this->defaultTitles[$action]= $title;
 	}
-	function getTitle() : string
+	function getTitle() : string | null
 	{
+		$title= null;
 		$action= $this->getAction();
+		$listDefinition= STLIST;
 		if(	isset($action) &&
-			isset($this->defaultTitles[$action])	)
+			array_key_exists($action, $this->defaultTitles)	)
 		{
 			$title= $this->defaultTitles[$action];
-		}else
-			$title= $action;
-		$table= $this->getTable();
-		if(isset($table))
-			$title.= " ".$table->getTitle();
+		}elseif(array_key_exists(STLIST, $this->defaultTitles))
+			$title= $this->defaultTitles[STLIST];
 		if(!isset($title))
-		    return "";
-		return trim($title);
+		{
+			$currentTable= $this->getTable();
+			if(isset($currentTable))
+				$title= $currentTable->getDisplayName();
+			else
+				$title= $this->getDisplayName();
+		}
+		return $title;
 		
 	}
 	public function setDefaultLanguage(string $lang, string $nation= "XXX")
@@ -326,10 +331,6 @@ abstract class STBaseContainer extends BodyTag implements STContainerTempl
 		$table->columnAlign($align);
 		$this->addObj($table);
 	}
-	function setTitle(string $title)
-	{
-		$this->chooseTitle= $title;
-	}
 	function &getHead($defaultTitle= "unknown")
 	{
 		Tag::paramCheck($defaultTitle, 1, "string");
@@ -342,7 +343,15 @@ abstract class STBaseContainer extends BodyTag implements STContainerTempl
   		    trim($titleString) == ""    )
   		{
   		    $titleString= $defaultTitle;
-  		}
+  		}else
+		{
+			if(	isset($defaultTitle) &&
+			   	trim($defaultTitle) != "" &&
+				$titleString != $defaultTitle	)
+			{
+				$titleString= $defaultTitle." - ".$titleString;
+			}
+		}
   		$title= new TitleTag($titleString);
   		$head->add($title);
   		$cssLinks= $this->oExternSideCreator->getCssLinks();

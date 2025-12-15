@@ -107,6 +107,7 @@ class STProjectOverviewList extends STBackgroundImagesDbContainer
         $this->displayNoTables();
         //$user= $this->needTable("User");
 
+        $this->title("");
         //$this->db->verifyLogin("##StartPage");
         STCheck::echoDebug("user", "entering ProjectAccess init function...");
         $cluster= $this->db->getTable("Cluster");
