@@ -2347,7 +2347,7 @@ class STBaseTable
 		        $abCorrect['len']= strlen($content) - 2;
 		    }
 		    if( $bString &&
-				preg[1] == $openFieldDelimiter	)
+				$preg[1] == $openFieldDelimiter	)
 		    {
 		        $content= substr($content, 1, -1);
 		    }
