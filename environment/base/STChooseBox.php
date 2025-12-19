@@ -118,6 +118,18 @@ class STChooseBox extends TableTag
 													"type"  => "table",
 													"choose"=> true,
 													"object"=> $this->tableContainer->getTable($table)	);
+				}elseif(	!isset($this->tableContainer->aAccessList) ||
+							count($this->tableContainer->aAccessList)===0	)
+				{// create access list from tables in container, if nothing needed in list before
+					$aTables= $this->tableContainer->getTables();
+					$aAccessList= array();
+					foreach($aTables as $tableName=>$tableObject)
+					{
+						$aAccessList[$tableName]= array(	"name"  => $tableName,
+															"type"  => "table",
+															"choose"=> true,
+															"object"=> $tableObject	);
+					}
 				}else
 					$aAccessList= &$this->tableContainer->aAccessList;
 				$nTables= 0;
