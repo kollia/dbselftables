@@ -409,6 +409,14 @@ class Tag extends STCheck
 			$this->aNames["#require_once"]= $fileName;
 		}
 	/**
+	 * Return all tags inside this tag
+	 * @return array result array of tags
+	 */
+	public function getElements() : array
+	{
+		return $this->inherit;
+	}
+	/**
 	 * Return array of tags with the given attribute
 	 * or the tag name itself when the attribute is "##tag"
 	 * 

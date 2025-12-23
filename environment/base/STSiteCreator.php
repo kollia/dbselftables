@@ -1291,6 +1291,20 @@ class STSiteCreator extends HtmlTag
 			$tagCount= $testdebug['progress']['onTableTagCount'] + 1;
 			if(isset($tags[$tagCount]))
 			{
+				$elements= $tags[$tagCount]->getElements();
+				if(count($elements) > 0)
+				{ // if next table is same as first table, increase tagCount
+					$container= $this->getContainer();
+					$firstTable= $container->getFirstTableName();
+					$t= $container->getTable($firstTable);
+					$firstTable= $t->getDisplayName();
+					$newTableName= trim($elements[0]);
+					if($newTableName == trim($firstTable))
+						$tagCount++;
+				}
+			}
+			if(isset($tags[$tagCount]))
+			{
 				$link= $tags[$tagCount]->getAttribut($onAttribute);
 				$link= $query->update($link);
 				if($testdebug['step'] > 0)
