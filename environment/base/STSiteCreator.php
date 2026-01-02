@@ -56,6 +56,11 @@ class STSiteCreator extends HtmlTag
 		var $aDefaultCssLink= array();
 		var $aJavaScriptLinks= array();
 		protected $bUseOnlyDefaultCssLinks= false;
+		/**
+		 * Store test exception for display after output buffer ends
+		 * @var \Throwable|null
+		 */
+		protected $testException= null;
 
 		function __construct($container= null)
 		{
@@ -352,6 +357,113 @@ class STSiteCreator extends HtmlTag
 									"buttonId"=>$buttonId		);
 	}
 		public function execute($onError= onErrorMessage)
+		{
+			global	$HTTP_GET_VARS;
+			global  $__global_finished_SiteCreator_result;
+
+			// If testing mode is active, wrap execution in try-catch
+			if(STCheck::isDebug("test")) {
+				try {
+					return $this->executeInternal($onError);
+				} catch (\Throwable $e) {
+					$this->handleTestException($e);
+					$__global_finished_SiteCreator_result= "ERROR";
+					return "ERROR";
+				}
+			} else {
+				return $this->executeInternal($onError);
+			}
+		}
+		
+		/**
+		 * Handle exception during testing - write to report file only
+		 * Store exception for later display after output buffer ends
+		 */
+		protected function handleTestException(\Throwable $e) : void
+		{
+			// Store exception for display after output buffer ends
+			$this->testException= $e;
+			
+			$errorMsg= $e->getMessage();
+			$errorFile= $e->getFile();
+			$errorLine= $e->getLine();
+			$errorTrace= $e->getTraceAsString();
+			
+			// Write error to report file only - NOT to screen
+			// The testing() function will display errors on screen
+			$report= "\n\n";
+			$report.= " *******************************************************************************\n";
+			$report.= " ***  EXCEPTION in execute() method\n";
+			$report.= " ***  Message: $errorMsg\n";
+			$report.= " ***  File: $errorFile\n";
+			$report.= " ***  Line: $errorLine\n";
+			$report.= " ***\n";
+			$report.= " ***  Stack Trace:\n";
+			foreach(explode("\n", $errorTrace) as $traceLine) {
+				$report.= " ***    $traceLine\n";
+			}
+			$report.= " ***\n";
+			$report.= " *******************************************************************************\n";
+			$report.= "\n";
+			
+			if(file_put_contents($this->reportFilename, $report, FILE_APPEND) === false) {
+				echo "<br /> ERROR: cannot write to report file {$this->reportFilename}<br />";
+			}
+		}
+		
+		/**
+		 * Display test exception on screen via JavaScript
+		 * Called AFTER output buffer is ended so it actually shows on screen
+		 */
+		protected function displayTestExceptionOnScreen() : void
+		{
+			if($this->testException === null) return;
+			
+			$e= $this->testException;
+			$errorMsg= addslashes($e->getMessage());
+			$errorFile= addslashes($e->getFile());
+			$errorLine= $e->getLine();
+			$errorTrace= addslashes(str_replace("\n", "\\n", $e->getTraceAsString()));
+			
+			// Try to get body - might be null if error occurred before body was created
+			$body= $this->getBody();
+			
+			if($body !== null) {
+				// Create error display via JavaScript that runs after page load
+				$script= new JavaScriptTag();
+				$script->add("
+					(function() {
+						var errorDiv = document.createElement('div');
+						errorDiv.style.cssText = 'position:fixed; top:10px; left:10px; right:10px; background:#ffcccc; padding:15px; border:3px solid red; z-index:999999; font-family:monospace; white-space:pre-wrap; max-height:80vh; overflow:auto;';
+						errorDiv.innerHTML = '<b style=\"color:red; font-size:16px;\">EXECUTE ERROR:</b><br/>' +
+							'<b>Message:</b> {$errorMsg}<br/>' +
+							'<b>File:</b> {$errorFile}<br/>' +
+							'<b>Line:</b> {$errorLine}<br/>' +
+							'<b>Trace:</b><br/>{$errorTrace}<br/><br/>' +
+							'<button onclick=\"this.parentElement.remove()\" style=\"padding:5px 15px; cursor:pointer;\">Close</button>';
+						document.body.insertBefore(errorDiv, document.body.firstChild);
+					})();
+				");
+				$body->add($script);
+			} else {
+				// Body doesn't exist - output error directly (outside buffer at this point)
+				echo "<div style='position:fixed; top:10px; left:10px; right:10px; background:#ffcccc; padding:15px; border:3px solid red; z-index:999999; font-family:monospace; white-space:pre-wrap; max-height:80vh; overflow:auto;'>";
+				echo "<b style='color:red; font-size:16px;'>EXECUTE ERROR:</b><br/>";
+				echo "<b>Message:</b> " . htmlspecialchars($e->getMessage()) . "<br/>";
+				echo "<b>File:</b> " . htmlspecialchars($e->getFile()) . "<br/>";
+				echo "<b>Line:</b> " . $e->getLine() . "<br/>";
+				echo "<b>Trace:</b><br/><pre>" . htmlspecialchars($e->getTraceAsString()) . "</pre>";
+				echo "</div>";
+			}
+			
+			// Clear the exception after displaying
+			$this->testException= null;
+		}
+		
+		/**
+		 * Internal execute logic - separated for try-catch wrapper
+		 */
+		protected function executeInternal($onError= onErrorMessage)
 		{
 			global	$HTTP_GET_VARS;
 			global  $__global_finished_SiteCreator_result;
@@ -889,307 +1001,365 @@ class STSiteCreator extends HtmlTag
 		global $global_selftable_testing_file_warnings;
 
 		$report= "";
-		$query= new STQueryString();
-		//$query->update("set=5");
-		$testdebug= $query->getParameterValue("testdebug");
-		$status= $query->getParameterValue("testdebug", "status");
-		//STCheck::end_outputBuffer(false);// flush first normal output buffer
-		if(	isset($__global_finished_SiteCreator_result) &&
-			(	$__global_finished_SiteCreator_result === "NOERROR" ||
-				$__global_finished_SiteCreator_result === "BOXDISPLAY" ||
-				$__global_finished_SiteCreator_result === "EMPTY_RESULT"	) &&
-			(	!isset($status) ||
-				$status !== "finished"	)											)
-		{
-			$sorted_selftable_test_links= array();
-			// Sort keys according to the order in $this->aTestTypes
-			foreach ($this->aTestTypes as $orderKey)
+		$testdebug= null;
+		
+		try {
+			$query= new STQueryString();
+			//$query->update("set=5");
+			$testdebug= $query->getParameterValue("testdebug");
+			$status= $query->getParameterValue("testdebug", "status");
+			//STCheck::end_outputBuffer(false);// flush first normal output buffer
+			if(	isset($__global_finished_SiteCreator_result) &&
+				(	$__global_finished_SiteCreator_result === "NOERROR" ||
+					$__global_finished_SiteCreator_result === "BOXDISPLAY" ||
+					$__global_finished_SiteCreator_result === "EMPTY_RESULT"	) &&
+				(	!isset($status) ||
+					$status !== "finished"	)											)
 			{
-				if (isset($global_selftable_test_links[$orderKey]))
-					$sorted_selftable_test_links[$orderKey] = $global_selftable_test_links[$orderKey];
-			}
-			$bNew= false;
-			//$nMaxEditLinks= 1;
-			$script = pathinfo($_SERVER["SCRIPT_FILENAME"]);
-			if(isset($testdebug))
-			{
-				$type= $testdebug['link-type'];
-				if($testdebug['status'] == "finished")
-					$bNew= true;
-			}else
-				$bNew= true;
-
-			$bFinished= false;
-			if($bNew)
-			{
-				reset($sorted_selftable_test_links);
-				$type= key($sorted_selftable_test_links);						
-				reset($sorted_selftable_test_links[$type]);
-
-				$testdebug= array();
-				$testdebug['start']= time();
-				$testdebug['status']= "running";
-				$testdebug['link-type']= $type;
-				$testdebug['link-class']= "STChoose-menue-button"; //should be first link class
-				$testdebug['last-insert']= null;
-				/**
-				 * if 'test' entry is true, the double update test will be activated
-				 * to update table row back to original values in next update.
-				 * if 'secondRun' entry is true, the second run of the update will be performed.
-				 */
-				$testdebug['DoubleUpdate']= array(	'test' => "false",
-													'secondRun' => "false"	);
-
-				$testdebug['faults']= false;
-				$this->resetDebugValues($testdebug);
-
-				$report= "\n\n";
-				$report.= " ****************************************\n";
-				$report.= " ***  new DBSelfTables test started\n";
-				$report.= " ***  on ".date("d.m.Y H:i:s")."\n";
-				$report.= " ***  file {$script['basename']}\n";
-				$report.= " ***\n";
-				$report.= " ***\n";
-				$report.= "\n";
-
-			}elseif(trim($testdebug['containers']) == "")
-				$this->resetDebugValues($testdebug);
-
-			// report testing steps forcast
-			// if debugging step was (4) - insert new entry
-			//                   or  (7) - update entry
-			// link made over javascript function
-			// no increasing was made, do now
-			if(	(	$testdebug['step'] == 4 ||
-					$testdebug['step'] == 7		) &&
-					!isset($sorted_selftable_test_links['action']['function'])	)
-			{// action was done
-				$testdebug['link-type']= "action";
-				$testdebug['step']++;
-			}	
-			if($testdebug['step'] == 0)
-			{
-				$table= $this->getTableName();
-				if(trim($table) != "")
+				$sorted_selftable_test_links= array();
+				// Sort keys according to the order in $this->aTestTypes
+				foreach ($this->aTestTypes as $orderKey)
 				{
-					$testdebug['step']= 1;
-					++$testdebug['tab_count'];
+					if (isset($global_selftable_test_links[$orderKey]))
+						$sorted_selftable_test_links[$orderKey] = $global_selftable_test_links[$orderKey];
 				}
-			}
-			/**
-			 * existing step cases:
-			 *	case 0 -> go to first table-button listing
-			 *  case 1 -> go to insert/update box to test backbutton
-			 *  case 2 -> display item box to test back-button
-			 *  case 3 -> show table listing again
-			 *  case 4 -> go to item box for new entry
-			 * 	case 5 -> insert new entry done, go back to table listing
-			 *  case 6 -> go to update box
-			 * 	case 7 -> display item box to update entry
-			 *  case 8 -> update entry done, go back to table listing
-			 * 	case 9 -> show table listing to delete entry inserted before
-			 *  case 10 -> delete entry done, go back to table listing
-			 * 	case 11 -> go to table listing for next table
-			 */
-			$this->createContainerReport($testdebug['step']);
-			/**
-			 * AFTER method createContainerReport() see in WATCH window
-			 * 		$this->report
-			 * 			 		['container']	- name of container
-			 * 					['table']		- name of table
-			 * 					['action']		- current action of table
-			 * 					['step']		- current step in test
-			 * 			 		['description']	- description of current step
-			 * 
-			 * 		$testdebug['progress']
-			 * 					['onTableTagCount']		- count of seen table in current container begin by 0
-			 * 					['backbutton-test']		- first step is back-button tested
-			 * 					['onEditLinkCount']+1	- current step in edit ##link (STINSERT, STUPDATE) (res:2 = done)
-			 * 					['onEditDeleteCount']+1	- current step in edit ##delete (STDELETE) (res:1 = done)
-			 * 
-			 * 		$sorted_selftable_test_links['edit']
-			 * 					['###link']		- array with links to edit (STINSERT, STUPDATE)
-			 * 					['###delete']	- array with links to delete (STDELETE)
-			 */
-
-			if(	$__global_finished_SiteCreator_result === "NOERROR" ||
-				$__global_finished_SiteCreator_result === "BOXDISPLAY"	) // ||
-			//	$__global_finished_SiteCreator_result === "EMPTY_RESULT"	)
-			{
-				// Check if there are no back_tables or action links
-				if(	!isset($sorted_selftable_test_links['back_tables']['###action']) &&
-					!isset($sorted_selftable_test_links['action'])			)
+				$bNew= false;
+				//$nMaxEditLinks= 1;
+				$script = pathinfo($_SERVER["SCRIPT_FILENAME"]);
+				if(isset($testdebug))
 				{
-					if( $testdebug['step'] == 0 ||		//  0	- go to first table listing (only table-buttons are displayed)
-						$testdebug['step'] == 11	)	// 11	- go to table listing for next table
-					{ // [0][11] Pos. beginning of tables 
-						//       0 - go to first table listing (only table-buttons are displayed)
-						//      11 - go to table listing for next table
-						$link= $this->makeNextTableContainer_Test($testdebug, $sorted_selftable_test_links, $query);
-					}else
-					{ // [1][3][6] Pos. show table listing STListBox
-						//       1 - go to insert/update box to test backbutton
-						//       3 - go to insert box again
-						//       6 - go to update box
-						//       9 - delete inserted before
-						$link= $this->makeTableListing_Test($testdebug, $sorted_selftable_test_links, $query);
-					}
+					$type= $testdebug['link-type'];
+					if($testdebug['status'] == "finished")
+						$bNew= true;
 				}else
-				{ // [2][4][5][7][8] Pos. show STItemBox
-					//       2 - go Back-Button from insert box
-					//       4 - insert new entry
-					//       5 - insert done go back to table listing
-					//       7 - update inserted before
-					//       8 - update done go back to table listing
-					//      10 - delete done go back to table listing
-					$link= $this->makeTableAction_Test($testdebug, $sorted_selftable_test_links, $query);
-				}
-				if( $testdebug['step'] == 8 &&
-					$testdebug['DoubleUpdate']['test'] == "true" &&
-					$testdebug['DoubleUpdate']['secondRun'] == "true"	)
-				{ // steps are now normal again
-					$testdebug['DoubleUpdate']['test']= "false";
-					$testdebug['DoubleUpdate']['secondRun']= "false";
-				}
-				if	($testdebug['table'] != $this->report['table'] ||
-					(	$testdebug['step'] >= 11 &&
-						$testdebug['tab_count'] >= $testdebug['tables']	)	)
-				{ // new next table
-					$testdebug['table']= $this->report['table'];
-					if($testdebug['tab_count'] >= $testdebug['tables'])
+					$bNew= true;
+
+				$bFinished= false;
+				if($bNew)
+				{
+					reset($sorted_selftable_test_links);
+					$type= key($sorted_selftable_test_links);						
+					reset($sorted_selftable_test_links[$type]);
+
+					$testdebug= array();
+					$testdebug['start']= time();
+					$testdebug['status']= "running";
+					$testdebug['link-type']= $type;
+					$testdebug['link-class']= "STChoose-menue-button"; //should be first link class
+					$testdebug['last-insert']= null;
+					/**
+					 * if 'test' entry is true, the double update test will be activated
+					 * to update table row back to original values in next update.
+					 * if 'secondRun' entry is true, the second run of the update will be performed.
+					 */
+					$testdebug['DoubleUpdate']= array(	'test' => "false",
+														'secondRun' => "false"	);
+
+					$testdebug['faults']= false;
+					$this->resetDebugValues($testdebug);
+
+					$report= "\n\n";
+					$report.= " ****************************************\n";
+					$report.= " ***  new DBSelfTables test started\n";
+					$report.= " ***  on ".date("d.m.Y H:i:s")."\n";
+					$report.= " ***  file {$script['basename']}\n";
+					$report.= " ***\n";
+					$report.= " ***\n";
+					$report.= "\n";
+
+				}elseif(trim($testdebug['containers']) == "")
+					$this->resetDebugValues($testdebug);
+
+				// report testing steps forcast
+				// if debugging step was (4) - insert new entry
+				//                   or  (7) - update entry
+				// link made over javascript function
+				// no increasing was made, do now
+				if(	(	$testdebug['step'] == 4 ||
+						$testdebug['step'] == 7		) &&
+						!isset($sorted_selftable_test_links['action']['function'])	)
+				{// action was done
+					$testdebug['link-type']= "action";
+					$testdebug['step']++;
+				}	
+				if($testdebug['step'] == 0)
+				{
+					$table= $this->getTableName();
+					if(trim($table) != "")
 					{
-						if(	$testdebug['containers'] > 0 &&
-							$testdebug['cont_count'] < $testdebug['containers']	)
-						{ // more containers to test
-							$testdebug['cont_count']++;
-							$this->pushDebugToOlder($testdebug);
-							$testdebug['containers']= null;
-							$testdebug['step']= 0; // go to first table listing of next container
-							$testdebug['link-type']= "container_link";
-							$link= $sorted_selftable_test_links['container']['###link'][$testdebug['cont_count']];
-							
-						}else
-						{
-							if(isset($sorted_selftable_test_links['back_tables']['###container']))
-							{ // go back to older container
-								$this->restoreDebugOlder($testdebug);
-								$testdebug['step']= 10; // go to table listing for next table
-								$testdebug['link-type']= "link";
-								$link= $sorted_selftable_test_links['back_tables']['###container'];
-							}else
+						$testdebug['step']= 1;
+						++$testdebug['tab_count'];
+					}
+				}
+				/**
+				 * existing step cases:
+				 *	case 0 -> go to first table-button listing
+				*  case 1 -> go to insert/update box to test backbutton
+				*  case 2 -> display item box to test back-button
+				*  case 3 -> show table listing again
+				*  case 4 -> go to item box for new entry
+				* 	case 5 -> insert new entry done, go back to table listing
+				*  case 6 -> go to update box
+				* 	case 7 -> display item box to update entry
+				*  case 8 -> update entry done, go back to table listing
+				* 	case 9 -> show table listing to delete entry inserted before
+				*  case 10 -> delete entry done, go back to table listing
+				* 	case 11 -> go to table listing for next table
+				*/
+				$this->createContainerReport($testdebug['step']);
+				/**
+				 * AFTER method createContainerReport() see in WATCH window
+				 * 		$this->report
+				 * 			 		['container']	- name of container
+				 * 					['table']		- name of table
+				 * 					['action']		- current action of table
+				 * 					['step']		- current step in test
+				 * 			 		['description']	- description of current step
+				 * 
+				 * 		$testdebug['progress']
+				 * 					['onTableTagCount']		- count of seen table in current container begin by 0
+				 * 					['backbutton-test']		- first step is back-button tested
+				 * 					['onEditLinkCount']+1	- current step in edit ##link (STINSERT, STUPDATE) (res:2 = done)
+				 * 					['onEditDeleteCount']+1	- current step in edit ##delete (STDELETE) (res:1 = done)
+				 * 
+				 * 		$sorted_selftable_test_links['edit']
+				 * 					['###link']		- array with links to edit (STINSERT, STUPDATE)
+				 * 					['###delete']	- array with links to delete (STDELETE)
+				 */
+
+				if(	$__global_finished_SiteCreator_result === "NOERROR" ||
+					$__global_finished_SiteCreator_result === "BOXDISPLAY"	) // ||
+				//	$__global_finished_SiteCreator_result === "EMPTY_RESULT"	)
+				{
+					// Check if there are no back_tables or action links
+					if(	!isset($sorted_selftable_test_links['back_tables']['###action']) &&
+						!isset($sorted_selftable_test_links['action'])			)
+					{
+						if( $testdebug['step'] == 0 ||		//  0	- go to first table listing (only table-buttons are displayed)
+							$testdebug['step'] == 11	)	// 11	- go to table listing for next table
+						{ // [0][11] Pos. beginning of tables 
+							//       0 - go to first table listing (only table-buttons are displayed)
+							//      11 - go to table listing for next table
+							$link= $this->makeNextTableContainer_Test($testdebug, $sorted_selftable_test_links, $query);
+							// check if makeNextTableContainer_Test set status to finished
+							if($testdebug['status'] == "finished")
 								$bFinished= true;
+						}else
+						{ // [1][3][6] Pos. show table listing STListBox
+							//       1 - go to insert/update box to test backbutton
+							//       3 - go to insert box again
+							//       6 - go to update box
+							//       9 - delete inserted before
+							$link= $this->makeTableListing_Test($testdebug, $sorted_selftable_test_links, $query);
 						}
 					}else
-						++$testdebug['tab_count'];
-				}
-				// to get last inserted PK, write containr report after localize new values
-				$sErrorOutput= STCheck::end_outputBuffer("test");
-				if(count($global_selftable_testing_file_warnings) > 0)
-				{
-					foreach($global_selftable_testing_file_warnings as $warning)
-						$sErrorOutput.= $warning."\n";
-					$sErrorOutput.= "\n\n";
-					$global_selftable_testing_file_warnings= array();
-				}
-				$report.= $this->writeContainerReport($testdebug, $sErrorOutput);
+					{ // [2][4][5][7][8] Pos. show STItemBox
+						//       2 - go Back-Button from insert box
+						//       4 - insert new entry
+						//       5 - insert done go back to table listing
+						//       7 - update inserted before
+						//       8 - update done go back to table listing
+						//      10 - delete done go back to table listing
+						$link= $this->makeTableAction_Test($testdebug, $sorted_selftable_test_links, $query);
+					}
+					if( $testdebug['step'] == 8 &&
+						$testdebug['DoubleUpdate']['test'] == "true" &&
+						$testdebug['DoubleUpdate']['secondRun'] == "true"	)
+					{ // steps are now normal again
+						$testdebug['DoubleUpdate']['test']= "false";
+						$testdebug['DoubleUpdate']['secondRun']= "false";
+					}
+					if	($testdebug['table'] != $this->report['table'] ||
+						(	$testdebug['step'] >= 11 &&
+							$testdebug['tab_count'] >= $testdebug['tables']	)	)
+					{ // new next table
+						$testdebug['table']= $this->report['table'];
+						if($testdebug['tab_count'] >= $testdebug['tables'])
+						{
+							if(	$testdebug['containers'] > 0 &&
+								$testdebug['cont_count'] < $testdebug['containers']	)
+							{ // more containers to test
+								$testdebug['cont_count']++;
+								$this->pushDebugToOlder($testdebug);
+								$testdebug['containers']= null;
+								$testdebug['step']= 0; // go to first table listing of next container
+								$testdebug['link-type']= "container_link";
+								$link= $sorted_selftable_test_links['container']['###link'][$testdebug['cont_count']];
+								
+							}else
+							{
+								if(isset($sorted_selftable_test_links['back_tables']['###container']))
+								{ // go back to older container
+									$this->restoreDebugOlder($testdebug);
+									$testdebug['step']= 10; // go to table listing for next table
+									$testdebug['link-type']= "link";
+									$link= $sorted_selftable_test_links['back_tables']['###container'];
+								}else{
+									$bFinished= true;
+								}
+							}
+						}else
+							++$testdebug['tab_count'];
+					}
+					// to get last inserted PK, write containr report after localize new values
+					$sErrorOutput= STCheck::end_outputBuffer("test");
+					if(count($global_selftable_testing_file_warnings) > 0)
+					{
+						foreach($global_selftable_testing_file_warnings as $warning)
+							$sErrorOutput.= $warning."\n";
+						$sErrorOutput.= "\n\n";
+						$global_selftable_testing_file_warnings= array();
+					}
+					$report.= $this->writeContainerReport($testdebug, $sErrorOutput);
 
-				$type= $testdebug['link-type'];
-				if(	$type == "link" || $type == "edit"	)
-				{ // otherwise the increasing was made in make_XXX_Test() functions
-					if(	$testdebug['DoubleUpdate']['test'] == "true" &&
-						$testdebug['DoubleUpdate']['secondRun'] == "false" &&
-						$testdebug['step'] == 9 					)
-					{// update was done and should updated back in a previous run
-						$testdebug['step']= 6;
-						$testdebug['DoubleUpdate']['secondRun']= "true";
-					}else
-						$testdebug['step']++;
-				}
-				$output= false;
-				if( isset($HTML_CLASS_DEBUG_CONTENT_CLASS_FUNCTION) &&
-					$HTML_CLASS_DEBUG_CONTENT_CLASS_FUNCTION != ""		)
-				{
-					$exp= explode("/", $HTML_CLASS_DEBUG_CONTENT_CLASS_FUNCTION);
-					if(count($exp) > 1) // it exists more than debug('test')
-						$output= true;
-				}
-				if($output)
-				{
-					echo "<pre>";
-					showLine();
-					echo "Current working directory: " . getcwd();
-					echo "nextLink: $link<br />";
-					if(!is_array($sorted_selftable_test_links))
-						echo "<br /><br />";
-					st_print_r($sorted_selftable_test_links,2);
-					echo "new testdbug array:";
-					st_print_r($testdebug, 2);
-					if(!is_array($testdebug))
-						echo "<br /><br />";
-					echo "next stget query string:";
-					$stget= $query->getArrayVars("stget");
-					st_print_r($stget, 8);
-					if(!is_array($stget))
-						echo "<br /><br />";
-					echo "</pre>";
-				}
-			}else
-			{ 
-				$bFinished= true; 
-				$testdebug['status']= "finished";
-			}
-
-			if($bFinished)
-				$report.= $this->writeEndTimeReport($testdebug);					
-
-			if(	$__global_finished_SiteCreator_result === "NOERROR" ||
-				$__global_finished_SiteCreator_result === "BOXDISPLAY"	)
-			{
-				if($bFinished)
-				{
-					$query->update("testdebug[status]=finished");
-					$link= "alert('Test finished'); ";
-					$link.= "location.href='".$query->getUrlParamString()."'";
+					$type= $testdebug['link-type'];
+					if(	$type == "link" || $type == "edit"	)
+					{ // otherwise the increasing was made in make_XXX_Test() functions
+						if(	$testdebug['DoubleUpdate']['test'] == "true" &&
+							$testdebug['DoubleUpdate']['secondRun'] == "false" &&
+							$testdebug['step'] == 9 					)
+						{// update was done and should updated back in a previous run
+							$testdebug['step']= 6;
+							$testdebug['DoubleUpdate']['secondRun']= "true";
+						}else
+							$testdebug['step']++;
+					}
+					$output= false;
+					if( isset($HTML_CLASS_DEBUG_CONTENT_CLASS_FUNCTION) &&
+						$HTML_CLASS_DEBUG_CONTENT_CLASS_FUNCTION != ""		)
+					{
+						$exp= explode("/", $HTML_CLASS_DEBUG_CONTENT_CLASS_FUNCTION);
+						if(count($exp) > 1) // it exists more than debug('test')
+							$output= true;
+					}
+					if($output)
+					{
+						echo "<pre>";
+						showLine();
+						echo "Current working directory: " . getcwd();
+						echo "nextLink: $link<br />";
+						if(!is_array($sorted_selftable_test_links))
+							echo "<br /><br />";
+						st_print_r($sorted_selftable_test_links,2);
+						echo "new testdbug array:";
+						st_print_r($testdebug, 2);
+						if(!is_array($testdebug))
+							echo "<br /><br />";
+						echo "next stget query string:";
+						$stget= $query->getArrayVars("stget");
+						st_print_r($stget, 8);
+						if(!is_array($stget))
+							echo "<br /><br />";
+						echo "</pre>";
+					}
 				}else
-				{
-					$params= array( 'testdebug' => $testdebug );
-					$query->update($params);
-					if(	$type == "link" ||
-						$type == "container_link"	)
-					{
-						$link= "window.location='$link".$query->getUrlParamString()."'";
-					}elseif($type == "edit")
-					{
-						$link= $query->update($link);
-						$link= "window.location='$link".$query->getUrlParamString()."'";
-					}// by type action no update of parameters can be made, because link is made over javascript function
+				{ 
+					$bFinished= true; 
+					$testdebug['status']= "finished";
 				}
-				$script= new JavaScriptTag();
-					$script->add("setTimeout(function(){ $link; }, 1);");
-				$body= $this->getBody();
-				$body->add($script);
-			}
-		}else
-		{
-			if( $status != "finished" )
-			{
-				$this->createContainerReport($testdebug['step']);
-				$sErrorOutput= STCheck::end_outputBuffer("test");
-				if(trim($sErrorOutput) != "")
+
+				if($bFinished)
+					$report.= $this->writeEndTimeReport($testdebug);					
+
+				if(	$__global_finished_SiteCreator_result === "NOERROR" ||
+					$__global_finished_SiteCreator_result === "BOXDISPLAY"	)
 				{
-					$report.= "\n\n";
-					$report.= " ****************************************\n";
-					$report.= " ***  ERROR: on Ending of test\n";
-					$report.= "\n";
-					$report.= $sErrorOutput;
-					$report.= "\n\n\n\n";
+					if($bFinished)
+					{
+						$query->update("testdebug[status]=finished");
+						$link= "alert('Test finished'); ";
+						$link.= "location.href='".$query->getUrlParamString()."'";
+					}else
+					{
+						$params= array( 'testdebug' => $testdebug );
+						$query->update($params);
+						if(	$type == "link" ||
+							$type == "container_link"	)
+						{
+							$link= "window.location='$link".$query->getUrlParamString()."'";
+						}elseif($type == "edit")
+						{
+							$link= $query->update($link);
+							$link= "window.location='$link".$query->getUrlParamString()."'";
+						}// by type action no update of parameters can be made, because link is made over javascript function
+					}
+					$script= new JavaScriptTag();
+						$script->add("setTimeout(function(){ $link; }, 1);");
+					$body= $this->getBody();
+					$body->add($script);
 				}
 			}else
-			{ // on finished do not output any crutial string with maybe open pre-tag
-				$sErrorOutput= STCheck::end_outputBuffer("test");
-				//echo $sErrorOutput;
-			}
+			{
+				if( $status != "finished" )
+				{
+					$this->createContainerReport($testdebug['step']);
+					$sErrorOutput= STCheck::end_outputBuffer("test");
+					if(trim($sErrorOutput) != "")
+					{
+						$report.= "\n\n";
+						$report.= " ****************************************\n";
+						$report.= " ***  ERROR: on Ending of test\n";
+						$report.= "\n";
+						$report.= $sErrorOutput;
+						$report.= "\n\n";
+					}
+					// Write proper ending report even on error
+					$testdebug['faults']= true;
+					$report.= $this->writeEndTimeReport($testdebug);
+					
+					// Display error on screen via JavaScript (after buffer is flushed)
+					if($this->testException !== null) {
+						$this->displayTestExceptionOnScreen();
+					}
+				}else
+				{ // on finished do not output any crutial string with maybe open pre-tag
+					$sErrorOutput= STCheck::end_outputBuffer("test");
+					//echo $sErrorOutput;
+				}
 
+			}
+		
+		} catch (\Throwable $e) {
+			// Handle any error/exception during testing
+			$errorMsg= $e->getMessage();
+			$errorFile= $e->getFile();
+			$errorLine= $e->getLine();
+			$errorTrace= $e->getTraceAsString();
+			
+			// Show error on screen
+			echo "<pre style='background:#ffcccc; padding:10px; border:2px solid red;'>";
+			echo "<b>TEST ERROR:</b> $errorMsg\n";
+			echo "<b>File:</b> $errorFile\n";
+			echo "<b>Line:</b> $errorLine\n";
+			echo "<b>Trace:</b>\n$errorTrace";
+			echo "</pre>";
+			
+			// Write error to report
+			$report.= "\n\n";
+			$report.= " *******************************************************************************\n";
+			$report.= " ***  EXCEPTION/ERROR occurred during testing\n";
+			$report.= " ***  Message: $errorMsg\n";
+			$report.= " ***  File: $errorFile\n";
+			$report.= " ***  Line: $errorLine\n";
+			$report.= " ***\n";
+			$report.= " ***  Stack Trace:\n";
+			foreach(explode("\n", $errorTrace) as $traceLine) {
+				$report.= " ***    $traceLine\n";
+			}
+			$report.= " *******************************************************************************\n";
+			
+			// Write finished message even on error
+			if(is_array($testdebug)) {
+				$testdebug['faults']= true;
+				$report.= $this->writeEndTimeReport($testdebug);
+			} else {
+				// No testdebug available, create minimal finish report
+				$report.= " ***\n";
+				$report.= " ***\n";
+				$report.= " ***  Test ABORTED with errors on ".date("H:i:s")."\n";
+				$report.= " ********************************************************************************************************************************************************\n";
+				$report.= "\n\n\n\n\n\n\n\n";
+			}
 		}
 
 		if(file_put_contents($this->reportFilename, $report, FILE_APPEND) === false)
@@ -1232,6 +1402,8 @@ class STSiteCreator extends HtmlTag
 		$testdebug['progress']['onEditLinkCount']= -1;
 		$testdebug['progress']['onEditDeleteCount']= -1;
 		$testdebug['progress']['onContainerLinkCount']= -1;
+		$testdebug['progress']['testedTables']= array(); // track tested table names to avoid skipping
+		$testdebug['progress']['tablesWithFaults']= array(); // track table names that had errors
 	}
 	/**
 	 * push debug content to new parameter layer
@@ -1269,6 +1441,7 @@ class STSiteCreator extends HtmlTag
 			isset($sorted_selftable_test_links['edit']['###link_container'][$testdebug['progress']['onContainerLinkCount']+1])	)
 		{
 			$testdebug['last-insert']= null;
+			$testdebug['progress']['onTableTagCount']++;
 			$testdebug['progress']['onContainerLinkCount']++;
 			$link= $sorted_selftable_test_links['edit']['###link_container'][$testdebug['progress']['onContainerLinkCount']];
 			$link= $this->updateQueryLink($query, $link);
@@ -1284,26 +1457,39 @@ class STSiteCreator extends HtmlTag
 		$testdebug['progress']['onEditLinkCount']= -1;
 		$testdebug['progress']['onEditDeleteCount']= -1;
 		$buttonClass= $testdebug['link-class'];
+		$debugButtons= ""; // initialize debug string
 		if(isset($sorted_selftable_test_links[$type][$buttonClass]))
 		{
 			$onAttribute= $sorted_selftable_test_links[$type][$buttonClass];
 			$tags= $this->getElementsByClass($buttonClass);
-			$tagCount= $testdebug['progress']['onTableTagCount'] + 1;
-			if(isset($tags[$tagCount]))
-			{
-				$elements= $tags[$tagCount]->getElements();
-				if(count($elements) > 0)
-				{ // if next table is same as first table, increase tagCount
-					$container= $this->getContainer();
-					$firstTable= $container->getFirstTableName();
-					$t= $container->getTable($firstTable);
-					$firstTable= $t->getDisplayName();
-					$newTableName= trim($elements[0]);
-					if($newTableName == trim($firstTable))
-						$tagCount++;
+			
+			// Get current table name to add to tested list
+			$currentTableDisplay= $this->getTableName();
+			$container= $this->getContainer();
+			if($container) {
+				$currentT= $container->getTable($currentTableDisplay);
+				if($currentT) {
+					$currentTableDisplay= $currentT->getDisplayName();
 				}
 			}
-			if(isset($tags[$tagCount]))
+			// Add current table to tested list (if not already there)
+			if(!isset($testdebug['progress']['testedTables']))
+				$testdebug['progress']['testedTables']= array();
+			if(!in_array(trim($currentTableDisplay), $testdebug['progress']['testedTables']))
+				$testdebug['progress']['testedTables'][]= trim($currentTableDisplay);
+			
+			// Find next untested table button by searching for name NOT in testedTables
+			$tagCount= -1;
+			foreach($tags as $idx => $tag) {
+				$els= $tag->getElements();
+				$buttonName= trim($els[0] ?? '');
+				if($buttonName != '' && !in_array($buttonName, $testdebug['progress']['testedTables'])) {
+					$tagCount= $idx;
+					break;
+				}
+			}
+			
+			if($tagCount >= 0 && isset($tags[$tagCount]))
 			{
 				$link= $tags[$tagCount]->getAttribut($onAttribute);
 				$link= $query->update($link);
@@ -1866,7 +2052,23 @@ class STSiteCreator extends HtmlTag
 			if(!STCheck::isDebug("test.see"))
 				return ""; // should not write anything into report
 		}else
+		{
 			$testdebug['faults']= true;
+			// Track which table had the fault
+			if(!isset($testdebug['progress']['tablesWithFaults']))
+				$testdebug['progress']['tablesWithFaults']= array();
+			$faultTable= $testdebug['table'];
+			// Get display name if available
+			$containerObj= $this->getContainer();
+			if($containerObj) {
+				$t= $containerObj->getTable($faultTable);
+				if($t) {
+					$faultTable= $t->getDisplayName();
+				}
+			}
+			if(!in_array(trim($faultTable), $testdebug['progress']['tablesWithFaults']))
+				$testdebug['progress']['tablesWithFaults'][]= trim($faultTable);
+		}
 
 		if(	(	$action == STINSERT ||
 				$action == STUPDATE ||
@@ -1916,6 +2118,33 @@ class STSiteCreator extends HtmlTag
 		else
 			$report.= " ***  Test finished on $endtime\n";
 		$report.= " ***                in $finishedtime $item\n";
+		$report.= " ***\n";
+		$report.= " ***  Container: ".$testdebug['container']."\n";
+		
+		// Calculate correctly tested tables
+		$testedTables= isset($testdebug['progress']['testedTables']) ? $testdebug['progress']['testedTables'] : array();
+		$tablesWithFaults= isset($testdebug['progress']['tablesWithFaults']) ? $testdebug['progress']['tablesWithFaults'] : array();
+		$totalTested= count($testedTables);
+		$faultCount= count($tablesWithFaults);
+		$correctlyTested= $totalTested - $faultCount;
+		
+		// Tables tested line
+		$report.= " ***  Tables tested: $totalTested of {$testdebug['tables']}\n";
+		
+		if($totalTested > 0) {
+			// List tables without faults
+			$tablesOK= array_diff($testedTables, $tablesWithFaults);
+			if(count($tablesOK) > 0) {
+				$report.= " ***    - OK ($correctlyTested): " . implode(', ', $tablesOK) . "\n";
+			}
+			// List tables with faults/warnings
+			if($faultCount > 0) {
+				$report.= " ***    - with warnings/errors ($faultCount): " . implode(', ', $tablesWithFaults) . "\n";
+			}
+		} else {
+			$report.= " ***    (no tracking data)\n";
+		}
+		
 		$report.= " ********************************************************************************************************************************************************\n";
 		$report.= "\n\n\n\n\n\n\n\n";
 		return $report;

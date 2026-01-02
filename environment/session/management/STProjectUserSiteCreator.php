@@ -426,14 +426,20 @@ class STProjectUserSiteCreator extends STUserSiteCreator
         }
         
     }
-    public function execute($onError= onErrorMessage)
+    
+    /**
+     * Internal execute logic for STProjectUserSiteCreator
+     * Overrides parent::executeInternal()
+     */
+    protected function executeInternal($onError= onErrorMessage)
     {
         $query= new STQueryString();
         $projectID= $query->getParameterValue("ProjectID");
         $show= $query->getParameterValue("show");
         $this->setDebugStrings();       
         $this->initialPredefinedStates();
-        STUserSiteCreator::execute($onError);
+        // Call parent's executeInternal (not execute) to avoid nested try-catch
+        return parent::executeInternal($onError);
     }
     /**
      * define all containers which are predefined in global array variable 

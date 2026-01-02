@@ -336,9 +336,28 @@ class STSessionSiteCreator extends STSiteCreator
 				//$db->closeConnection();
 			}
 		}
+		/**
+		 * Store additionalText for use in executeInternal
+		 */
+		protected $executeAdditionalText = "";
+		
 		function execute($additionalText= "")
 		{
+			// Store parameter for use in executeInternal
+			$this->executeAdditionalText = $additionalText;
+			// Call parent which has the try-catch wrapper
+			return parent::execute();
+		}
+		
+		/**
+		 * Internal execute logic for STSessionSiteCreator
+		 * Overrides parent::executeInternal()
+		 */
+		protected function executeInternal($onError= onErrorMessage)
+		{
 			global $__global_finished_SiteCreator_result;
+			
+			$additionalText = $this->executeAdditionalText;
 			
 		    $tableName= $this->getTableName();
 		    if($tableName)
@@ -350,14 +369,15 @@ class STSessionSiteCreator extends STSiteCreator
     			$action= $this->getAction();
     			if(trim($additionalText) == "")
     			    $additionalText= "user has access to table $tableName on container ".$this->getContainer()->getName();
-    
+
     			if(isset($table))
     				$this->accessTable($table, $action, $additionalText);
 			}
 			
 			// check access to SideCreator, Container, and Tables
 			$this->checkPermission();
-			$result= STSiteCreator::execute();
+			// Call parent's executeInternal (not execute) to avoid nested try-catch
+			$result= parent::executeInternal($onError);
 			if(STCheck::isDebug("test"))
 				$__global_finished_SiteCreator_result= $result;
 			return $result;
