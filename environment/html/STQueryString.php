@@ -1035,7 +1035,8 @@ class STQueryString
 		        }
 		    }else
 		        unset($this->param_vars['stget']['link']);
-		    if(!$bExistSecondLink)
+		    if(	!$bExistSecondLink &&
+		        isset($this->param_vars['stget']['limit'])	)
 		    {
 		        if(isset($columnName))
 		        {
