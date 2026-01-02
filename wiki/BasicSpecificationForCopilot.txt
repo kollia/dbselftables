@@ -12,3 +12,16 @@ Frage: kannst Du mir das Framework so ändern dass er dann den Projekt Namen aus
 Die externen Projekte können unabhängig vom Framework sein, oder so wie in meinem fall der Stationsplan aus dem Repository
 https://github.com/kollia/hospital_stationplan liegt im workspace unter /html/stationplan_linux/ welches ebenfalls auf das Framework zugreift.
 Dieses Projekt erzeugt ebenfalls korrekt den Titel Stationsplan
+
+
+
+PURE FRAMEWORK ANWEISUNG:
+----------------------------------------------------------------------------------------------------------------------
+Das Framework dbselftables siehe development branch auf https://github.com/kollia/dbselftables/tree/development
+erzeugt aus den bestehenden SQL-Tabellen eine Oberfläche zum Einfügen/Ändern und löschen.
+Bitte analysiere das Projekt und erzeuge json-files unter dbselftables/copilotDocs/ was noch alles zu erledigen ist
+Bei Änderungen im Source sollen die Dokumentationen immer auf Englisch geschrieben werden
+In meinem Beispiel-File 02_tables_listing_withNoTest.php ist zur zeit ein STCheck::debug("test") vorhanden.
+dieser erstellt mithilfe der STSiteCreator Klasse unter der Funktion testing() eine Textdatei mit dem Namen selftable_test_report.txt
+dort werden alle getesteten Tabellen und Container angegeben. Nur mit "test.see" mit "test" alleine sollen nur die Tabellen angegeben werden
+welche Fehler enthalten. Am Ende kommt eine Alert Box die aber in meinem Testfile nicht erscheint. bitte überprüfen.

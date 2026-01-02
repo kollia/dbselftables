@@ -1,0 +1,96 @@
+{
+  "todos": [
+    {
+      "id": "ISSUE-001",
+      "priority": "high",
+      "category": "bug",
+      "title": "Testing alert box not appearing at end of test cycle",
+      "description": "When using STCheck::debug('test'), the test cycles through all tables but the final alert('Test finished') does not appear",
+      "file": "environment/base/STSiteCreator.php",
+      "function": "testing()",
+      "lineReference": "1151",
+      "analysis": {
+        "expectedBehavior": "At the end of all table tests, an alert box should display 'Test finished' followed by page redirect",
+        "actualBehavior": "Test finishes (visible in selftable_test_report.txt) but alert box never appears",
+        "alertCodeLogic": {
+          "location": "Lines 1145-1169",
+          "conditionsRequired": [
+            "$bFinished must be true",
+            "$__global_finished_SiteCreator_result must be 'NOERROR' or 'BOXDISPLAY'"
+          ],
+          "javascriptGenerated": "setTimeout(function(){ alert('Test finished'); location.href='...'; }, 1);",
+          "scriptAddedTo": "$body->add($script) at line 1169"
+        },
+        "bFinishedSetAt": {
+          "line1080": "When no more containers to test and no back_tables link",
+          "line1138": "When result is not NOERROR/BOXDISPLAY but status not finished",
+          "line1327": "When no more table buttons found (makeNextTableContainer_Test)",
+          "line1342": "When no action links exist in makeNextTableContainer_Test"
+        },
+        "tableCountSource": "STChooseBox.php line 144 calls STCheck::test_tagClassAttributeLinks('table', 'count', $nTables)",
+        "possibleCauses": [
+          "Browser blocking JavaScript alerts",
+          "Page redirect executing before alert is dismissed",
+          "Script not being properly rendered in HTML output",
+          "Test not actually completing (interrupted before $bFinished=true)"
+        ]
+      },
+      "stepsToReproduce": [
+        "1. Set STCheck::debug('test') in your test file",
+        "2. Create an STSiteCreator with database tables",
+        "3. Call execute() and display()",
+        "4. Observe test cycles but no final alert"
+      ],
+      "debuggingSteps": [
+        "1. Check selftable_test_report.txt - if 'Test finished on...' appears, $bFinished was true",
+        "2. View page source after test completes - look for setTimeout script with alert",
+        "3. Check browser console for JavaScript errors",
+        "4. Test with different browser to rule out alert blocking"
+      ],
+      "suggestedFix": "Add console.log before alert() to verify script execution, or use a modal dialog instead of native alert()",
+      "status": "investigating",
+      "createdAt": "2025-12-30",
+      "updatedAt": "2025-12-30"
+    },
+    {
+      "id": "ISSUE-002",
+      "priority": "medium",
+      "category": "documentation",
+      "title": "Test report shows tables only with test.see debug mode",
+      "description": "With debug('test') alone, successful table tests are not written to selftable_test_report.txt",
+      "file": "environment/base/STSiteCreator.php",
+      "function": "writeContainerReport()",
+      "lineReference": "1867",
+      "analysis": {
+        "codeSnippet": "if(!STCheck::isDebug('test.see')) return ''; // should not write anything into report",
+        "explanation": "This is intentional - only errors are logged by default. Use debug('test.see') to see all pages"
+      },
+      "resolution": "This is working as designed. Documentation should clarify the difference between 'test' and 'test.see' modes",
+      "status": "documented",
+      "createdAt": "2025-12-30"
+    },
+    {
+      "id": "ISSUE-003",
+      "priority": "medium",
+      "category": "enhancement",
+      "title": "Add summary statistics to test report",
+      "description": "The test report should include a summary at the end showing total tables tested, errors found, time per table, etc.",
+      "file": "environment/base/STSiteCreator.php",
+      "function": "writeEndTimeReport()",
+      "suggestedFeatures": [
+        "Total number of tables tested",
+        "Number of containers traversed",
+        "Count of successful/failed tests",
+        "Average time per table test"
+      ],
+      "status": "open",
+      "createdAt": "2025-12-30"
+    }
+  ],
+  "metadata": {
+    "generatedBy": "GitHub Copilot",
+    "lastUpdated": "2025-12-30",
+    "totalIssues": 3,
+    "openIssues": 2
+  }
+}

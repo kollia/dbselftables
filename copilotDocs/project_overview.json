@@ -1,0 +1,53 @@
+{
+  "project": "dbselftables",
+  "description": "A PHP framework that generates CRUD interfaces from existing SQL tables automatically",
+  "version": "development branch",
+  "repository": "https://github.com/kollia/dbselftables",
+  "mainComponents": {
+    "STSiteCreator": {
+      "file": "environment/base/STSiteCreator.php",
+      "description": "Main class that creates the web interface for database management",
+      "responsibilities": [
+        "Display generation from SQL tables",
+        "Testing functionality via debug mode",
+        "CSS/JavaScript link management",
+        "Container orchestration"
+      ]
+    },
+    "STCheck": {
+      "file": "environment/html/STCheck.php",
+      "description": "Debugging and validation utility class",
+      "responsibilities": [
+        "Debug mode management",
+        "Parameter validation",
+        "Error/warning output",
+        "Output buffer management for testing"
+      ]
+    },
+    "STDbTable": {
+      "file": "environment/db/STDbTable.php",
+      "description": "Database table representation and operations"
+    },
+    "STObjectContainer": {
+      "file": "environment/base/STObjectContainer.php",
+      "description": "Container for database objects and table management"
+    },
+    "STListBox": {
+      "file": "environment/base/STListBox.php",
+      "description": "List display component for table rows"
+    },
+    "STItemBox": {
+      "file": "environment/base/STItemBox.php",
+      "description": "Item display/edit component for single records (INSERT/UPDATE)"
+    }
+  },
+  "debugModes": {
+    "test": "Activates automatic testing of all tables and containers",
+    "test.see": "Shows ALL test pages in report, even when no error occurred",
+    "db.statement": "Shows SQL statements sent to database",
+    "table": "Shows table object creation and initialization",
+    "container": "Shows container creation and initialization",
+    "performance": "Shows start/end time and page creation duration"
+  },
+  "lastUpdated": "2025-12-30"
+}
