@@ -1285,12 +1285,17 @@ class STSiteCreator extends HtmlTag
 						if(	$type == "link" ||
 							$type == "container_link"	)
 						{
-							$link= $query->update($link); // merge link params into query and get base URL
-							$link= "window.location='$link".$query->getUrlParamString()."'";
+							$baseUrl= $query->update($link); // merge link params into query and get base URL
+							// if update returns true/false (no base URL in link), use current script
+							if($baseUrl === true || $baseUrl === false || $baseUrl === "")
+								$baseUrl= $_SERVER["SCRIPT_NAME"];
+							$link= "window.location='$baseUrl".$query->getUrlParamString()."'";
 						}elseif($type == "edit")
 						{
-							$link= $query->update($link);
-							$link= "window.location='$link".$query->getUrlParamString()."'";
+							$baseUrl= $query->update($link);
+							if($baseUrl === true || $baseUrl === false || $baseUrl === "")
+								$baseUrl= $_SERVER["SCRIPT_NAME"];
+							$link= "window.location='$baseUrl".$query->getUrlParamString()."'";
 						}// by type action no update of parameters can be made, because link is made over javascript function
 					}
 					$script= new JavaScriptTag();
