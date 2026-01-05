@@ -1285,6 +1285,7 @@ class STSiteCreator extends HtmlTag
 						if(	$type == "link" ||
 							$type == "container_link"	)
 						{
+							$link= $query->update($link); // merge link params into query and get base URL
 							$link= "window.location='$link".$query->getUrlParamString()."'";
 						}elseif($type == "edit")
 						{
