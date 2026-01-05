@@ -17,10 +17,22 @@ Dieses Projekt erzeugt ebenfalls korrekt den Titel Stationsplan
 
 PURE FRAMEWORK ANWEISUNG:
 ----------------------------------------------------------------------------------------------------------------------
-Das Framework dbselftables siehe development branch auf https://github.com/kollia/dbselftables/tree/development
-erzeugt aus den bestehenden SQL-Tabellen eine Oberfläche zum Einfügen/Ändern und löschen.
-Bitte analysiere das Projekt und erzeuge json-files unter dbselftables/copilotDocs/ was noch alles zu erledigen ist
-Bei Änderungen im Source sollen die Dokumentationen immer auf Englisch geschrieben werden
+The dbselftables framework (see development branch at https://github.com/kollia/dbselftables/tree/development)
+creates an interface for inserting, modifying, and deleting data from existing SQL tables.
+
+Please analyze the project and generate the JSON files located at dbselftables/copilotDocs/ 
+to see what still needs to be done. Documentation for any changes to the source code should 
+always be written in English. Please check also the last commits to see what we have done last time.
+
+In my example file 04_basic_main.php the framework take tables from the database and I organiced them
+with an container where all bills inside. If the user click on any bill id, it jumps into the Order container
+where all order be seen for the current bill and you can also see ther the article table.
+I organiced the script with STCheck::debug("test"). This meaning that the framework testing inside the STSiteCreator
+class all tables inside testing() method. Jumping inside Order Container will be OK and also test there the order table
+and also the article table. But after that it should jump back and test ther all other tables. But the framework
+stop on this time. Can you check why?
+The Testing write an report under selftable_test_report.txt.
+
 In meinem Beispiel-File 02_tables_listing_withNoTest.php ist zur zeit ein STCheck::debug("test") vorhanden.
 dieser erstellt mithilfe der STSiteCreator Klasse unter der Funktion testing() eine Textdatei mit dem Namen selftable_test_report.txt
 dort werden alle getesteten Tabellen und Container angegeben. Nur mit "test.see" mit "test" alleine sollen nur die Tabellen angegeben werden

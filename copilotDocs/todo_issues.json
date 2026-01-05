@@ -4,53 +4,29 @@
       "id": "ISSUE-001",
       "priority": "high",
       "category": "bug",
-      "title": "Testing alert box not appearing at end of test cycle",
-      "description": "When using STCheck::debug('test'), the test cycles through all tables but the final alert('Test finished') does not appear",
+      "title": "Testing stops after returning from sub-container",
+      "description": "When using STCheck::debug('test') with nested containers (e.g., bill -> Order), testing completes the sub-container but stops instead of continuing with remaining tables in the parent container",
       "file": "environment/base/STSiteCreator.php",
       "function": "testing()",
-      "lineReference": "1151",
+      "lineReference": "1191-1205, 1519-1535",
       "analysis": {
-        "expectedBehavior": "At the end of all table tests, an alert box should display 'Test finished' followed by page redirect",
-        "actualBehavior": "Test finishes (visible in selftable_test_report.txt) but alert box never appears",
-        "alertCodeLogic": {
-          "location": "Lines 1145-1169",
-          "conditionsRequired": [
-            "$bFinished must be true",
-            "$__global_finished_SiteCreator_result must be 'NOERROR' or 'BOXDISPLAY'"
-          ],
-          "javascriptGenerated": "setTimeout(function(){ alert('Test finished'); location.href='...'; }, 1);",
-          "scriptAddedTo": "$body->add($script) at line 1169"
-        },
-        "bFinishedSetAt": {
-          "line1080": "When no more containers to test and no back_tables link",
-          "line1138": "When result is not NOERROR/BOXDISPLAY but status not finished",
-          "line1327": "When no more table buttons found (makeNextTableContainer_Test)",
-          "line1342": "When no action links exist in makeNextTableContainer_Test"
-        },
-        "tableCountSource": "STChooseBox.php line 144 calls STCheck::test_tagClassAttributeLinks('table', 'count', $nTables)",
-        "possibleCauses": [
-          "Browser blocking JavaScript alerts",
-          "Page redirect executing before alert is dismissed",
-          "Script not being properly rendered in HTML output",
-          "Test not actually completing (interrupted before $bFinished=true)"
-        ]
+        "expectedBehavior": "After testing all tables in Order container, should return to bill container and test remaining tables (Article, addressee container)",
+        "actualBehavior": "Test stops after completing Order container tables (order, article)",
+        "rootCause": "When returning from sub-container, step was set to 10 (delete done), but the condition at line 1138 only checks for step 0 or 11 to trigger makeNextTableContainer_Test(). Step 10 fell through to makeTableListing_Test() which cannot handle it properly.",
+        "fix": "Changed step from 10 to 11 when returning from sub-container. Step 11 means 'go to table listing for next table' which correctly triggers makeNextTableContainer_Test() to find the next untested table."
       },
       "stepsToReproduce": [
-        "1. Set STCheck::debug('test') in your test file",
-        "2. Create an STSiteCreator with database tables",
-        "3. Call execute() and display()",
-        "4. Observe test cycles but no final alert"
+        "1. Set STCheck::debug('test') in 04_basic_main.php",
+        "2. Run the test - bill container has namedLink to Order container",
+        "3. Test completes bill table, jumps into Order container",
+        "4. Tests order and article tables in Order container",
+        "5. Should return to bill and test Article + addressee, but stops"
       ],
-      "debuggingSteps": [
-        "1. Check selftable_test_report.txt - if 'Test finished on...' appears, $bFinished was true",
-        "2. View page source after test completes - look for setTimeout script with alert",
-        "3. Check browser console for JavaScript errors",
-        "4. Test with different browser to rule out alert blocking"
-      ],
-      "suggestedFix": "Add console.log before alert() to verify script execution, or use a modal dialog instead of native alert()",
-      "status": "investigating",
+      "resolution": "Fixed by changing testdebug['step']= 10 to testdebug['step']= 11 at lines 1194, 1201, 1524, 1532",
+      "status": "resolved",
       "createdAt": "2025-12-30",
-      "updatedAt": "2025-12-30"
+      "updatedAt": "2026-01-05",
+      "resolvedAt": "2026-01-05"
     },
     {
       "id": "ISSUE-002",

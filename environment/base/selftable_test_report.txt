@@ -1,0 +1,945 @@
+
+
+ ****************************************
+ ***  new DBSelfTables test started
+ ***  on 02.01.2026 13:20:11
+ ***  file xdebug_router.php
+ ***
+ ***
+
+ *******************************************************************************
+ ***      site Nr: Ce837D098fTt2R0S01
+ ***    container: bill
+ ***        table: bill
+ ***         step: 1 for table in container
+ ***       action: list
+ ***  description: show first table listing
+ ***       result: NOERROR
+ ***
+
+
+
+
+
+ *******************************************************************************
+ ***      site Nr: Ce837D098fTt2R0S02
+ ***    container: bill
+ ***        table: bill
+ ***         step: 2 for table in container
+ ***       action: insert
+ ***  description: display item box to test back-button
+ ***       result: BOXDISPLAY
+ ***
+
+
+
+
+
+ *******************************************************************************
+ ***      site Nr: Ce837D098fTt2R0S03
+ ***    container: bill
+ ***        table: bill
+ ***         step: 3 for table in container
+ ***       action: list
+ ***  description: show table listing again
+ ***       result: NOERROR
+ ***
+
+
+
+
+
+ *******************************************************************************
+ ***      site Nr: Ce837D098fTt2R0S04
+ ***    container: bill
+ ***        table: bill
+ ***         step: 4 for table in container
+ ***       action: insert
+ ***  description: display item box to insert new entry
+ ***       result: BOXDISPLAY
+ ***
+
+
+
+
+
+ *******************************************************************************
+ ***      site Nr: Ce837D098fTt2R0S05
+ ***    container: bill
+ ***        table: bill
+ ***         step: 5 for table in container
+ ***       action: insert PK 213
+ ***  description: insert new entry done, go back to table listing
+ ***       result: NOERROR
+ ***
+
+
+
+
+
+ *******************************************************************************
+ ***      site Nr: Ce837D098fTt2R0S06
+ ***    container: bill
+ ***        table: bill
+ ***         step: 6 for table in container
+ ***       action: list
+ ***  description: show table listing again
+ ***       result: NOERROR
+ ***
+
+
+
+
+
+ *******************************************************************************
+ ***      site Nr: Ce837D098fTt2R0S07
+ ***    container: bill
+ ***        table: bill
+ ***         step: 7 for table in container
+ ***       action: update PK 213
+ ***  description: display item box to update entry
+ ***       result: BOXDISPLAY
+ ***
+
+
+
+
+
+ *******************************************************************************
+ ***      site Nr: Ce837D098fTt2R0S08
+ ***    container: bill
+ ***        table: bill
+ ***         step: 8 for table in container
+ ***       action: update PK 213
+ ***  description: update entry done, go back to table listing
+ ***       result: NOERROR
+ ***
+
+
+
+
+
+ *******************************************************************************
+ ***      site Nr: Ce837D098fTt2R0S09
+ ***    container: bill
+ ***        table: bill
+ ***         step: 9 for table in container
+ ***       action: list
+ ***  description: show table listing to delete entry inserted before
+ ***       result: NOERROR
+ ***
+
+
+
+
+
+ *******************************************************************************
+ ***      site Nr: Ce837D098fTt2R0S10
+ ***    container: bill
+ ***        table: bill
+ ***         step: 10 for table in container
+ ***       action: delete PK 213
+ ***  description: delete entry done, go back to table listing
+ ***       result: NOERROR
+ ***
+
+
+
+
+
+ *******************************************************************************
+ ***      site Nr: Ce837D098fTt2R0S11
+ ***    container: bill
+ ***        table: bill
+ ***         step: 11 for table in container
+ ***       action: list
+ ***  description: show table listing for next table
+ ***       result: NOERROR
+ ***
+
+
+
+
+
+ *******************************************************************************
+ ***      site Nr: Ca240D098fTt5R0S01
+ ***    container: Order
+ ***        table: order
+ ***         step: 1 for table in container
+ ***       action: list
+ ***  description: show first table listing
+ ***       result: NOERROR
+ ***
+
+
+
+
+
+ *******************************************************************************
+ ***      site Nr: Ca240D098fTt5R0S02
+ ***    container: Order
+ ***        table: order
+ ***         step: 2 for table in container
+ ***       action: insert
+ ***  description: display item box to test back-button
+ ***       result: BOXDISPLAY
+ ***
+
+
+
+
+
+ *******************************************************************************
+ ***      site Nr: Ca240D098fTt5R0S03
+ ***    container: Order
+ ***        table: order
+ ***         step: 3 for table in container
+ ***       action: list
+ ***  description: show table listing again
+ ***       result: NOERROR
+ ***
+
+
+
+
+
+ *******************************************************************************
+ ***      site Nr: Ca240D098fTt5R0S04
+ ***    container: Order
+ ***        table: order
+ ***         step: 4 for table in container
+ ***       action: insert
+ ***  description: display item box to insert new entry
+ ***       result: BOXDISPLAY
+ ***
+
+
+
+
+
+ *******************************************************************************
+ ***      site Nr: Ca240D098fTt5R0S05
+ ***    container: Order
+ ***        table: order
+ ***         step: 5 for table in container
+ ***       action: insert PK 170
+ ***  description: insert new entry done, go back to table listing
+ ***       result: NOERROR
+ ***
+
+
+
+
+
+ *******************************************************************************
+ ***      site Nr: Ca240D098fTt5R0S06
+ ***    container: Order
+ ***        table: order
+ ***         step: 6 for table in container
+ ***       action: list
+ ***  description: show table listing again
+ ***       result: NOERROR
+ ***
+
+
+
+
+
+ *******************************************************************************
+ ***      site Nr: Ca240D098fTt5R0S07
+ ***    container: Order
+ ***        table: order
+ ***         step: 7 for table in container
+ ***       action: update PK 170
+ ***  description: display item box to update entry
+ ***       result: BOXDISPLAY
+ ***
+
+
+
+
+
+ *******************************************************************************
+ ***      site Nr: Ca240D098fTt5R0S08
+ ***    container: Order
+ ***        table: order
+ ***         step: 8 for table in container
+ ***       action: update PK 170
+ ***  description: update entry done, go back to table listing
+ ***       result: NOERROR
+ ***
+
+
+
+
+
+ *******************************************************************************
+ ***      site Nr: Ca240D098fTt5R0S09
+ ***    container: Order
+ ***        table: order
+ ***         step: 9 for table in container
+ ***       action: list
+ ***  description: show table listing to delete entry inserted before
+ ***       result: NOERROR
+ ***
+
+
+
+
+
+ *******************************************************************************
+ ***      site Nr: Ca240D098fTt5R0S10
+ ***    container: Order
+ ***        table: order
+ ***         step: 10 for table in container
+ ***       action: delete PK 170
+ ***  description: delete entry done, go back to table listing
+ ***       result: NOERROR
+ ***
+
+
+
+
+
+ *******************************************************************************
+ ***      site Nr: Ca240D098fTt5R0S11
+ ***    container: Order
+ ***        table: order
+ ***         step: 11 for table in container
+ ***       action: list
+ ***  description: show table listing for next table
+ ***       result: NOERROR
+ ***
+
+
+
+
+
+ *******************************************************************************
+ ***      site Nr: Ca240D098fTt1R0S01
+ ***    container: Order
+ ***        table: article
+ ***         step: 1 for table in container
+ ***       action: list
+ ***  description: show first table listing
+ ***       result: NOERROR
+ ***
+
+
+
+
+
+ *******************************************************************************
+ ***      site Nr: Ca240D098fTt1R0S02
+ ***    container: Order
+ ***        table: article
+ ***         step: 2 for table in container
+ ***       action: insert
+ ***  description: display item box to test back-button
+ ***       result: BOXDISPLAY
+ ***
+
+
+
+
+
+ *******************************************************************************
+ ***      site Nr: Ca240D098fTt1R0S03
+ ***    container: Order
+ ***        table: article
+ ***         step: 3 for table in container
+ ***       action: list
+ ***  description: show table listing again
+ ***       result: NOERROR
+ ***
+
+
+
+
+
+ *******************************************************************************
+ ***      site Nr: Ca240D098fTt1R0S04
+ ***    container: Order
+ ***        table: article
+ ***         step: 4 for table in container
+ ***       action: insert
+ ***  description: display item box to insert new entry
+ ***       result: BOXDISPLAY
+ ***
+
+
+
+
+
+ *******************************************************************************
+ ***      site Nr: Ca240D098fTt1R0S05
+ ***    container: Order
+ ***        table: article
+ ***         step: 5 for table in container
+ ***       action: insert PK 311
+ ***  description: insert new entry done, go back to table listing
+ ***       result: NOERROR
+ ***
+
+
+
+
+
+ *******************************************************************************
+ ***      site Nr: Ca240D098fTt1R0S06
+ ***    container: Order
+ ***        table: article
+ ***         step: 6 for table in container
+ ***       action: list
+ ***  description: show table listing again
+ ***       result: NOERROR
+ ***
+
+
+
+
+
+ *******************************************************************************
+ ***      site Nr: Ca240D098fTt1R0S07
+ ***    container: Order
+ ***        table: article
+ ***         step: 7 for table in container
+ ***       action: update PK 311
+ ***  description: display item box to update entry
+ ***       result: BOXDISPLAY
+ ***
+
+
+
+
+
+ *******************************************************************************
+ ***      site Nr: Ca240D098fTt1R0S08
+ ***    container: Order
+ ***        table: article
+ ***         step: 8 for table in container
+ ***       action: update PK 311
+ ***  description: update entry done, go back to table listing
+ ***       result: NOERROR
+ ***
+
+
+
+
+
+ *******************************************************************************
+ ***      site Nr: Ca240D098fTt1R0S09
+ ***    container: Order
+ ***        table: article
+ ***         step: 9 for table in container
+ ***       action: list
+ ***  description: show table listing to delete entry inserted before
+ ***       result: NOERROR
+ ***
+
+
+
+
+
+ *******************************************************************************
+ ***      site Nr: Ca240D098fTt1R0S10
+ ***    container: Order
+ ***        table: article
+ ***         step: 10 for table in container
+ ***       action: delete PK 311
+ ***  description: delete entry done, go back to table listing
+ ***       result: NOERROR
+ ***
+
+
+
+
+
+ *******************************************************************************
+ ***      site Nr: Ca240D098fTt1R0S11
+ ***    container: Order
+ ***        table: article
+ ***         step: 11 for table in container
+ ***       action: list
+ ***  description: show table listing for next table
+ ***       result: NOERROR
+ ***
+
+
+
+
+
+ ***
+ ***
+ ***  Test finished on 13:47:38
+ ***                in 27:27 min:sec
+ ***
+ ***  Container: bill
+ ***  Tables tested: 0 of 2
+ ***    (no tracking data)
+ ********************************************************************************************************************************************************
+
+
+
+
+
+
+
+
+
+
+ ****************************************
+ ***  new DBSelfTables test started
+ ***  on 02.01.2026 14:37:18
+ ***  file xdebug_router.php
+ ***
+ ***
+
+ *******************************************************************************
+ ***      site Nr: Ce837D098fTt2R0S01
+ ***    container: bill
+ ***        table: bill
+ ***         step: 1 for table in container
+ ***       action: list
+ ***  description: show first table listing
+ ***       result: NOERROR
+ ***
+
+
+
+
+
+ *******************************************************************************
+ ***      site Nr: Ce837D098fTt2R0S02
+ ***    container: bill
+ ***        table: bill
+ ***         step: 2 for table in container
+ ***       action: insert
+ ***  description: display item box to test back-button
+ ***       result: BOXDISPLAY
+ ***
+
+
+
+
+
+ *******************************************************************************
+ ***      site Nr: Ce837D098fTt2R0S03
+ ***    container: bill
+ ***        table: bill
+ ***         step: 3 for table in container
+ ***       action: list
+ ***  description: show table listing again
+ ***       result: NOERROR
+ ***
+
+
+
+
+
+ *******************************************************************************
+ ***      site Nr: Ce837D098fTt2R0S04
+ ***    container: bill
+ ***        table: bill
+ ***         step: 4 for table in container
+ ***       action: insert
+ ***  description: display item box to insert new entry
+ ***       result: BOXDISPLAY
+ ***
+
+
+
+
+
+ *******************************************************************************
+ ***      site Nr: Ce837D098fTt2R0S05
+ ***    container: bill
+ ***        table: bill
+ ***         step: 5 for table in container
+ ***       action: insert PK 215
+ ***  description: insert new entry done, go back to table listing
+ ***       result: NOERROR
+ ***
+
+
+
+
+
+ *******************************************************************************
+ ***      site Nr: Ce837D098fTt2R0S06
+ ***    container: bill
+ ***        table: bill
+ ***         step: 6 for table in container
+ ***       action: list
+ ***  description: show table listing again
+ ***       result: NOERROR
+ ***
+
+
+
+
+
+ *******************************************************************************
+ ***      site Nr: Ce837D098fTt2R0S07
+ ***    container: bill
+ ***        table: bill
+ ***         step: 7 for table in container
+ ***       action: update PK 215
+ ***  description: display item box to update entry
+ ***       result: BOXDISPLAY
+ ***
+
+
+
+
+
+ *******************************************************************************
+ ***      site Nr: Ce837D098fTt2R0S08
+ ***    container: bill
+ ***        table: bill
+ ***         step: 8 for table in container
+ ***       action: update PK 215
+ ***  description: update entry done, go back to table listing
+ ***       result: NOERROR
+ ***
+
+
+
+
+
+ *******************************************************************************
+ ***      site Nr: Ce837D098fTt2R0S09
+ ***    container: bill
+ ***        table: bill
+ ***         step: 9 for table in container
+ ***       action: list
+ ***  description: show table listing to delete entry inserted before
+ ***       result: NOERROR
+ ***
+
+
+
+
+
+ *******************************************************************************
+ ***      site Nr: Ce837D098fTt2R0S10
+ ***    container: bill
+ ***        table: bill
+ ***         step: 10 for table in container
+ ***       action: delete PK 215
+ ***  description: delete entry done, go back to table listing
+ ***       result: NOERROR
+ ***
+
+
+
+
+
+ *******************************************************************************
+ ***      site Nr: Ce837D098fTt2R0S11
+ ***    container: bill
+ ***        table: bill
+ ***         step: 11 for table in container
+ ***       action: list
+ ***  description: show table listing for next table
+ ***       result: NOERROR
+ ***
+
+
+
+
+
+ *******************************************************************************
+ ***      site Nr: Ca240D098fTt5R0S01
+ ***    container: Order
+ ***        table: order
+ ***         step: 1 for table in container
+ ***       action: list
+ ***  description: show first table listing
+ ***       result: NOERROR
+ ***
+
+
+
+
+
+ *******************************************************************************
+ ***      site Nr: Ca240D098fTt5R0S02
+ ***    container: Order
+ ***        table: order
+ ***         step: 2 for table in container
+ ***       action: insert
+ ***  description: display item box to test back-button
+ ***       result: BOXDISPLAY
+ ***
+
+
+
+
+
+ *******************************************************************************
+ ***      site Nr: Ca240D098fTt5R0S03
+ ***    container: Order
+ ***        table: order
+ ***         step: 3 for table in container
+ ***       action: list
+ ***  description: show table listing again
+ ***       result: NOERROR
+ ***
+
+
+
+
+
+ *******************************************************************************
+ ***      site Nr: Ca240D098fTt5R0S04
+ ***    container: Order
+ ***        table: order
+ ***         step: 4 for table in container
+ ***       action: insert
+ ***  description: display item box to insert new entry
+ ***       result: BOXDISPLAY
+ ***
+
+
+
+
+
+ *******************************************************************************
+ ***      site Nr: Ca240D098fTt5R0S05
+ ***    container: Order
+ ***        table: order
+ ***         step: 5 for table in container
+ ***       action: insert PK 172
+ ***  description: insert new entry done, go back to table listing
+ ***       result: NOERROR
+ ***
+
+
+
+
+
+ *******************************************************************************
+ ***      site Nr: Ca240D098fTt5R0S06
+ ***    container: Order
+ ***        table: order
+ ***         step: 6 for table in container
+ ***       action: list
+ ***  description: show table listing again
+ ***       result: NOERROR
+ ***
+
+
+
+
+
+ *******************************************************************************
+ ***      site Nr: Ca240D098fTt5R0S07
+ ***    container: Order
+ ***        table: order
+ ***         step: 7 for table in container
+ ***       action: update PK 172
+ ***  description: display item box to update entry
+ ***       result: BOXDISPLAY
+ ***
+
+
+
+
+
+ *******************************************************************************
+ ***      site Nr: Ca240D098fTt5R0S08
+ ***    container: Order
+ ***        table: order
+ ***         step: 8 for table in container
+ ***       action: update PK 172
+ ***  description: update entry done, go back to table listing
+ ***       result: NOERROR
+ ***
+
+
+
+
+
+ *******************************************************************************
+ ***      site Nr: Ca240D098fTt5R0S09
+ ***    container: Order
+ ***        table: order
+ ***         step: 9 for table in container
+ ***       action: list
+ ***  description: show table listing to delete entry inserted before
+ ***       result: NOERROR
+ ***
+
+
+
+
+
+ *******************************************************************************
+ ***      site Nr: Ca240D098fTt5R0S10
+ ***    container: Order
+ ***        table: order
+ ***         step: 10 for table in container
+ ***       action: delete PK 172
+ ***  description: delete entry done, go back to table listing
+ ***       result: NOERROR
+ ***
+
+
+
+
+
+ *******************************************************************************
+ ***      site Nr: Ca240D098fTt5R0S11
+ ***    container: Order
+ ***        table: order
+ ***         step: 11 for table in container
+ ***       action: list
+ ***  description: show table listing for next table
+ ***       result: NOERROR
+ ***
+
+
+
+
+
+ *******************************************************************************
+ ***      site Nr: Ca240D098fTt1R0S01
+ ***    container: Order
+ ***        table: article
+ ***         step: 1 for table in container
+ ***       action: list
+ ***  description: show first table listing
+ ***       result: NOERROR
+ ***
+
+
+
+
+
+ *******************************************************************************
+ ***      site Nr: Ca240D098fTt1R0S02
+ ***    container: Order
+ ***        table: article
+ ***         step: 2 for table in container
+ ***       action: insert
+ ***  description: display item box to test back-button
+ ***       result: BOXDISPLAY
+ ***
+
+
+
+
+
+ *******************************************************************************
+ ***      site Nr: Ca240D098fTt1R0S03
+ ***    container: Order
+ ***        table: article
+ ***         step: 3 for table in container
+ ***       action: list
+ ***  description: show table listing again
+ ***       result: NOERROR
+ ***
+
+
+
+
+
+ *******************************************************************************
+ ***      site Nr: Ca240D098fTt1R0S04
+ ***    container: Order
+ ***        table: article
+ ***         step: 4 for table in container
+ ***       action: insert
+ ***  description: display item box to insert new entry
+ ***       result: BOXDISPLAY
+ ***
+
+
+
+
+
+ *******************************************************************************
+ ***      site Nr: Ca240D098fTt1R0S05
+ ***    container: Order
+ ***        table: article
+ ***         step: 5 for table in container
+ ***       action: insert PK 313
+ ***  description: insert new entry done, go back to table listing
+ ***       result: NOERROR
+ ***
+
+
+
+
+
+ *******************************************************************************
+ ***      site Nr: Ca240D098fTt1R0S06
+ ***    container: Order
+ ***        table: article
+ ***         step: 6 for table in container
+ ***       action: list
+ ***  description: show table listing again
+ ***       result: NOERROR
+ ***
+
+
+
+
+
+ *******************************************************************************
+ ***      site Nr: Ca240D098fTt1R0S07
+ ***    container: Order
+ ***        table: article
+ ***         step: 7 for table in container
+ ***       action: update PK 313
+ ***  description: display item box to update entry
+ ***       result: BOXDISPLAY
+ ***
+
+
+
+
+
+ *******************************************************************************
+ ***      site Nr: Ca240D098fTt1R0S08
+ ***    container: Order
+ ***        table: article
+ ***         step: 8 for table in container
+ ***       action: update PK 313
+ ***  description: update entry done, go back to table listing
+ ***       result: NOERROR
+ ***
+
+
+
+
+
+ *******************************************************************************
+ ***      site Nr: Ca240D098fTt1R0S09
+ ***    container: Order
+ ***        table: article
+ ***         step: 9 for table in container
+ ***       action: list
+ ***  description: show table listing to delete entry inserted before
+ ***       result: NOERROR
+ ***
+
+
+
+
+
+ *******************************************************************************
+ ***      site Nr: Ca240D098fTt1R0S10
+ ***    container: Order
+ ***        table: article
+ ***         step: 10 for table in container
+ ***       action: delete PK 313
+ ***  description: delete entry done, go back to table listing
+ ***       result: NOERROR
+ ***
+
+
+
+
+

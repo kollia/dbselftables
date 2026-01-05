@@ -921,7 +921,7 @@ class STSiteCreator extends HtmlTag
 		$container= &$this->getContainer();
 		return $container->getAction();
 	}
-	function &getTable(string $tableName= null, string|bool $sContainer= null, bool $bEmpty= false)
+	function &getTable(string|null $tableName= null, string|bool|null $sContainer= null, bool $bEmpty= false)
 	{
 		return $this->getContainer()->getTable($tableName, $sContainer, $bEmpty); 
 	}
@@ -1189,12 +1189,21 @@ class STSiteCreator extends HtmlTag
 							}else
 							{
 								if(isset($sorted_selftable_test_links['back_tables']['###container']))
-								{ // go back to older container
+								{ // go back to older container using back_tables link
 									$this->restoreDebugOlder($testdebug);
-									$testdebug['step']= 10; // go to table listing for next table
+									$testdebug['step']= 11; // go to table listing for next table
 									$testdebug['link-type']= "link";
 									$link= $sorted_selftable_test_links['back_tables']['###container'];
-								}else{
+								}
+								elseif(isset($testdebug['older']) && is_array($testdebug['older']))
+								{ // no explicit back link, but restore older debug state so testing continues
+									$this->restoreDebugOlder($testdebug);
+									$testdebug['step']= 11;
+									$testdebug['link-type']= "link";
+									// fallback to current query string to continue execution
+									$link= $query->getUrlParamString();
+								}
+								else{
 									$bFinished= true;
 								}
 							}
@@ -1504,11 +1513,31 @@ class STSiteCreator extends HtmlTag
 				}
 				$type= "link";
 			}else
-			{ // no more table-button found, so test is finished
+			{ // no more table-button found
 				$link= "";
-				if($testdebug['containers'] == 0 ||
-				   $testdebug['cont_count'] >= $testdebug['containers']	)
+				// Check if we need to go back to parent container
+				if(isset($sorted_selftable_test_links['back_tables']['###container']) &&
+					trim($sorted_selftable_test_links['back_tables']['###container']) != "")
 				{
+					// Use explicit back link to return to parent container
+					$this->restoreDebugOlder($testdebug);
+					$testdebug['step']= 11; // go to table listing for next table
+					$testdebug['link-type']= "link";
+					$link= $sorted_selftable_test_links['back_tables']['###container'];
+				}
+				elseif(isset($testdebug['older']) && is_array($testdebug['older']) && !empty($testdebug['older']))
+				{
+					// No explicit back link, but we have older debug state - restore it
+					$this->restoreDebugOlder($testdebug);
+					$testdebug['step']= 11; // go to table listing for next table
+					$testdebug['link-type']= "link";
+					// Use current URL to continue in parent container context
+					$link= $query->getUrlParamString();
+				}
+				elseif($testdebug['containers'] == 0 ||
+				   		$testdebug['cont_count'] >= $testdebug['containers'])
+				{
+					// No parent container to return to - test is finished
 					$bFinished= true;
 					$testdebug['status']= "finished";
 				}
