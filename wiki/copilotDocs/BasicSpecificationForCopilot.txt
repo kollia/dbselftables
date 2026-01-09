@@ -20,7 +20,7 @@ PURE FRAMEWORK ANWEISUNG:
 The dbselftables framework (see development branch at https://github.com/kollia/dbselftables/tree/development)
 creates an interface for inserting, modifying, and deleting data from existing SQL tables.
 
-Please analyze the project and generate the JSON files located at dbselftables/copilotDocs/ 
+Please analyze the project and generate the JSON files located at dbselftables/wiki/copilotDocs/ 
 to see what still needs to be done. Documentation for any changes to the source code should 
 always be written in English. Please check also the last commits to see what we have done last time.
 
