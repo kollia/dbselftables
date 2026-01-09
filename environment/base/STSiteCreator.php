@@ -1281,21 +1281,31 @@ class STSiteCreator extends HtmlTag
 					}else
 					{
 						$params= array( 'testdebug' => $testdebug );
+						$query->delete("testdebug");
 						$query->update($params);
 						if(	$type == "link" ||
 							$type == "container_link"	)
 						{
-							$baseUrl= $query->update($link); // merge link params into query and get base URL
-							// if update returns true/false (no base URL in link), use current script
-							if($baseUrl === true || $baseUrl === false || $baseUrl === "")
-								$baseUrl= $_SERVER["SCRIPT_NAME"];
-							$link= "window.location='$baseUrl".$query->getUrlParamString()."'";
+							// For back navigation, merge link params if they exist
+							if(is_string($link) && strpos($link, '?') !== false)
+							{
+								// Extract just the query string part and merge it
+								$linkParams = substr($link, strpos($link, '?') + 1);
+								if($linkParams)
+									$query->update($linkParams);
+							}
+							// Build URL using script name and properly encoded query string
+							$urlParams = $query->getUrlParamString();
+							// Escape special characters for JavaScript string literal
+							$jsUrl = addslashes($_SERVER["SCRIPT_NAME"] . $urlParams);
+							$link= "window.location='" . $jsUrl . "'";
 						}elseif($type == "edit")
 						{
 							$baseUrl= $query->update($link);
 							if($baseUrl === true || $baseUrl === false || $baseUrl === "")
 								$baseUrl= $_SERVER["SCRIPT_NAME"];
-							$link= "window.location='$baseUrl".$query->getUrlParamString()."'";
+							$jsUrl = addslashes($baseUrl . $query->getUrlParamString());
+							$link= "window.location='" . $jsUrl . "'";
 						}// by type action no update of parameters can be made, because link is made over javascript function
 					}
 					$script= new JavaScriptTag();
@@ -1417,8 +1427,6 @@ class STSiteCreator extends HtmlTag
 		$testdebug['progress']['onEditLinkCount']= -1;
 		$testdebug['progress']['onEditDeleteCount']= -1;
 		$testdebug['progress']['onContainerLinkCount']= -1;
-		$testdebug['progress']['testedTables']= array(); // track tested table names to avoid skipping
-		$testdebug['progress']['tablesWithFaults']= array(); // track table names that had errors
 	}
 	/**
 	 * push debug content to new parameter layer
@@ -1448,6 +1456,22 @@ class STSiteCreator extends HtmlTag
 				$testdebug[$param]= $older[$param];
 		}
 	}
+	private function addDisplayedTable(array &$testdebug)
+	{
+		$currentTableDisplay= $this->getTableName();
+		$container= $this->getContainer();
+		if($container) {
+			$currentT= $container->getTable($currentTableDisplay);
+			if($currentT) {
+				$currentTableDisplay= $currentT->getDisplayName();
+			}
+		}
+		// Add current table to tested list (if not already there)
+		if(!isset($testdebug['progress']['testedTables']))
+			$testdebug['progress']['testedTables']= array();
+		if(!in_array(trim($currentTableDisplay), $testdebug['progress']['testedTables']))
+			$testdebug['progress']['testedTables'][]= trim($currentTableDisplay);
+	}
 	private function makeNextTableContainer_Test(array &$testdebug, array $sorted_selftable_test_links, STQueryString &$query) : string
 	{
 		// ( 0) - go to first table listing (only table-buttons are displayed)
@@ -1455,6 +1479,9 @@ class STSiteCreator extends HtmlTag
 		if( $testdebug['step'] == 11 &&
 			isset($sorted_selftable_test_links['edit']['###link_container'][$testdebug['progress']['onContainerLinkCount']+1])	)
 		{
+			// Add current table to tested list (if not already there)
+			$this->addDisplayedTable($testdebug);
+
 			$testdebug['last-insert']= null;
 			$testdebug['progress']['onTableTagCount']++;
 			$testdebug['progress']['onContainerLinkCount']++;
@@ -1472,26 +1499,14 @@ class STSiteCreator extends HtmlTag
 		$testdebug['progress']['onEditLinkCount']= -1;
 		$testdebug['progress']['onEditDeleteCount']= -1;
 		$buttonClass= $testdebug['link-class'];
-		$debugButtons= ""; // initialize debug string
+		
 		if(isset($sorted_selftable_test_links[$type][$buttonClass]))
 		{
 			$onAttribute= $sorted_selftable_test_links[$type][$buttonClass];
 			$tags= $this->getElementsByClass($buttonClass);
 			
-			// Get current table name to add to tested list
-			$currentTableDisplay= $this->getTableName();
-			$container= $this->getContainer();
-			if($container) {
-				$currentT= $container->getTable($currentTableDisplay);
-				if($currentT) {
-					$currentTableDisplay= $currentT->getDisplayName();
-				}
-			}
 			// Add current table to tested list (if not already there)
-			if(!isset($testdebug['progress']['testedTables']))
-				$testdebug['progress']['testedTables']= array();
-			if(!in_array(trim($currentTableDisplay), $testdebug['progress']['testedTables']))
-				$testdebug['progress']['testedTables'][]= trim($currentTableDisplay);
+			$this->addDisplayedTable($testdebug);
 			
 			// Find next untested table button by searching for name NOT in testedTables
 			$tagCount= -1;
@@ -1527,11 +1542,14 @@ class STSiteCreator extends HtmlTag
 				{
 					// Use explicit back link to return to parent container
 					$this->restoreDebugOlder($testdebug);
-					$testdebug['step']= 11; // go to table listing for next table
-					$testdebug['link-type']= "link";
 					$link= $sorted_selftable_test_links['back_tables']['###container'];
-				}
-				elseif(isset($testdebug['older']) && is_array($testdebug['older']) && !empty($testdebug['older']))
+					$link= $this->updateQueryLink($query, $link);
+
+					$testdebug['step']= -1; // go to first table listing of next container
+					$type= "container_link";
+
+
+				}elseif(isset($testdebug['older']) && is_array($testdebug['older']) && !empty($testdebug['older']))
 				{
 					// No explicit back link, but we have older debug state - restore it
 					$this->restoreDebugOlder($testdebug);
@@ -1774,7 +1792,7 @@ class STSiteCreator extends HtmlTag
 			}
 		}else
 		{// (9) step delete entry
-			if(isset($sorted_selftable_test_links['edit']['###delete']))
+			if(isset($sorted_selftable_test_links['edit']['###delete'][$testdebug['progress']['onEditDeleteCount']+1]))
 			{
 				$testdebug['progress']['onEditDeleteCount']++;
 				$link= $sorted_selftable_test_links['edit']['###delete'][$testdebug['progress']['onEditDeleteCount']];
