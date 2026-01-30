@@ -1180,6 +1180,10 @@ class STSiteCreator extends HtmlTag
 								$testdebug['cont_count'] < $testdebug['containers']	)
 							{ // more containers to test
 								$testdebug['cont_count']++;
+								$testdebug['last-insert']= null;
+								$testdebug['progress']['backbutton-test']= "false";
+								$testdebug['progress']['onEditLinkCount']= -1;
+								$testdebug['progress']['onEditDeleteCount']= -1;
 								$this->pushDebugToOlder($testdebug);
 								$testdebug['containers']= null;
 								$testdebug['step']= 0; // go to first table listing of next container
@@ -1292,7 +1296,17 @@ class STSiteCreator extends HtmlTag
 								// Extract just the query string part and merge it
 								$linkParams = substr($link, strpos($link, '?') + 1);
 								if($linkParams)
+								{
 									$query->update($linkParams);
+									if($type == "container_link")
+									{
+										$query->update("testdebug[step]=".$testdebug['step']);
+										$query->update("testdebug[last-insert]=null");
+										$query->update("testdebug[progress][backbutton-test]=false");
+										$query->update("testdebug[progress][onEditLinkCount]=-1");
+										$query->update("testdebug[progress][onEditDeleteCount]=-1");
+									}
+								}
 							}
 							// Build URL using script name and properly encoded query string
 							$urlParams = $query->getUrlParamString();
@@ -1502,40 +1516,12 @@ class STSiteCreator extends HtmlTag
 		
 		if(isset($sorted_selftable_test_links[$type][$buttonClass]))
 		{
-			$onAttribute= $sorted_selftable_test_links[$type][$buttonClass];
-			$tags= $this->getElementsByClass($buttonClass);
-			
-			// Add current table to tested list (if not already there)
-			$this->addDisplayedTable($testdebug);
-			
-			// Find next untested table button by searching for name NOT in testedTables
-			$tagCount= -1;
-			foreach($tags as $idx => $tag) {
-				$els= $tag->getElements();
-				$buttonName= trim($els[0] ?? '');
-				if($buttonName != '' && !in_array($buttonName, $testdebug['progress']['testedTables'])) {
-					$tagCount= $idx;
-					break;
-				}
-			}
-			
-			if($tagCount >= 0 && isset($tags[$tagCount]))
-			{
-				$link= $tags[$tagCount]->getAttribut($onAttribute);
-				$link= $query->update($link);
-				if($testdebug['step'] > 0)
-				{// if step is 0, no table was selected
-				 // so do not increase the count of tag (onTableTagCount)
-				 // because on next beginning when count is 10
-				 // button of first table not be displayed
-				 // and should begin also on first table tags entry (0)
-					$testdebug['progress']['onTableTagCount']= $tagCount;
-					$testdebug['step']= 0; // increasing outside by type link to 1 for first step
-				}
-				$type= "link";
-			}else
+			$res= $this->gotoNextTable_Test($testdebug, $sorted_selftable_test_links, $query);
+			$link= $res['link'];
+			$type= $res['type'];
+			if($type == "noTable")
 			{ // no more table-button found
-				$link= "";
+				
 				// Check if we need to go back to parent container
 				if(isset($sorted_selftable_test_links['back_tables']['###container']) &&
 					trim($sorted_selftable_test_links['back_tables']['###container']) != "")
@@ -1545,7 +1531,7 @@ class STSiteCreator extends HtmlTag
 					$link= $sorted_selftable_test_links['back_tables']['###container'];
 					$link= $this->updateQueryLink($query, $link);
 
-					$testdebug['step']= -1; // go to first table listing of next container
+					$testdebug['step']= 11; // go to last step for next table
 					$type= "container_link";
 
 
@@ -1584,6 +1570,47 @@ class STSiteCreator extends HtmlTag
 		}
 		$testdebug['link-type']= $type;
 		return $link;
+	}
+	private function gotoNextTable_Test(array &$testdebug, array $sorted_selftable_test_links, STQueryString &$query) : array
+	{
+		$buttonClass= $testdebug['link-class'];
+		$onAttribute= $sorted_selftable_test_links['table'][$buttonClass];
+		$tags= $this->getElementsByClass($buttonClass);
+		
+		// Add current table to tested list (if not already there)
+		$this->addDisplayedTable($testdebug);
+		
+		// Find next untested table button by searching for name NOT in testedTables
+		$tagCount= -1;
+		foreach($tags as $idx => $tag) {
+			$els= $tag->getElements();
+			$buttonName= trim($els[0] ?? '');
+			if($buttonName != '' && !in_array($buttonName, $testdebug['progress']['testedTables'])) {
+				$tagCount= $idx;
+				break;
+			}
+		}
+		
+		if($tagCount >= 0 && isset($tags[$tagCount]))
+		{
+			$link= $tags[$tagCount]->getAttribut($onAttribute);
+			$link= $query->update($link);
+			if($testdebug['step'] > 0)
+			{// if step is 0, no table was selected
+				// so do not increase the count of tag (onTableTagCount)
+				// because on next beginning when count is 10
+				// button of first table not be displayed
+				// and should begin also on first table tags entry (0)
+				$testdebug['progress']['onTableTagCount']= $tagCount;
+				$testdebug['step']= 0; // increasing outside by type link to 1 for first step
+			}
+			$type= "link";
+		}else
+		{
+			$link= "";
+			$type= "noTable";
+		}
+		return [ 'link' => $link, 'type' => $type ];
 	}
 	private function makeTableListing_Test(array &$testdebug, array $sorted_selftable_test_links, STQueryString &$query) : string
 	{

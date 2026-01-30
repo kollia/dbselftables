@@ -20,7 +20,7 @@ PURE FRAMEWORK ANWEISUNG:
 The dbselftables framework (see development branch at https://github.com/kollia/dbselftables/tree/development)
 creates an interface for inserting, modifying, and deleting data from existing SQL tables.
 
-Please analyze the project and generate the JSON files located at dbselftables/wiki/copilotDocs/ 
+Please analyze the project and read/generate the JSON files located at dbselftables/wiki/copilotDocs/ 
 to see what still needs to be done. Documentation for any changes to the source code should 
 always be written in English. Please check also the last commits to see what we have done last time.
 
@@ -29,11 +29,7 @@ with an container where all bills inside. If the user click on any bill id, it j
 where all order be seen for the current bill and you can also see ther the article table.
 I organiced the script with STCheck::debug("test"). This meaning that the framework testing inside the STSiteCreator
 class all tables inside testing() method. Jumping inside Order Container will be OK and also test there the order table
-and also the article table. But after that it should jump back and test ther all other tables. But the framework
-stop on this time. Can you check why?
-The Testing write an report under selftable_test_report.txt.
-
-In meinem Beispiel-File 02_tables_listing_withNoTest.php ist zur zeit ein STCheck::debug("test") vorhanden.
-dieser erstellt mithilfe der STSiteCreator Klasse unter der Funktion testing() eine Textdatei mit dem Namen selftable_test_report.txt
-dort werden alle getesteten Tabellen und Container angegeben. Nur mit "test.see" mit "test" alleine sollen nur die Tabellen angegeben werden
-welche Fehler enthalten. Am Ende kommt eine Alert Box die aber in meinem Testfile nicht erscheint. bitte überprüfen.
+and also the article table. But after that it should jump back and test there all other containers and tables. 
+See testing report under selftable_test_report.txt.
+if finished article table it should go to addressee container and there to person table.
+But bginning with step 1 and not with 11
