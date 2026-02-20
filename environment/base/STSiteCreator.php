@@ -1125,6 +1125,8 @@ class STSiteCreator extends HtmlTag
 				 * 		$sorted_selftable_test_links['edit']
 				 * 					['###link']		- array with links to edit (STINSERT, STUPDATE)
 				 * 					['###delete']	- array with links to delete (STDELETE)
+				 * 
+				 * test stop by: $testdebug['step'] == 11 && $testdebug['container'] == "addressee" && $testdebug['table'] == "address"
 				 */
 
 				if(	$__global_finished_SiteCreator_result === "NOERROR" ||
@@ -1192,17 +1194,19 @@ class STSiteCreator extends HtmlTag
 								
 							}else
 							{
-								if(isset($sorted_selftable_test_links['back_tables']['###container']))
+								if(	isset($sorted_selftable_test_links['back_tables']['###container']) &&
+									(	$testdebug['progress']['backcontainer'] == "true" ||
+										$this->restoreDebugOlder($testdebug) == true		)				)
 								{ // go back to older container using back_tables link
-									$this->restoreDebugOlder($testdebug);
-									$testdebug['step']= 11; // go to table listing for next table
+									
+									$testdebug['step']= 10; // increase next, go to table listing for next table
 									$testdebug['link-type']= "link";
 									$link= $sorted_selftable_test_links['back_tables']['###container'];
 								}
 								elseif(isset($testdebug['older']) && is_array($testdebug['older']))
 								{ // no explicit back link, but restore older debug state so testing continues
 									$this->restoreDebugOlder($testdebug);
-									$testdebug['step']= 11;
+									$testdebug['step']= 10; // increase next, go to table listing for next table
 									$testdebug['link-type']= "link";
 									// fallback to current query string to continue execution
 									$link= $query->getUrlParamString();
@@ -1298,14 +1302,9 @@ class STSiteCreator extends HtmlTag
 								if($linkParams)
 								{
 									$query->update($linkParams);
-									if($type == "container_link")
-									{
-										$query->update("testdebug[step]=".$testdebug['step']);
-										$query->update("testdebug[last-insert]=null");
-										$query->update("testdebug[progress][backbutton-test]=false");
-										$query->update("testdebug[progress][onEditLinkCount]=-1");
-										$query->update("testdebug[progress][onEditDeleteCount]=-1");
-									}
+									// update again testdebug in case link params overwrite it
+									$query->delete("testdebug");
+									$query->update($params);
 								}
 							}
 							// Build URL using script name and properly encoded query string
@@ -1441,6 +1440,7 @@ class STSiteCreator extends HtmlTag
 		$testdebug['progress']['onEditLinkCount']= -1;
 		$testdebug['progress']['onEditDeleteCount']= -1;
 		$testdebug['progress']['onContainerLinkCount']= -1;
+		$testdebug['progress']['backcontainer']= "false";
 	}
 	/**
 	 * push debug content to new parameter layer
@@ -1451,24 +1451,37 @@ class STSiteCreator extends HtmlTag
 	private function pushDebugToOlder(array &$testdebug)
 	{
 		$older= array();
+		$testdebug['progress']['backcontainer']= "false";
 		foreach($testdebug as $param => $value)
 		{
 			if(in_array($param, $this->aDebugShiftVars))
 				$older[$param]= $value;
 		}
+		$testdebug['progress']['backcontainer']= "false";
 		$testdebug['older']= $older;
 		$this->resetDebugValues($testdebug);			
 	}
-	private function restoreDebugOlder(array &$testdebug)
+	private function restoreDebugOlder(array &$testdebug) : bool
 	{
+		if(	!isset($testdebug['older']) &&
+			!is_array($testdebug['older']) &&
+			empty($testdebug['older'])	)
+		{
+			return false;
+		}
 		$older= $testdebug['older'];
 		foreach($this->aDebugShiftVars as $param)
 		{
 			if(isset($testdebug[$param]))
 				unset($testdebug[$param]);
 			if(isset($older[$param]))
+			{
 				$testdebug[$param]= $older[$param];
+				if($param == "progress")
+					$testdebug[$param]['backcontainer']= "true";
+			}
 		}
+		return true;
 	}
 	private function addDisplayedTable(array &$testdebug)
 	{
@@ -2109,6 +2122,12 @@ class STSiteCreator extends HtmlTag
 		$siteNr= $this->getSiteNumberI($step);
 		$action= $this->report['action'];
 		$description= $this->report['description'];
+		if( $step == 11 &&
+			$testdebug['progress']['backcontainer'] === "true"	)
+		{
+			$description= "back from container, $description";
+			$testdebug['progress']['backcontainer']= "false";
+		}
 		$this->report= array();
 		// correct $sErrorOutput to ASCII-only
 		// remove all html-tags
