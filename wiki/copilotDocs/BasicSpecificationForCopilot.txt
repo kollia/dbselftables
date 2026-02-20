@@ -26,10 +26,12 @@ always be written in English. Please check also the last commits to see what we 
 
 In my example file 04_basic_main.php the framework take tables from the database and I organiced them
 with an container where all bills inside. If the user click on any bill id, it jumps into the Order container
-where all order be seen for the current bill and you can also see ther the article table.
+where all order be seen for the current bill and you can also see there the article table.
 I organiced the script with STCheck::debug("test"). This meaning that the framework testing inside the STSiteCreator
 class all tables inside testing() method. Jumping inside Order Container will be OK and also test there the order table
 and also the article table. But after that it should jump back and test there all other containers and tables. 
 See testing report under selftable_test_report.txt.
+
 if finished article table it should go to addressee container and there to person table.
-But bginning with step 1 and not with 11
+It doing well if the main ObjectContainer has an article table defined in testing script 04_basic_main.php
+but if undocumented (line 34) the variable $sorted_selftable_test_links['container']['###link'] has no container

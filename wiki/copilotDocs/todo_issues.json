@@ -61,12 +61,41 @@
       ],
       "status": "open",
       "createdAt": "2025-12-30"
+    },
+    {
+      "id": "ISSUE-004",
+      "priority": "high",
+      "category": "bug",
+      "title": "Testing does not navigate to needContainer sub-containers when no Article table in main container",
+      "description": "When the main bill ObjectContainer does not have an Article table defined directly (line 34 commented out in 04_basic_main.php), after returning from the Order sub-container the test cannot find the addressee container. The variable $sorted_selftable_test_links['container']['###link'] has no container entries because the STChooseBox only registers container buttons when they appear in the choose menu listing, and after returning from a namedLink sub-container the choose menu may not include them.",
+      "file": "environment/base/STSiteCreator.php",
+      "function": "makeNextTableContainer_Test() and testing()",
+      "lineReference": "1174-1195, 1530-1585",
+      "analysis": {
+        "expectedBehavior": "After finishing article table in Order container, testing should return to bill container and continue to addressee container, then test Person table",
+        "actualBehavior": "Testing stops after Order container because $sorted_selftable_test_links['container']['###link'] is not populated when Article table is not in the main container - the test has no link to navigate to the addressee container",
+        "rootCause": "Two issues: (1) The 'new next table' section at line 1174 fires even when makeNextTableContainer_Test() already set link-type to 'container_link', causing incorrect state override. (2) When no more table-buttons are found in makeNextTableContainer_Test(), the code did not attempt to navigate to remaining sub-containers via container['###link'] entries.",
+        "fix": "Added guard condition to skip 'new next table' section when link-type is already 'container_link'. Added isset() check for $sorted_selftable_test_links['container']['###link'] before accessing it. Added container navigation branch in makeNextTableContainer_Test() to enter remaining sub-containers when no more tables are found but containers exist."
+      },
+      "stepsToReproduce": [
+        "1. In 04_basic_main.php, comment out line 34: $main->needTable('Article')",
+        "2. Set STCheck::debug('test')",
+        "3. Run the test - bill container still has namedLink to Order container and needContainer($addressee)",
+        "4. Test completes bill table, jumps into Order container via namedLink",
+        "5. Tests order and article tables in Order container",
+        "6. Returns to bill but cannot find addressee container to test Person table"
+      ],
+      "resolution": "Three changes in STSiteCreator.php: (1) Guard 'new next table' section with link-type != 'container_link' check at line 1174. (2) Added isset($sorted_selftable_test_links['container']['###link']) check at line 1183. (3) Added container navigation branch in makeNextTableContainer_Test() at line 1563 to enter sub-containers when all tables are tested but containers remain.",
+      "status": "resolved",
+      "createdAt": "2026-02-20",
+      "updatedAt": "2026-02-20",
+      "resolvedAt": "2026-02-20"
     }
   ],
   "metadata": {
     "generatedBy": "GitHub Copilot",
-    "lastUpdated": "2025-12-30",
-    "totalIssues": 3,
-    "openIssues": 2
+    "lastUpdated": "2026-02-20",
+    "totalIssues": 4,
+    "openIssues": 1
   }
 }
