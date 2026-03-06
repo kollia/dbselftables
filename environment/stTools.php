@@ -1,7 +1,7 @@
 <?php
 
 
-function st_print_r($value, $deep=1, $space= 0, $bPrint= true, $bFirst= true) : string
+function st_print_r($value, int $deep=1, int $space= 0, bool $bPrint= true, bool $bFirst= true) : string
 {
 	$outputStr= "";
     if($bFirst)

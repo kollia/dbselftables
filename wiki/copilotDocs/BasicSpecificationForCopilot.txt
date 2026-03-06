@@ -32,6 +32,7 @@ class all tables inside testing() method. Jumping inside Order Container will be
 and also the article table. But after that it should jump back and test there all other containers and tables. 
 See testing report under selftable_test_report.txt.
 
-if finished article table it should go to addressee container and there to person table.
+if finished bill container it should go to main container after that to addressee container and there to person table.
 It doing well if the main ObjectContainer has an article table defined in testing script 04_basic_main.php
 but if undocumented (line 34) the variable $sorted_selftable_test_links['container']['###link'] has no container
+and it makes the main container again, what is wrong
