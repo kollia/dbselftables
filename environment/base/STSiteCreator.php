@@ -1171,12 +1171,15 @@ class STSiteCreator extends HtmlTag
 						$testdebug['DoubleUpdate']['test']= "false";
 						$testdebug['DoubleUpdate']['secondRun']= "false";
 					}
-					if	($testdebug['table'] != $this->report['table'] ||
+					if	(($testdebug['table'] != $this->report['table'] ||
 						(	$testdebug['step'] >= 11 &&
-							$testdebug['tab_count'] >= $testdebug['tables']	)	)
+							$testdebug['tab_count'] >= $testdebug['tables']	)	) &&
+						$testdebug['link-type'] != "container_link"	)
 					{ // new next table
 						$testdebug['table']= $this->report['table'];
-						if($testdebug['tab_count'] >= $testdebug['tables'])
+						if(	$testdebug['tab_count'] >= $testdebug['tables'] ) //||
+					//		(	$testdebug['containers'] > 0 &&
+					//			$testdebug['cont_count'] < $testdebug['containers']	)	)
 						{
 							if(	$testdebug['containers'] > 0 &&
 								$testdebug['cont_count'] < $testdebug['containers']	)
@@ -1188,10 +1191,14 @@ class STSiteCreator extends HtmlTag
 								$testdebug['progress']['onEditDeleteCount']= -1;
 								$this->pushDebugToOlder($testdebug);
 								$testdebug['containers']= null;
-								$testdebug['step']= 0; // go to first table listing of next container
+								$testdebug['step']= -1; // go to first table listing of next container
 								$testdebug['link-type']= "container_link";
-								$link= $sorted_selftable_test_links['container']['###link'][$testdebug['cont_count']];
-								
+								if(isset($sorted_selftable_test_links['container']['###link'][$testdebug['cont_count']]))
+								{
+									$link= $sorted_selftable_test_links['container']['###link'][$testdebug['cont_count']];
+									$bFinished= false;
+									$testdebug['status']= "running";
+								}
 							}else
 							{
 								if(	isset($sorted_selftable_test_links['back_tables']['###container']) &&
@@ -1431,6 +1438,11 @@ class STSiteCreator extends HtmlTag
 		$containers= 0;
 		if(isset($global_selftable_test_links['container']))
 			$containers= $global_selftable_test_links['container']['count'];
+		if(	isset($global_selftable_test_links['edit']['###link_container']) &&
+			is_array($global_selftable_test_links['edit']['###link_container'])	)
+		{
+			$containers+= count($global_selftable_test_links['edit']['###link_container']);
+		}
 		$testdebug['containers']= $containers;
 		$testdebug['cont_count']= 0; // on beginning step define also whether the first shows an container or container listing
 		$testdebug['tab_count']= $step; // on beginning step define also whether the first shows an table or table listing
@@ -1512,6 +1524,7 @@ class STSiteCreator extends HtmlTag
 			$testdebug['last-insert']= null;
 			$testdebug['progress']['onTableTagCount']++;
 			$testdebug['progress']['onContainerLinkCount']++;
+			$testdebug['cont_count']++;
 			$link= $sorted_selftable_test_links['edit']['###link_container'][$testdebug['progress']['onContainerLinkCount']];
 			$link= $this->updateQueryLink($query, $link);
 			$this->pushDebugToOlder($testdebug);
@@ -1557,6 +1570,28 @@ class STSiteCreator extends HtmlTag
 					// Use current URL to continue in parent container context
 					$link= $query->getUrlParamString();
 				}
+				elseif(isset($sorted_selftable_test_links['container']) &&
+						isset($sorted_selftable_test_links['container']['###link']) &&
+						is_array($sorted_selftable_test_links['container']['###link']) &&
+						count($sorted_selftable_test_links['container']['###link']) > 0 &&
+						isset($testdebug['containers']) && $testdebug['containers'] > 0 &&
+						$testdebug['cont_count'] < $testdebug['containers'])
+				{
+					// Navigate to remaining needContainer sub-containers (e.g., addressee)
+					$containerLinks= $sorted_selftable_test_links['container']['###link'];
+					$link= $containerLinks[0];
+					$link= $this->updateQueryLink($query, $link);
+					$this->addDisplayedTable($testdebug);
+					$testdebug['cont_count']++;
+					$testdebug['last-insert']= null;
+					$testdebug['progress']['backbutton-test']= "false";
+					$testdebug['progress']['onEditLinkCount']= -1;
+					$testdebug['progress']['onEditDeleteCount']= -1;
+					$this->pushDebugToOlder($testdebug);
+					$testdebug['containers']= null;
+					$testdebug['step']= -1; // go to first table listing of next container
+					$type= "container_link";
+				}
 				elseif($testdebug['containers'] == 0 ||
 				   		$testdebug['cont_count'] >= $testdebug['containers'])
 				{
@@ -1574,7 +1609,45 @@ class STSiteCreator extends HtmlTag
 				$link= $this->updateQueryLink($query, $link);
 				$testdebug['step']= 1;
 				$type= "link";
-			}else
+			}
+			elseif(isset($sorted_selftable_test_links['back_tables']['###container']) &&
+					trim($sorted_selftable_test_links['back_tables']['###container']) != "")
+			{ // no table buttons shown (single table) - go back to parent container
+				$this->restoreDebugOlder($testdebug);
+				$link= $sorted_selftable_test_links['back_tables']['###container'];
+				$link= $this->updateQueryLink($query, $link);
+				$testdebug['step']= 11;
+				$type= "container_link";
+			}
+			elseif(isset($testdebug['older']) && is_array($testdebug['older']) && !empty($testdebug['older']))
+			{ // no table buttons - restore older debug state
+				$this->restoreDebugOlder($testdebug);
+				$testdebug['step']= 11;
+				$type= "link";
+				$link= $query->getUrlParamString();
+			}
+			elseif(isset($sorted_selftable_test_links['container']) &&
+					isset($sorted_selftable_test_links['container']['###link']) &&
+					is_array($sorted_selftable_test_links['container']['###link']) &&
+					count($sorted_selftable_test_links['container']['###link']) > 0 &&
+					isset($testdebug['containers']) && $testdebug['containers'] > 0 &&
+					$testdebug['cont_count'] < $testdebug['containers'])
+			{ // no table buttons - navigate to remaining needContainer sub-containers
+				$containerLinks= $sorted_selftable_test_links['container']['###link'];
+				$link= $containerLinks[0];
+				$link= $this->updateQueryLink($query, $link);
+				$this->addDisplayedTable($testdebug);
+				$testdebug['cont_count']++;
+				$testdebug['last-insert']= null;
+				$testdebug['progress']['backbutton-test']= "false";
+				$testdebug['progress']['onEditLinkCount']= -1;
+				$testdebug['progress']['onEditDeleteCount']= -1;
+				$this->pushDebugToOlder($testdebug);
+				$testdebug['containers']= null;
+				$testdebug['step']= -1; // go to first table listing of next container
+				$type= "container_link";
+			}
+			else
 			{ // no other table found, so test is finished
 				$bFinished= true;
 				$link= "";
@@ -2114,6 +2187,7 @@ class STSiteCreator extends HtmlTag
 	private $report= array();
 	private function writeContainerReport(array &$testdebug, string $sErrorOutput) : string
 	{
+		global $global_selftable_test_links;
 		global $__global_finished_SiteCreator_result;
 
 		$container= $this->report['container'];
@@ -2188,6 +2262,16 @@ class STSiteCreator extends HtmlTag
 		$report.= " ***       result: $__global_finished_SiteCreator_result\n";
 		$report.= " ***\n";
 		$report.= "\n";
+		if(STCheck::isDebug("test.see.develop"))
+		{
+			$report.= " ***  Testdebug array:\n";
+			$report.= st_print_r($testdebug, 5, 5, /*print*/false);
+			$report.= " ***\n";
+			$report.= " ***  global selfTables test:\n";
+			$report.= st_print_r($global_selftable_test_links, 5, 5, /*print*/false);
+			$report.= " ***\n";
+			$report.= "\n";
+		}
 		$report.= "$sErrorOutput\n\n";
 		return $report;
 	}

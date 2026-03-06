@@ -67,35 +67,64 @@
       "priority": "high",
       "category": "bug",
       "title": "Testing does not navigate to needContainer sub-containers when no Article table in main container",
-      "description": "When the main bill ObjectContainer does not have an Article table defined directly (line 34 commented out in 04_basic_main.php), after returning from the Order sub-container the test cannot find the addressee container. The variable $sorted_selftable_test_links['container']['###link'] has no container entries because the STChooseBox only registers container buttons when they appear in the choose menu listing, and after returning from a namedLink sub-container the choose menu may not include them.",
+      "description": "When the main bill ObjectContainer does not have an Article table defined directly (line 34 commented out in 04_basic_main.php), after returning from the Order sub-container the test declares 'finished' instead of advancing to the addressee container. The bill container has only 1 table so no STChoose-menue-button is rendered, causing makeNextTableContainer_Test() to fall into the else branch which lacked container navigation checks. Additionally, the 'new next table' block in testing() needs safety resets when it finds remaining containers after makeNextTableContainer_Test already declared finished.",
       "file": "environment/base/STSiteCreator.php",
       "function": "makeNextTableContainer_Test() and testing()",
-      "lineReference": "1174-1195, 1530-1585",
+      "lineReference": "1174-1202, 1570-1595, 1601-1653",
       "analysis": {
         "expectedBehavior": "After finishing article table in Order container, testing should return to bill container and continue to addressee container, then test Person table",
-        "actualBehavior": "Testing stops after Order container because $sorted_selftable_test_links['container']['###link'] is not populated when Article table is not in the main container - the test has no link to navigate to the addressee container",
-        "rootCause": "Two issues: (1) The 'new next table' section at line 1174 fires even when makeNextTableContainer_Test() already set link-type to 'container_link', causing incorrect state override. (2) When no more table-buttons are found in makeNextTableContainer_Test(), the code did not attempt to navigate to remaining sub-containers via container['###link'] entries.",
-        "fix": "Added guard condition to skip 'new next table' section when link-type is already 'container_link'. Added isset() check for $sorted_selftable_test_links['container']['###link'] before accessing it. Added container navigation branch in makeNextTableContainer_Test() to enter remaining sub-containers when no more tables are found but containers exist."
+        "actualBehavior": "After returning from Order to bill, the bill container page has only 1 table (bill) so table['STChoose-menue-button'] is not set. makeNextTableContainer_Test() falls to the else branch which only checked for action['link'] before declaring finished. The container['###link'][0] pointing to addressee existed but was never checked in this code path. The 'new next table' block in testing() also fired but could not override $bFinished=true.",
+        "rootCause": "Three issues: (1) The else branch in makeNextTableContainer_Test() (when no table button class exists) only checked for action link then declared finished, without checking for back_tables, older state, or container links. (2) The 'new next table' block's 'more containers' branch did not reset $bFinished and testdebug['status'] when it found a valid container link, so $bFinished=true from makeNextTableContainer_Test persisted. (3) Step was set to 0 instead of -1 in the 'more containers' branch.",
+        "fix": "Fix 1: Added guard '&& testdebug[link-type] != container_link' to 'new next table' block at line 1174. Fix 2: Added container navigation branch in makeNextTableContainer_Test() 'noTable' path (line 1570). Fix 3: Added full navigation chain (back_tables, older, container links) to the else branch of makeNextTableContainer_Test() (line 1612-1653) so that when no table buttons exist, the code still checks for parent container back-navigation and needContainer sub-containers before declaring finished. Fix 4: In 'more containers' branch of 'new next table' block (line 1198), added $bFinished=false and status='running' reset, and changed step from 0 to -1."
       },
       "stepsToReproduce": [
         "1. In 04_basic_main.php, comment out line 34: $main->needTable('Article')",
-        "2. Set STCheck::debug('test')",
+        "2. Set STCheck::debug('test.see.develop')",
         "3. Run the test - bill container still has namedLink to Order container and needContainer($addressee)",
         "4. Test completes bill table, jumps into Order container via namedLink",
         "5. Tests order and article tables in Order container",
-        "6. Returns to bill but cannot find addressee container to test Person table"
+        "6. Returns to bill but restarts bill table test instead of navigating to addressee"
       ],
-      "resolution": "Three changes in STSiteCreator.php: (1) Guard 'new next table' section with link-type != 'container_link' check at line 1174. (2) Added isset($sorted_selftable_test_links['container']['###link']) check at line 1183. (3) Added container navigation branch in makeNextTableContainer_Test() at line 1563 to enter sub-containers when all tables are tested but containers remain.",
+      "resolution": "Four changes in STSiteCreator.php: (1) Guard 'new next table' at line 1174 with link-type != container_link. (2) In 'more containers' branch at line 1198, reset $bFinished=false and status='running' when container link found, change step from 0 to -1. (3) Added container['###link'] check in makeNextTableContainer_Test() 'noTable' path at line 1570. (4) Added full navigation chain (back_tables, older, containers) to the else branch at line 1612, so when no table buttons exist (single-table container), the code navigates to sub-containers instead of declaring finished.",
       "status": "resolved",
       "createdAt": "2026-02-20",
-      "updatedAt": "2026-02-20",
-      "resolvedAt": "2026-02-20"
+      "updatedAt": "2026-03-06",
+      "resolvedAt": "2026-03-06"
+    },
+    {
+      "id": "ISSUE-005",
+      "priority": "high",
+      "category": "bug",
+      "title": "Test loops infinitely between bill and addressee containers",
+      "description": "After ISSUE-004 fix, when all containers in bill (Order + addressee) have been tested, the test returns to bill but re-enters addressee endlessly. The container['###link'] checks added in ISSUE-004 did not verify whether cont_count >= containers before navigating to a sub-container. Since the addressee needContainer link is always present in the bill page HTML, the code re-enters it on every cycle with cont_count incrementing (2,3,4,...) past containers=2.",
+      "file": "environment/base/STSiteCreator.php",
+      "function": "makeNextTableContainer_Test()",
+      "lineReference": "1575-1580, 1641-1646",
+      "analysis": {
+        "expectedBehavior": "After addressee container finishes (5 tables: person, country, state, county, address), test returns to bill with cont_count=2, containers=2 and declares finished",
+        "actualBehavior": "After addressee returns to bill (cont_count=2, containers=2), the container['###link'] check finds the addressee link still present in HTML, navigates to it again, increments cont_count to 3, and loops indefinitely",
+        "rootCause": "The container['###link'] elseif conditions in both the 'noTable' path and the 'else' branch of makeNextTableContainer_Test() only checked whether any container links existed in the page HTML, without checking whether all containers had already been tested (cont_count >= containers). The link is always present because it's a needContainer button rendered by the framework.",
+        "fix": "Added guards 'isset($testdebug[containers]) && $testdebug[containers] > 0 && $testdebug[cont_count] < $testdebug[containers]' to both container['###link'] elseif conditions. When cont_count >= containers (e.g. 2 >= 2), the condition is false and execution falls through to the 'finished' branch."
+      },
+      "stepsToReproduce": [
+        "1. In 04_basic_main.php, comment out line 34: $main->needTable('Article')",
+        "2. Set STCheck::debug('test.see.develop')",
+        "3. Run the test - bill tests Order then addressee",
+        "4. After addressee finishes all 5 tables, test returns to bill",
+        "5. Bill re-enters addressee instead of declaring finished",
+        "6. Loop repeats indefinitely (test report grows to 13000+ lines)"
+      ],
+      "resolution": "Added cont_count < containers guard to two container['###link'] elseif conditions in makeNextTableContainer_Test(): (1) 'noTable' path at line ~1575, (2) 'else' branch at line ~1641. Both now require isset(containers) && containers > 0 && cont_count < containers before navigating to sub-containers.",
+      "status": "resolved",
+      "createdAt": "2026-03-06",
+      "updatedAt": "2026-03-06",
+      "resolvedAt": "2026-03-06"
     }
   ],
   "metadata": {
     "generatedBy": "GitHub Copilot",
-    "lastUpdated": "2026-02-20",
-    "totalIssues": 4,
+    "lastUpdated": "2026-03-06",
+    "totalIssues": 5,
     "openIssues": 1
   }
 }
