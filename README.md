@@ -178,7 +178,7 @@ $article->setMaxRowSelect(50);
 
 ```
 
-... now we want to execute and display the database-object in a second file, for later changes.
+... and we want to execute and display the database-object in a second file, for later changes.
 
 **[ [03_basic_display.php](examples/03_basic_display.php) ]**
 ```php
