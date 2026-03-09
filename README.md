@@ -178,7 +178,7 @@ $article->setMaxRowSelect(50);
 
 ```
 
-... and execute/display in a second file, for late changes.
+... now we want to execute and display the database-object in a second file, for later changes.
 
 **[ [03_basic_display.php](examples/03_basic_display.php) ]**
 ```php
@@ -193,7 +193,9 @@ $creator->execute();
 $creator->display();
 
 ```
-
+If you look now on the generated web-site
+you see all seven tables in an logical content of foreign-keys 
+with limitation of row displaying
 
 <br /><br />
 ### structuring Website
