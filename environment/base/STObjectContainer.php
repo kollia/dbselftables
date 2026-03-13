@@ -625,7 +625,7 @@ class STObjectContainer extends STBaseContainer
 	{
 		return $this->db->isDbTable($tableName);
 	}
-	function getTableName(string $tableName= null)
+	function getTableName(string|null $tableName= null)
 	{
 		if($tableName === null)
 		{

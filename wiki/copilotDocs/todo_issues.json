@@ -119,12 +119,39 @@
       "createdAt": "2026-03-06",
       "updatedAt": "2026-03-06",
       "resolvedAt": "2026-03-06"
+    },
+    {
+      "id": "ISSUE-006",
+      "priority": "high",
+      "category": "bug",
+      "title": "Test report end summary missing for sub-containers (Order, addressee)",
+      "description": "When testing nested containers (bill -> Order, bill -> addressee), the test report step entries show all containers being tested correctly, but the final summary only shows the top-level container (bill). The summaries for sub-containers Order and addressee are missing from the report.",
+      "file": "environment/base/STSiteCreator.php",
+      "function": "restoreDebugOlder(), testing(), writeSubContainerEndReport()",
+      "analysis": {
+        "expectedBehavior": "Each sub-container (Order, addressee) should have its own summary in the test report showing how many tables were tested and their status, similar to the final summary for the top-level container.",
+        "actualBehavior": "Only the top-level container (bill) gets a summary via writeEndTimeReport() when $bFinished=true. Sub-containers finish by calling restoreDebugOlder() which replaces their testdebug state with the parent's, losing the sub-container's progress data without ever writing a summary.",
+        "rootCause": "restoreDebugOlder() replaces the sub-container's testdebug (including container name, tested tables, and progress) with the parent's saved state. No summary data is saved before this restoration. writeEndTimeReport() is only called when $bFinished=true at the end of the entire test. Additionally, each test step is a separate PHP page request, so instance properties are lost between requests - only testdebug data (passed via URL parameters) persists.",
+        "fix": "Two changes: (1) Modified restoreDebugOlder() to save sub-container summary data (container name, tables count, testedTables, tablesWithFaults, faults flag) as an array entry in testdebug['subContainerReports'] before restoring the parent state. Since this key is not in aDebugShiftVars, it persists across push/restore cycles and across page requests. (2) Modified writeEndTimeReport() to iterate over testdebug['subContainerReports'] and render each sub-container's summary inside the 'Test finished' end block, before the main container summary."
+      },
+      "stepsToReproduce": [
+        "1. Set STCheck::debug('test.see') in 04_basic_main.php",
+        "2. Run the test - bill container has namedLink to Order and needContainer($addressee)",
+        "3. Test runs through all containers: bill, Order(order,article), bill(article), addressee(person,country,state,county,address)",
+        "4. Check selftable_test_report.txt - only bill container has end summary",
+        "5. Order and addressee summaries are missing"
+      ],
+      "resolution": "Sub-container summary data is now stored in testdebug['subContainerReports'] array (survives page requests via URL parameters). restoreDebugOlder() saves summary data before restoring parent state. writeEndTimeReport() renders all sub-container summaries inside the 'Test finished' end block.",
+      "status": "resolved",
+      "createdAt": "2026-03-13",
+      "updatedAt": "2026-03-13",
+      "resolvedAt": "2026-03-13"
     }
   ],
   "metadata": {
     "generatedBy": "GitHub Copilot",
-    "lastUpdated": "2026-03-06",
-    "totalIssues": 5,
+    "lastUpdated": "2026-03-13",
+    "totalIssues": 6,
     "openIssues": 1
   }
 }

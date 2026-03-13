@@ -21,18 +21,16 @@ The dbselftables framework (see development branch at https://github.com/kollia/
 creates an interface for inserting, modifying, and deleting data from existing SQL tables.
 
 Please analyze the project and read/generate the JSON files located at dbselftables/wiki/copilotDocs/ 
+only in the current project folder test_windows
 to see what still needs to be done. Documentation for any changes to the source code should 
 always be written in English. Please check also the last commits to see what we have done last time.
 
 In my example file 04_basic_main.php the framework take tables from the database and I organiced them
-with an container where all bills inside. If the user click on any bill id, it jumps into the Order container
-where all order be seen for the current bill and you can also see there the article table.
-I organiced the script with STCheck::debug("test"). This meaning that the framework testing inside the STSiteCreator
-class all tables inside testing() method. Jumping inside Order Container will be OK and also test there the order table
-and also the article table. But after that it should jump back and test there all other containers and tables. 
-See testing report under selftable_test_report.txt.
+with containers where all bills inside and also see addressees.
+There is a testing framework inside STSiteCreator::testing() to test all tables and containers
+to insert/update and delete entries. For every container you can see all tables for list/insert/update/delete position
+as testreport inside selftable_test_report.txt
+On the current report you see an endmessage with container bill with all tables have done.
+But it have also done the container order and addressee. Where are they?
 
-if finished bill container it should go to main container after that to addressee container and there to person table.
-It doing well if the main ObjectContainer has an article table defined in testing script 04_basic_main.php
-but if undocumented (line 34) the variable $sorted_selftable_test_links['container']['###link'] has no container
-and it makes the main container again, what is wrong
+

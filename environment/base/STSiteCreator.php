@@ -1481,6 +1481,18 @@ class STSiteCreator extends HtmlTag
 		{
 			return false;
 		}
+		// Save sub-container summary data before restoring parent state
+		// (stored in testdebug so it survives across page requests)
+		$subReport= array(
+			'container' => $testdebug['container'],
+			'tables' => $testdebug['tables'],
+			'testedTables' => isset($testdebug['progress']['testedTables']) ? $testdebug['progress']['testedTables'] : array(),
+			'tablesWithFaults' => isset($testdebug['progress']['tablesWithFaults']) ? $testdebug['progress']['tablesWithFaults'] : array(),
+			'faults' => isset($testdebug['faults']) && $testdebug['faults'] === true
+		);
+		if(!isset($testdebug['subContainerReports']))
+			$testdebug['subContainerReports']= array();
+		$testdebug['subContainerReports'][]= $subReport;
 		$older= $testdebug['older'];
 		foreach($this->aDebugShiftVars as $param)
 		{
@@ -2275,6 +2287,7 @@ class STSiteCreator extends HtmlTag
 		$report.= "$sErrorOutput\n\n";
 		return $report;
 	}
+
 	private function writeEndTimeReport(array $testdebug) : string
 	{
 		$timestamp= time();
@@ -2302,6 +2315,31 @@ class STSiteCreator extends HtmlTag
 			$report.= " ***  Test finished on $endtime\n";
 		$report.= " ***                in $finishedtime $item\n";
 		$report.= " ***\n";
+		// Insert accumulated sub-container summaries
+		if(isset($testdebug['subContainerReports']) && is_array($testdebug['subContainerReports']))
+		{
+			foreach($testdebug['subContainerReports'] as $sub)
+			{
+				$subTested= isset($sub['testedTables']) && is_array($sub['testedTables']) ? $sub['testedTables'] : array();
+				$subFaults= isset($sub['tablesWithFaults']) && is_array($sub['tablesWithFaults']) ? $sub['tablesWithFaults'] : array();
+				$subTotal= count($subTested);
+				$subFaultCount= count($subFaults);
+				$subCorrect= $subTotal - $subFaultCount;
+				if($sub['faults'])
+					$report.= " ***  Sub-Container finished with errors: ".$sub['container']."\n";
+				else
+					$report.= " ***  Sub-Container finished: ".$sub['container']."\n";
+				$report.= " ***  Tables tested: $subTotal of {$sub['tables']}\n";
+				if($subTotal > 0) {
+					$subOK= array_diff($subTested, $subFaults);
+					if(count($subOK) > 0)
+						$report.= " ***    - OK ($subCorrect): " . implode(', ', $subOK) . "\n";
+					if($subFaultCount > 0)
+						$report.= " ***    - with warnings/errors ($subFaultCount): " . implode(', ', $subFaults) . "\n";
+				}
+				$report.= " ***\n";
+			}
+		}
 		$report.= " ***  Container: ".$testdebug['container']."\n";
 		
 		// Calculate correctly tested tables
