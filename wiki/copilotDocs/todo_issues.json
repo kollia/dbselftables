@@ -147,11 +147,51 @@
       "updatedAt": "2026-03-13",
       "resolvedAt": "2026-03-13"
     }
+    ,
+    {
+      "id": "ISSUE-007",
+      "priority": "medium",
+      "category": "refactoring",
+      "title": "Refactor STSiteCreator::testing() into focused helper methods",
+      "description": "The testing() method was a monolithic ~420-line method mixing initialization, dispatch, navigation, reporting, debug output, error handling, and file writing. Refactored into 15 focused private methods while preserving all existing behavior.",
+      "file": "environment/base/STSiteCreator.php",
+      "function": "testing()",
+      "analysis": {
+        "problemsBefore": [
+          "Single 420-line method with mixed concerns",
+          "Deep nesting (5+ levels of if/else blocks)",
+          "Duplicated navigation patterns",
+          "Hard to read and maintain"
+        ],
+        "extractedMethods": {
+          "canContinueTesting()": "Checks if test can proceed based on SiteCreator result and status",
+          "isSuccessfulResult()": "Checks if result is NOERROR or BOXDISPLAY",
+          "sortTestLinks()": "Sorts global test links by aTestTypes order",
+          "initializeOrContinueTest()": "Starts new test or continues from existing state",
+          "adjustStepForPendingAction()": "Handles pending JS action steps (4/7) and step 0->1",
+          "dispatchTestStep()": "Routes to makeNextTableContainer_Test, makeTableListing_Test, or makeTableAction_Test",
+          "finalizeDoubleUpdate()": "Resets DoubleUpdate flags when both runs complete",
+          "handleTableTransition()": "Manages transitions between tables and containers",
+          "collectTestStepReport()": "Gathers output buffer and writes step report",
+          "advanceStep()": "Increments step counter with DoubleUpdate rollback support",
+          "outputTestDebugInfo()": "Shows debug info when extended debug modes are active",
+          "buildTestNavigation()": "Creates JavaScript for page navigation (link, edit, action types)",
+          "handleNonTestableResult()": "Handles invalid/finished result state",
+          "buildTestExceptionReport()": "Builds exception report and shows error on screen",
+          "writeTestReportToFile()": "Writes accumulated report to file"
+        },
+        "testingMethodAfter": "~55 lines, clear orchestration flow with descriptive method calls"
+      },
+      "status": "resolved",
+      "createdAt": "2026-03-13",
+      "updatedAt": "2026-03-13",
+      "resolvedAt": "2026-03-13"
+    }
   ],
   "metadata": {
     "generatedBy": "GitHub Copilot",
     "lastUpdated": "2026-03-13",
-    "totalIssues": 6,
+    "totalIssues": 7,
     "openIssues": 1
   }
 }

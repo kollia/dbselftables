@@ -9,10 +9,28 @@
       "description": "Main class that creates the web interface for database management",
       "responsibilities": [
         "Display generation from SQL tables",
-        "Testing functionality via debug mode",
+        "Testing functionality via debug mode (refactored into 15 focused methods)",
         "CSS/JavaScript link management",
         "Container orchestration"
-      ]
+      ],
+      "testingMethods": {
+        "testing()": "Main orchestrator (~55 lines) - delegates to helper methods",
+        "canContinueTesting()": "Checks SiteCreator result and status",
+        "isSuccessfulResult()": "Checks for NOERROR/BOXDISPLAY result",
+        "sortTestLinks()": "Sorts test links by aTestTypes order",
+        "initializeOrContinueTest()": "Initializes new test or continues existing",
+        "adjustStepForPendingAction()": "Handles pending JS actions and step transitions",
+        "dispatchTestStep()": "Routes to table/container/action test handlers",
+        "finalizeDoubleUpdate()": "Resets DoubleUpdate flags",
+        "handleTableTransition()": "Manages table/container navigation transitions",
+        "collectTestStepReport()": "Collects output buffer and writes step report",
+        "advanceStep()": "Increments test step with DoubleUpdate support",
+        "outputTestDebugInfo()": "Shows debug info for extended modes",
+        "buildTestNavigation()": "Creates JavaScript navigation commands",
+        "handleNonTestableResult()": "Handles error/finished states",
+        "buildTestExceptionReport()": "Builds exception report",
+        "writeTestReportToFile()": "Writes report to file"
+      }
     },
     "STCheck": {
       "file": "environment/html/STCheck.php",

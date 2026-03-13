@@ -25,6 +25,9 @@ only in the current project folder test_windows
 to see what still needs to be done. Documentation for any changes to the source code should 
 always be written in English. Please check also the last commits to see what we have done last time.
 
+please can you now refactoring the STSiteCreator::testing() method!?
+
+
 In my example file 04_basic_main.php the framework take tables from the database and I organiced them
 with containers where all bills inside and also see addressees.
 There is a testing framework inside STSiteCreator::testing() to test all tables and containers
