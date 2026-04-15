@@ -543,41 +543,37 @@ class STCheck
 		 * @param string $file file where the debugging was set if defined, otherwise it will be detected by backtrace
 		 * @param integer $line line where the debugging was set if defined, otherwise it will be detected by backtrace
 		 */
-		public static function debug(bool|string $dbg_str= true, int $from= null, int $to= null, string|null $file= null, int|null $line= null)
+		public static function debug(bool|string $dbg_str= true, int|string|null $from= null, ?int $to= null, ?string $file= null, ?int $line= null)
 		{
-			global	$HTTP_POST_VARS,
-					$HTTP_POST_FILES,
-					$HTTP_COOKIE_VARS,
-					$HTML_CLASS_DEBUG_CONTENT,
+			global	$HTML_CLASS_DEBUG_CONTENT,
 					$HTML_CLASS_DEBUG_CONTENT_CLASS_FUNCTION,
 					$global_logfile_dataname,
-					$global_activeOutputBuffer,
-					$global_outputBufferWasErased,
 					$global_SESSION_noRegister_SHOWEN,
 					$global_set_DEBUG_onLine_byFirst,
 					$__stdbtables_statement_count,
 					$__stdbtables_statement_count_from,
 					$__stdbtables_statement_count_to;
 			
-			if( isset($from) )
+			if( isset($from) &&
+				is_int($from)	)
 			{
-			    $filter= STCheck::array_key_filter($dbg_str);
-			    if( !is_string($dbg_str) ||
-			        $filter == ""            )
-    			{
-    			    STCheck::debug(true);
-    			    $msg= "if first parameter not contain as prefix (\"";
-    			    $msg.= implode("\", \"", array_keys($__stdbtables_statement_count));
-    			    $msg.= "\") second and third parameter";
-    			    $msg.= " ( \$from and \$to ) are not allowed";
-    			    STCheck::warning(1, "STCheck::debug()", $msg, 1);
-    			    echo "<br />";
-    			}else
-    			{
-    			    $__stdbtables_statement_count_from[$filter]= $from;
-        			if(isset($to))
-        			    $__stdbtables_statement_count_to[$filter]= $to;
-    			}
+				$filter= STCheck::array_key_filter($dbg_str);
+				if( !is_string($dbg_str) ||
+					$filter == ""            )
+				{
+					STCheck::debug(true);
+					$msg= "if first parameter not contain as prefix (\"";
+					$msg.= implode("\", \"", array_keys($__stdbtables_statement_count));
+					$msg.= "\") second and third parameter";
+					$msg.= " ( \$from and \$to ) are not allowed";
+					STCheck::warning(1, "STCheck::debug()", $msg, 1);
+					echo "<br />";
+				}else
+				{
+					$__stdbtables_statement_count_from[$filter]= $from;
+					if(isset($to))
+						$__stdbtables_statement_count_to[$filter]= $to;
+				}
 			}
 			if( is_string($dbg_str) ||
 			    $dbg_str !== false       )
@@ -646,6 +642,46 @@ class STCheck
 				$HTML_CLASS_DEBUG_CONTENT= false;
 				$HTML_CLASS_DEBUG_CONTENT_CLASS_FUNCTION= "";
 			}
+			
+			if( strstr($dbg_str, "test.file") &&
+				isset($from) &&
+				is_string($from)					)
+			{
+				global $__global_testfile_variables;
+				
+				foreach($__global_testfile_variables as $var)
+				{
+					global $$var;
+				}
+				// testing incomming file in second parameter
+				$query= new STQueryString();
+				$testdebug= $query->getArrayVars("testdebug");
+				if(	(	$testdebug !== false &&
+						isset($testdebug['file']['done']) &&
+						is_array($testdebug['file']['done']) &&
+						in_array($from, $testdebug['file']['done'])	) ||
+					(	isset($testdebug['file']['src']) &&
+						$testdebug['file']['src'] != $from	)				)
+				{ // no test, testing next file
+					return;
+				}
+				$set= $query->getParameterValue("testdebug[file][src]");
+				if( !isset($set) ||
+					$set === false	)
+				{
+					$query->update("testdebug[file][src]=$from");
+					$query->synchronize();
+				}
+				require_once($from);
+			}
+		}
+		public static function global_testfile_variables(string $variable)
+		{
+			global $__global_testfile_variables;
+
+			if(!isset($__global_testfile_variables))
+				$__global_testfile_variables= array();
+			$__global_testfile_variables[]= $variable;
 		}
 		private static function print_query_post()
 		{

@@ -8,7 +8,7 @@ require_once $_stdbmariadb;
 
 $db= new STDbMariaDb();
 $db->connect('<host>', '<user>', '<password>');
-$db->database('<your preferred database>');
+$db->database('<database>');
 
 $country= $db->getTable("Country");
 $country->setDisplayName("existing Countries");

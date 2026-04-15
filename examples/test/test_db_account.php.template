@@ -1,0 +1,6 @@
+<?php
+
+$_test_db_host= "";
+$_test_db_user= "";
+$_test_db_password= "";
+$_test_db_name= "";

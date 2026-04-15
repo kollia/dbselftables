@@ -42,6 +42,8 @@
 	//     test                  -  test all created containers and write debug messages into log file (selftable_test_report.txt)
 	//     test.see              -  show all test pages also when no error result found
 	//     test.see.develop      -  show also development information for array variables $testdebug and $global_selftables_test_link
+	//     test.file             -  testing php file given in second parameter. Possibility to test more than one file
+	//     test.file.last        -  declare last tested file in test.file, only need for pop-up of 'end of test' message
 	//     log                   -  tracing recursive function names passed to calling one or more before defined position 
 	//     easter.date           -  show whether easter date inside STtDate() is calculated right
 	//

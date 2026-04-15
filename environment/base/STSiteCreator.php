@@ -1104,20 +1104,20 @@ class STSiteCreator extends HtmlTag
 		$report= "";
 		$bNew= false;
 
-		if(isset($testdebug))
+		if(!isset($testdebug['status']))
 		{
-			if($testdebug['status'] == "finished")
-				$bNew= true;
-		}else
-			$bNew= true;
-
-		if($bNew)
-		{
+			$file= null;
 			reset($sorted_selftable_test_links);
 			$type= key($sorted_selftable_test_links);						
 			reset($sorted_selftable_test_links[$type]);
 
 			$script = pathinfo($_SERVER["SCRIPT_FILENAME"]);
+			if(isset($testdebug['file']))
+			{
+				$fileArr= $testdebug['file'];
+				$fileName= $fileArr['src'];
+			}else
+				$fileName= $script['basename'];
 			$testdebug= array();
 			$testdebug['start']= time();
 			$testdebug['status']= "running";
@@ -1134,12 +1134,14 @@ class STSiteCreator extends HtmlTag
 
 			$testdebug['faults']= false;
 			$this->resetDebugValues($testdebug);
+			if(isset($fileArr))
+				$testdebug['file']= $fileArr;
 
 			$report= "\n\n";
 			$report.= " ****************************************\n";
 			$report.= " ***  new DBSelfTables test started\n";
 			$report.= " ***  on ".date("d.m.Y H:i:s")."\n";
-			$report.= " ***  file {$script['basename']}\n";
+			$report.= " ***  file {$fileName}\n";
 			$report.= " ***\n";
 			$report.= " ***\n";
 			$report.= "\n";
@@ -1376,8 +1378,17 @@ class STSiteCreator extends HtmlTag
 			$HTML_CLASS_DEBUG_CONTENT_CLASS_FUNCTION != ""		)
 		{
 			$exp= explode("/", $HTML_CLASS_DEBUG_CONTENT_CLASS_FUNCTION);
-			if(count($exp) > 1) // it exists more than debug('test')
-				$output= true;
+			if(is_array($exp))
+			{ // it exists more than debug('test')
+				foreach($exp as $part)
+				{
+					if(!strstr(strtolower(trim($part)), "test"))
+					{
+						$output= true;
+						break;
+					}
+				}
+			}
 		}
 		if($output)
 		{
@@ -1412,8 +1423,34 @@ class STSiteCreator extends HtmlTag
 		if($bFinished)
 		{
 			$query->update("testdebug[status]=finished");
-			$link= "alert('Test finished'); ";
-			$link.= "location.href='".$query->getUrlParamString()."'";
+			if(	!STCheck::isDebug("test.file") ||
+				STCheck::isDebug("test.file.last")	)
+			{
+				$link= "alert('Test finished'); ";
+				$link.= "location.href='".$query->getUrlParamString()."'";
+			}else
+			{
+				if(isset($testdebug['file']['done']))
+					$done= $testdebug['file']['done'];
+				else
+					$done= array();
+				if(isset($testdebug['file']['src']))
+					$from= $testdebug['file']['src'];
+				else
+					$from= "unknown";
+				$done[]= $from;
+				$testdebug= array( 'file' => array( 'done' => $done ) );		
+				$params= array( 'testdebug' => $testdebug );
+				$query->delete("stget");
+				$query->delete("testdebug");
+				$query->update($params);
+				//$query->synchronize();
+				//$link= $query->update("testdebug[status]=finished");
+				$link= "location.href='".$query->getUrlParamString()."'";
+				//$query->synchronize();
+				//if(is_bool($link))
+				//	$link= "";
+			}
 		}else
 		{
 			$params= array( 'testdebug' => $testdebug );

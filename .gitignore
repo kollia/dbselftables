@@ -7,3 +7,5 @@ org.eclipse.*
 extensions.json
 plugins/email/st_email.inc.json
 plugins/editors/tinymce/
+examples/test/test_db_account.php
+examples/test/selftable_test_report.php
