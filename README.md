@@ -4,7 +4,7 @@ The goal of this project is that you design your database table and automaticall
 This solution can be useful for research if you write your own specific algorithm that uses data from the database. 
 When first developing, you make your data available via an SQL interface such as phpMyAdmin or with a pure SQL-Client. After that, 
 when your own project is finished and you want to make it usable for other users, 
-you need an interface through which others can also insert data. In this case, you can link from your own project 
+you need an interface through which others can also insert/update data. In this case, you can link from your own project 
 to the DB selfTables generated interface.
 
 Or maybe you just want to collect data for future use, create statistics, or something else. There are many other solutions you can use...
@@ -73,12 +73,12 @@ the first what you should do is to define which column(s) describe the table as 
 In the example db there we have among other tables `Country` and `State`. If you look on the generated website
 clicking on the `[State]` button. You see the table with the columns:
 `state_id`, `name`, `country_id`
-but the table in the database has:
+but the table in the database have:
 `state_id`, `name`, <span style="color:red">`country`</span><br />
-The reason is, that the State table has an foreign key to the Country table and shows the primary key ('`country_id`') of the other table
+The reason is, that the state table have an foreign key to the country table and shows the primary key ('`country_id`') of the other table
 and not the own column ('`country`').<br />
-Pull the table 'Country' from the database object and identify the column as follow. <br />
-There is also the possibility to select only the columns you want and give them an other name, also the table.
+Pull the table 'Country' from the database object and identify the table as follow. <br />
+There is also the possibility to select only the columns you want and give them an other name, also the tables.
 ```php
 $country= $db->getTable("Country");
 $country->setDisplayName("existing Countries");
@@ -88,9 +88,9 @@ $country->select("name", "Name"); // for normal table listing
 $state = $db->getTable("State");
 $state->setDisplayName("States");
 $state->select("name", "Name");
-$state->select("country", "from Country"); // <- FK column to Country table
+$state->select("country", "from Country"); // <- FK column to country table
 ```
-You see now in table State as second position the name of the country as 'Country' (identif-column from table Country), altough you defined
+You see now in table State as second position the name of the country as 'Country' (identif-column from table country), altough you defined
 the FK in table as 'from Country'. This you see by updating row or by insert (clicking on button 'new Entry')
 
 > **Tipp:** for developing, it's a good choice to set after including 'st_pathdef.inc.php' 
@@ -102,7 +102,7 @@ If you want an other order by begin, order the table with the command ->orderBy(
 ```ex. $state->orderBy("name"); ```<br />
 You can also limit the table listing with ->setMaxRowSelect(&lt;row-count&gt;)
 
-Now let us organize the scripts inside two files.<br />
+Now let us organize the script inside two files.<br />
 Inside the common_db php file the primary configurations of database ...<br />
 <b>[ [02_common_db.php](examples/02_common_db.php) ]</b>
 ```php
@@ -115,7 +115,7 @@ require_once $_stdbmariadb;
 
 $db= new STDbMariaDb();
 $db->connect('<host>', '<user>', '<password>');
-$db->database('<your preferred database>');
+$db->database('<database name>');
 
 
 $country= $db->getTable("Country");
@@ -164,7 +164,7 @@ $bill->setMaxRowSelect(50);
 $order= $db->getTable("Order");
 $order->select("order_id", "Order ID");
 $order->select("bill", "Bill");
-$order->select("count", "Count");
+$order->select("amount", "Amount");
 $order->select("article", "Article");
 $order->setMaxRowSelect(50);
 
@@ -195,7 +195,7 @@ $creator->display();
 ```
 If you look now on the generated web-site
 you see all seven tables in an logical content of foreign-keys 
-with limitation of row displaying
+with limitation of row displaying.
 
 <br /><br />
 ### structuring Website
@@ -226,6 +226,9 @@ The database (STDbMariaDb) which you configured first is also a container.
 
 For an second website create a new `STObjectContainer` from an existing container. The tables you have configured before are the same. Only you want other columns (identifColumns), you need to select the new colums.
 The definition from the container before are the default config.
+
+> **basic config:** When you first select a table from the database, all columns are configured by default. If you then select a column, only that column will be displayed. The same applies to a second container. The selection from the previous container is always the default. Only when you make a new selection there will only the columns you selected be displayed. The same is also true for `identifColumns` or selecting tables within the container.
+
 ```php
 $addressee= new STObjectContainer("addressee", $db);
 $addressee->needTable("Country");
@@ -268,7 +271,7 @@ $orderContainer= new STObjectContainer("Order", $db);
 $orderContainer->needTable("article");
 $orderTable= $orderContainer->needTable("Order");
 $orderContainer->setFirstTable("Order");
-if( $orderContainer->getContainerName() == "Order" &&
+if( $orderContainer->currentContainer() &&
     $orderContainer->getTableName() == "Order" &&
     $orderContainer->getAction() == STINSERT       )
 {
