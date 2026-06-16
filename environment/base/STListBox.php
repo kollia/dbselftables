@@ -345,7 +345,7 @@ class STListBox extends STBaseBox
 				$oTable->orderBy($oTable->getPkColumnName());
 					
 			// alex 09/06/2005:	abchecken welche Rows selectiert werden
-			$firstRow= 0;
+			$firstRow= $from;
 			$this->nShowFirstRow= 0;
 			$nMaxSelect= $oTable->getMaxRowSelect();
 			if(0)//$nMaxSelect)

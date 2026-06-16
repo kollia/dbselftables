@@ -1094,11 +1094,29 @@ class STDbSelector extends STDbTable implements STContainerTempl
 		}
 		public function getStatement($limit= null, $withAlias= null)
 		{
+			STCheck::param($limit, 0, "int", "array", "null");
+			STCheck::param($withAlias, 1, "array", "null");
+
+			$oldLimit= null;
+			if(isset($limit))
+			{
+				if(	is_array($limit) &&
+				   	!isset($limit['start'])	)
+				{
+					$withAlias= $limit;
+					$limit= null;
+				}else
+				{
+					$oldLimit= $this->limitRows;
+					if(!is_array($limit))
+						$this->limitRows= array('start' => 0, 'limit' => $limit);
+					else
+						$this->limitRows= $limit;
+				}
+			}
 			$statement= STDbTable::getStatement(false, $withAlias);
-			//$this->sqlStatement= $this->db->getStatement($this, false, $withAlias);
-			//echo $this->sqlStatement."<br />";
-			if($limit)
-			    $statement.= " limit ".$limit;
+			if(isset($oldLimit))
+				$this->limitRows= $oldLimit;
 			return $statement;
 		}
 		function searchValue($searchValue)

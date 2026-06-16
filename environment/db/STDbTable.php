@@ -621,7 +621,7 @@ class STDbTable extends STBaseTable
 	 * @param string $sContainer container name from which table should fetched
 	 * @return NULL
 	 */
-	public function &getTable(string $sTableName, string $sContainer= null)
+	public function &getTable(string $sTableName, ?string $sContainer= null)
 	{   
 	    if( $sContainer != null &&
 	        $sContainer != $this->container->getName() )
@@ -791,8 +791,10 @@ class STDbTable extends STBaseTable
 	{
 		$this->selector= null;
 	}
-	public function getStatement(bool $bFromIdentifications= false)
+	public function getStatement($bFromIdentifications= false)
 	{
+		STCheck::param($bFromIdentifications, 0, "bool");
+
 	    $nr= STCheck::increase("db.statement");
 	    if(STCheck::isDebug())
 	    {
@@ -2023,7 +2025,7 @@ class STDbTable extends STBaseTable
 	    }
 	    return $aRv;
 	}
-	/*private*/function newWhereCreation(array $aliases= null, array $aSubstitutionTables= null)
+	/*private*/function newWhereCreation(array|null $aliases= null, array|null $aSubstitutionTables= null)
 	{
 	    $oWhere= $this->getWhere();
 	    if(isset($oWhere))
@@ -2494,31 +2496,48 @@ class STDbTable extends STBaseTable
 	}
 	private function getLimitStatement($bInWhere)
 	{
+		$tableName= "";
+		if(STCheck::isDebug("db.statements.limit"))
+			$tableName= $this->getDbTableName();
+		if(isset($this->aStatement['limit']))
+	    {
+	        if(STCheck::isDebug("db.statements.limit"))
+	        {
+	            $msg[]= "take predefined limit statement";
+	            $msg[]= "\"".$this->aStatement['limit']."\"";
+	            STCheck::echoDebug("db.statements.limit", $msg);
+	        }
+	        return $this->aStatement['limit'];
+	    }
 	    if($bInWhere)
 	    {
 	        STCheck::echoDebug("db.statements.limit", "do not use limit statement if where statement exist");
 	        return "";
 	    }
 	    $maxRows= $this->getMaxRowSelect();
-	    if($maxRows)
-	    {
-	        $tableName= $this->getDbTableName();
-	        $from= $this->getFirstRowSelect();
-	        if(!$from)
-	            $from= 0;
-            STCheck::echoDebug("db.statements.limit", "first row for selection in table '$tableName' is set to $from");
-            STCheck::echoDebug("db.statements.limit", "$maxRows maximal rows be set in table '$tableName'");
-	            
-	    }elseif(isset($this->limitRows))
+	    if(isset($this->limitRows))
 	    {
 	        $from= $this->limitRows["start"];
 	        $maxRows= $this->limitRows["limit"];
-	    }else
-	        return "";
+	    }elseif($maxRows)
+	    {
 	        
-        $where= " limit ".$from.", ".$maxRows;
-        STCheck::echoDebug("db.statements.limit", "add limit statement '$where'");
-        return $where;
+	        $from= $this->getFirstRowSelect();
+	        if(!$from)
+	            $from= 0;
+	            
+	    }else
+		{
+			$this->aStatement['limit']= "";
+	        return "";
+		}
+	     
+        $limit= " limit ".$from.", ".$maxRows;
+		$this->aStatement['limit']= $limit;
+		STCheck::echoDebug("db.statements.limit", "first row for selection in table '$tableName' is set to $from");
+		STCheck::echoDebug("db.statements.limit", "$maxRows maximal rows be set in table '$tableName'");
+        STCheck::echoDebug("db.statements.limit", "add limit statement '$limit'");
+        return $limit;
 	}
 	/**
      * allow modification by every table has an limit in the query string
