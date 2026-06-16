@@ -1,8 +1,9 @@
 <?php
 
 $dbselftables= '../..';
-require "$dbselftables/st_pathdef.inc.php";
+require_once "$dbselftables/st_pathdef.inc.php";
 require_once $_stdbmariadb;
+require_once "test_db_account.php";
 
 //STCheck::debug(true); // <- a good choice for developing
 
@@ -51,10 +52,13 @@ $bill= $db->getTable("Bill");
 $bill->identifColumn("bill_id", "Bill");
 $bill->select("bill_id", "Bill");
 $bill->select("person", "for Person");
+$bill->select("address", "on Address");
+$bill->preSelect("date", "CURRENT_TIME()");
 $bill->setMaxRowSelect(50);
 
 $order= $db->getTable("Order");
-$order->select("amount", "Count");
+$order->select("bill", "for Bill");
+$order->select("amount", "Amount");
 $order->select("article", "Article");
 $order->setMaxRowSelect(50);
 

@@ -51,10 +51,12 @@ $bill= $db->getTable("Bill");
 $bill->identifColumn("bill_id", "Bill");
 $bill->select("bill_id", "Bill");
 $bill->select("person", "for Person");
+$bill->select("address", "on Address");
+$bill->preSelect("date", "CURRENT_TIME()");
 $bill->setMaxRowSelect(50);
 
 $order= $db->getTable("Order");
-$order->select("count", "Count");
+$order->select("amount", "Amount");
 $order->select("article", "Article");
 $order->setMaxRowSelect(50);
 

@@ -1,7 +1,8 @@
 <?php
 
+require_once "test_db_account.php";
 $dbselftables= '../..'; // <- maybe also > dbselftables-x.x-RC
-require "$dbselftables/st_pathdef.inc.php";
+require_once "$dbselftables/st_pathdef.inc.php";
 require_once $_stdbmariadb;
 require_once $_stsitecreator;
 

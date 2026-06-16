@@ -664,7 +664,7 @@ class STBaseTable
 	 * @param enum $tableType for which display table - STLIST, STINSERT or STDELETE - alignment should be.
 	 * 							(default: <code>STLIST</code>)
 	 */
-	public function align($aliasName, $value, $tableType= STLIST)
+	public function align(string $aliasName, string $value, $tableType= STLIST)
 	{
 	    $this->tdAttribute("align", $value, $tableType, $aliasName);
 	}

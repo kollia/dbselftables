@@ -649,10 +649,6 @@ class STCheck
 			{
 				global $__global_testfile_variables;
 				
-				foreach($__global_testfile_variables as $var)
-				{
-					global $$var;
-				}
 				// testing incomming file in second parameter
 				$query= new STQueryString();
 				$testdebug= $query->getArrayVars("testdebug");
@@ -672,6 +668,13 @@ class STCheck
 					$query->update("testdebug[file][src]=$from");
 					$query->synchronize();
 				}
+
+				global $_dbselftable_root;
+				foreach($__global_testfile_variables as $var)
+				{
+					global $$var;
+				}
+				require($_dbselftable_root."/st_pathdef.inc.php");		
 				require_once($from);
 			}
 		}
@@ -1157,15 +1160,18 @@ class STCheck
 				$value= "update text (removable)";
 			}else
 				$value= "insert new text (removable)";
-			$len= strlen($value);
-			if(substr($oldValue, 0, $len) === $value)
+			if(isset($oldValue))
 			{
-				$nr = (int) substr($oldValue, 23);
-				if($nr !== false)
-					$nr++;
-				else
-					$nr= 1;
-				$value.= " $nr";
+				$len= strlen($value);
+				if(substr($oldValue, 0, $len) === $value)
+				{
+					$nr = (int) substr($oldValue, 23);
+					if($nr !== false)
+						$nr++;
+					else
+						$nr= 1;
+					$value.= " $nr";
+				}
 			}
 
 		}elseif($type == "time")

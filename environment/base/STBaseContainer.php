@@ -698,6 +698,13 @@ abstract class STBaseContainer extends BodyTag implements STContainerTempl
 	}
 	public function currentContainer() : bool
 	{
+		$containerName= $this->getContainerName();
+		if($this->name==$containerName)
+			return true;
+		return false;
+	}
+	public function getContainerName() : string | null
+	{
 		$query= new STQueryString();
 		$query= $query->getArrayVars();
 		$containerName= "";
@@ -706,14 +713,18 @@ abstract class STBaseContainer extends BodyTag implements STContainerTempl
 		{
 			$containerName= $query["stget"]["container"];
 		}
-		if($this->name==$containerName)
-			return true;
-		if(!$containerName)
+		if(	isset($containerName) &&
+			trim($containerName) != ""	)
 		{
-			if($this->bFirstContainer)
-				return true;
+			return $containerName;
 		}
-		return false;
+		if($this->bFirstContainer)
+			return $this->name;
+		return null;
+	}
+	public function getOwnContainerName() : string
+	{
+		return $this->name;
 	}
 	function insertByContainerLink($param, $name= STALLDEF)
 	{

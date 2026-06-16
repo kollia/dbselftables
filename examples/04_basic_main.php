@@ -14,20 +14,21 @@ $addressee->needTable("Person");
 $addressee->needTable("Address");
 $addressee->setFirstTable("Person");
 
-$order= new STObjectContainer("Order", $db);
-$order->needTable("article");
-$order->needTable("Order");
-$order->setFirstTable("Order");
-$container= $order->getContainerName();
-$table= $order->getTableName();
-$action= $order->getAction();
-if( $container == "Order" &&
-    $table == "Order" &&
-    $action == STINSERT       )
+$orderContainer= new STObjectContainer("Order", $db);
+$orderContainer->needTable("article");
+$orderTable= $orderContainer->needTable("Order");
+$orderTable->select("amount", "Amount");
+$orderTable->select("article", "Article");
+$orderTable->align("amount", "center");
+$orderContainer->setFirstTable("Order");
+
+if( $orderContainer->currentContainer() &&
+    $orderContainer->getTableName() == "Order" &&
+    $orderContainer->getAction() == STINSERT       )
 {
     $query= new STQueryString();
     $bill_id= $query->getParam("stget[from][bill]");
-    $order->preSelect("bill", $bill_id);
+    $orderContainer->preSelect("bill", $bill_id);
 }
 
 $main= new STObjectContainer("bill", $db);

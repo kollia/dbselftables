@@ -159,6 +159,8 @@ $bill= $db->getTable("Bill");
 $bill->identifColumn("bill_id", "Bill");
 $bill->select("bill_id", "Bill");
 $bill->select("person", "for Person");
+$bill->select("address", "on Address");
+$bill->preSelect("date", "CURRENT_TIME()");
 $bill->setMaxRowSelect(50);
 
 $order= $db->getTable("Order");
@@ -227,7 +229,7 @@ The database (STDbMariaDb) which you configured first is also a container.
 For an second website create a new `STObjectContainer` from an existing container. The tables you have configured before are the same. Only you want other columns (identifColumns), you need to select the new colums.
 The definition from the container before are the default config.
 
-> **basic config:** When you first select a table from the database, all columns are configured by default. If you then select a column, only that column will be displayed. The same applies to a second container. The selection from the previous container is always the default. Only when you make a new selection there will only the columns you selected be displayed. The same is also true for `identifColumns` or selecting tables within the container.
+> **basic config:** When you first select a table from the database, all columns are configured by default. If you then select a column, only that column will be displayed. The same applies to a second container. The selection from the previous container is always the default. Only when you make a new selection there will only the columns you selected be displayed. The same is also true for `->identifColumns()` or selecting tables `->needTable()` within the container.
 
 ```php
 $addressee= new STObjectContainer("addressee", $db);
@@ -270,16 +272,10 @@ $addressee->setFirstTable("Person");
 $orderContainer= new STObjectContainer("Order", $db);
 $orderContainer->needTable("article");
 $orderTable= $orderContainer->needTable("Order");
+$orderTable->select("amount", "Amount");
+$orderTable->select("article", "Article");
+$orderTable->align("amount", "center");
 $orderContainer->setFirstTable("Order");
-if( $orderContainer->currentContainer() &&
-    $orderContainer->getTableName() == "Order" &&
-    $orderContainer->getAction() == STINSERT       )
-{
-    $query= new STQueryString();
-    $limitation= $query->getLimitation("bill");
-    $bill_id= $limitation['bill_id'];
-    $orderTable->preSelect("bill", $bill_id);
-}
 
 $main= new STObjectContainer("bill", $db);
 $main->needContainer($addressee);
@@ -295,32 +291,10 @@ $creator->execute();
 $creator->display();
 
 ```
-When you test this scripts, you can see as first a listing of all bills, where every
+When you test this script, you can see as first a listing of all bills, where every
 bill has an ID which you link to all exist orders of the bill.<br />
 The reason is, because by creating the main container (<code>$main</code>) the Bill table defined as need
 and the column `bill_id` defined with the <code>$orderContainer</code> as <nobr>`->namedLink()`</nobr>.
-
-After organising the container <code>$orderContainer</code>, you can see an request of the current container, table and action.
-This you can do for every table if you want better performance. Because tables and containers not always need to organise when not displayed.
-> If you want developing object oriented, it's also possible to overload class `STObjectContainer`.
-> You can organize container inside the method create() and init().
-> ```php
-> class MyNewContainer extends STObjectContainer
-> {
->      protected function create()
->      {
->           // definition of which tables and
->           // other containers need from this container
->           // and maybe an other display-name if you want
->      }
->
->      protected function init(string $action, string $table)
->      {
->           // all other definitions
->           // which need for current container
->      }
-> }
-> ```
 
 
 <br /><br />
@@ -419,6 +393,75 @@ and then, if you want to make the project more beautiful later because you know 
 how to improve the containers with additional HTML tags.
 
 ### Functionality
+**[ [05_basic_main.php](examples/04_basic_main.php) ]**
+```php
+<?php
+
+require_once '02_common_db.php';
+require_once $_stsitecreator;
+
+//STCheck::debug("query"); // <- to see current query from URL
+
+$addressee= new STObjectContainer("addressee", $db);
+$addressee->setDisplayName("Addressee");
+$addressee->needTable("Country");
+$addressee->needTable("State");
+$addressee->needTable("County");
+$addressee->needTable("Person");
+$addressee->needTable("Address");
+$addressee->setFirstTable("Person");
+
+$orderContainer= new STObjectContainer("Order", $db);
+$orderContainer->needTable("article");
+$orderTable= $orderContainer->needTable("Order");
+$orderContainer->setFirstTable("Order");
+if( $orderContainer->currentContainer() &&
+    $orderContainer->getTableName() == "Order" &&
+    $orderContainer->getAction() == STINSERT       )
+{
+    $query= new STQueryString();
+    $limitation= $query->getLimitation("bill");
+    $bill_id= $limitation['bill_id'];
+    $orderTable->preSelect("bill", $bill_id);
+}
+
+$main= new STObjectContainer("bill", $db);
+$main->needContainer($addressee);
+$main->needTable("Article");
+$bill= $main->needTable("Bill");
+$bill->namedLink("bill_id", $orderContainer);
+$main->setFirstTable("Bill");
+
+
+$creator= new STSiteCreator($main);
+$creator->addCssLink('dbselftables/design/websitecolors.css');
+$creator->execute();
+$creator->display();
+
+```
+
+After organising the container <code>$orderContainer</code>, you can see an request of the current container, table and action.
+This you can do for every table if you want better performance. Because tables and containers not always need to organise when not displayed.
+> If you want developing object oriented, it's also possible to overload class `STObjectContainer`.
+> You can organize container inside the method create() and init().
+> ```php
+> class MyNewContainer extends STObjectContainer
+> {
+>      protected function create()
+>      {
+>           // definition of which tables and
+>           // other containers need from this container
+>           // and maybe an other display-name if you want
+>      }
+>
+>      protected function init(string $action, string $table)
+>      {
+>           // all other definitions
+>           // which need for current container
+>      }
+> }
+> ```
+
 #### Tables
 #### Containers
 
