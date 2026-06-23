@@ -166,7 +166,8 @@ class STDbTable extends STBaseTable
 	            {
 	                $this->sPKColumn= $field["name"];
 	            }
-	            if(preg_match("/multiple_key/i", $field["flags"]))
+	            if( preg_match("/multiple_key/i", $field["flags"]) ||
+					preg_match("/unique_key/i", $field["flags"])		)
 	            {
 					$aFK= $this->db->getForeignKeyLink($Table, $field["name"]);
 					if($aFK !== NULL)
@@ -613,6 +614,10 @@ class STDbTable extends STBaseTable
 		$this->aAuto_increment["session"]= $session;
 		$this->aAuto_increment["inColumn"]= $charColumn;
 		$this->aAuto_increment["PK"]= $column;
+	}
+	public function getAction()
+	{
+		return $this->container->getAction();
 	}
 	/**
 	 * fetch table from database of given or current container
@@ -1241,8 +1246,11 @@ class STDbTable extends STBaseTable
 					if($tKeyword === false)
 					{ // if column is an sql-keyword, it was prepered inside removeNoDbColumns()
                     	$fkTableName= $this->getFkTableName($column["column"]);
-						if($fkTableName == $this->getDbTableName())
-							$fkTableName= null; // own table
+						if( $this->getAction() != STLIST &&
+							$fkTableName == $this->getDbTableName()	)
+						{
+							$fkTableName= null;
+						}
 					}
                     if(STCheck::isDebug() && isset($fkTableName))
                     {

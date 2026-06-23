@@ -117,6 +117,7 @@ $db= new STDbMariaDb();
 $db->connect('<host>', '<user>', '<password>');
 $db->database('<database name>');
 
+$curTableName= $db->getTableName(); // get current displayed table name
 
 $country= $db->getTable("Country");
 $country->setDisplayName("existing Countries");
@@ -139,10 +140,18 @@ $county->select("name", "County");
 $county->setMaxRowSelect(50);
 
 $person= $db->getTable("Person");
-$person->identifColumn("first_name", "first Name");
-$person->identifColumn("last_name", "last Name");
+if($curTableName == $person->getName())
+{
+    $person->identifColumn("first_name", "spouse Forename");
+    $person->identifColumn("last_name", "spouse Surname");
+}else
+{
+    $person->identifColumn("first_name", "Forename");
+    $person->identifColumn("last_name", "Surname");
+}
 $person->select("first_name", "first Name");
 $person->select("last_name", "last Name");
+$person->select("spouse", "Spouse");
 $person->select("address", "Address");
 $person->setMaxRowSelect(50);
 
@@ -180,7 +189,17 @@ $article->setMaxRowSelect(50);
 
 ```
 
-... and we want to execute and display the database-object in a second file, for later changes.
+You see here in the script for table Person that we choose the identification columns dependent
+of current displaying table on the screen. The reason of this behavior is the spouse of the person.
+This is an self foreign key of the table and should display other names for clarity when showen own table.
+> **additional basic knowledge:** the variable $curTableName is selected from the database and will be compared
+>                                 with the name from the table. This name is selected from the table object,
+>                                 because if you ask only from an own defined string ("Person"), the table name
+>                                 inside the database, it works only for the linux OS. On Windows, the table names
+>                                 are not case sensetive and the  ```->getTableName()``` method return the table
+>                                 name only in small letters.
+
+Now we want to execute and display the database-object in a second file, for later changes.
 
 **[ [03_basic_display.php](examples/03_basic_display.php) ]**
 ```php

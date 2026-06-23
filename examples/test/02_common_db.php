@@ -11,6 +11,8 @@ $db= new STDbMariaDb();
 $db->connect($_test_db_host, $_test_db_user, $_test_db_password);
 $db->database($_test_db_name);
 
+$curTableName= $db->getTableName(); // get current displayed table name
+
 $country= $db->getTable("Country");
 $country->setDisplayName("existing Countries");
 $country->identifColumn("name", "Country");
@@ -32,10 +34,18 @@ $county->select("name", "County");
 $county->setMaxRowSelect(50);
 
 $person= $db->getTable("Person");
-$person->identifColumn("first_name", "first Name");
-$person->identifColumn("last_name", "last Name");
+if($curTableName == $person->getName())
+{
+    $person->identifColumn("first_name", "spouse Forename");
+    $person->identifColumn("last_name", "spouse Surname");
+}else
+{
+    $person->identifColumn("first_name", "Forename");
+    $person->identifColumn("last_name", "Surname");
+}
 $person->select("first_name", "first Name");
 $person->select("last_name", "last Name");
+$person->select("spouse", "Spouse");
 $person->select("address", "Address");
 $person->setMaxRowSelect(50);
 
