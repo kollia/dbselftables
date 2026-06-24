@@ -183,8 +183,8 @@ class STDbInserter extends STDbSqlCases
 			$session= STSession::instance();
 			if(typeof($session, "STUserSession"))
 			{
-                $identification= "";
-            	foreach($this->table->identification as $identifColumn)
+				$identification= "";
+				foreach($this->table->getIdentifColumns() as $identifColumn)
                 {
             	   	$identif= $row[$identifColumn["column"]];
                     $identification.= $identif." - ";
@@ -245,8 +245,8 @@ class STDbInserter extends STDbSqlCases
 			$this->lastInsertID= $this->getLastInsertID();
 
     		$_instance= &STUserSession::instance();
-            $identification= "";
-        	foreach($this->table->identification as $identifColumn)
+				$identification= "";
+				foreach($this->table->getIdentifColumns() as $identifColumn)
             {
         	   	$identif= $row[$identifColumn["column"]];
                 $identification.= $identif." - ";

@@ -1111,7 +1111,9 @@ class STListBox extends STBaseBox
 				$firstRow= $this->sqlResult[0];
 	            foreach($firstRow as $key=>$value)
     	        {
-					if(	!in_array($key, $aGetColumns) )
+						if(	!in_array($key, $aGetColumns) &&
+							(   !isset($this->showTypes[$key]) ||
+								$this->showTypes[$key] != "get" ) )
 					{// only if column no getColumn
 						$th= new ColumnTag(TH);
 							$this->insertAttributes($th, "th");

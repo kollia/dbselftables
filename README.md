@@ -142,8 +142,8 @@ $county->setMaxRowSelect(50);
 $person= $db->getTable("Person");
 if($curTableName == $person->getName())
 {
-    $person->identifColumn("first_name", "spouse Forename");
-    $person->identifColumn("last_name", "spouse Surname");
+    $person->identifColumn("first_name", "Spouse");
+    $person->getIdentif("last_name", "spouse_last_name");
 }else
 {
     $person->identifColumn("first_name", "Forename");
@@ -191,7 +191,12 @@ $article->setMaxRowSelect(50);
 
 You see here in the script for table Person that we choose the identification columns dependent
 of current displaying table on the screen. The reason of this behavior is the spouse of the person.
-This is an self foreign key of the table and should display other names for clarity when showen own table.
+This is an self foreign key of the table and should display other names for clarity when showen own table.<br />
+For the own table there is an identifColumn() and an ```->getIdentif()``` column which will be selected from the database,
+but not schowen by listing. Sometime they are not marryed and have an other surname, but when we display in an seond column
+the headline description will blow up the table. ( It should only be an example ;-) ) <br />
+To show the surname inside the Spouse column will be described later by ``` [chage content with callbacks](#change-content-with-callbacks)``` <br />
+(A pendant for the direct selection of table with select() will be the ```->getColumn()``` method)
 > **additional basic knowledge:** the variable $curTableName is selected from the database and will be compared
 >                                 with the name from the table. This name is selected from the table object,
 >                                 because if you ask only from an own defined string ("Person"), the table name
@@ -321,29 +326,29 @@ and the column `bill_id` defined with the <code>$orderContainer</code> as <nobr>
 
 Sometime you don't want to display exactly what filled in database.<br />
 For this case you can define a callback method for the table. Like <nobr>`->listCallback(<callback funtion>)`</nobr><br />
-You can define this &lt;callback function&gt; as follow for the bill table:
+You can define this &lt;callback function&gt; as follow for the spouse column inside the person table:
 ```php
-function billRequest(STCallbackClass &$callbackObject, string $columnName, int $rownum)
+function spouseColumn(STCallbackClass &$callbackObject, string $columnName, int $rownum)
 {
     if(	!$callbackObject->display ||
         !$callbackObject->before     )
     {
         return;
     }
-    if($columnName == "bill_id")
+    if($columnName == "Spouse")
     {
-        $billContent= $callbackObject->getValue();
-        $billContent= "Bill ".$billContent;
-        $callbackObject->setValue($billContent);
+        $spouse= $callbackObject->getValue();
+        $spouse= " ".$callbackObject->getValue("spouse_last_name");
+        $callbackObject->setValue($spouse);
     }
 }
 
-$bill->listCallback("billRequest");
+$bill->listCallback("spouseColumn");
 
 ```
 
-This behavior can also be assigned with the same callback-function for insertCallback(&lt;function&gt;), updateCallback(&lt;function&gt;) and/or deleteCallback(&lt;function&gt;).
-The display flag for the callback-object is for listing mostly true and for deliting always false. This flag means that if True it is for display (listing/insert/update) and if False the database will be manipulated.
+This behavior can also be assigned with the same callback-function for insertCallback(&lt;function&gt;), updateCallback(&lt;function&gt;), deleteCallback(&lt;function&gt;) and/or joinCallback(&lt;function&gt;).
+The display flag for the callback-object is for listing mostly true and for deliting always false. This flag means that if True it is for display (listing/insert/update box) and if False the database will be manipulated.
 The before flag is true if the function was called before display the content or before manipulate the database, otherwise false. 
 
 The function will be called for every column and row seperatly. 

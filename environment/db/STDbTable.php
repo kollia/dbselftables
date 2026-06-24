@@ -1150,9 +1150,9 @@ class STDbTable extends STBaseTable
 	    $singleStatement= "";
 	    $statement= "";
 	    if($bFirstSelect)
-	        $aNeededColumns= $this->getSelectedColumns();
-        else
-            $aNeededColumns= $this->getIdentifColumns();
+			$aNeededColumns= $this->getSelectedColumns();
+		else
+			$aNeededColumns= $this->getIdentifColumns(true);
         STCheck::flog("create select statement");
         $this->removeNoDbColumns($aNeededColumns, $aTableAlias);
         if(STCheck::isDebug())
@@ -2212,7 +2212,7 @@ class STDbTable extends STBaseTable
 			return $this->aStatement['orderAliases'];
 	    $aRv= array();
 		if($bFromIdentifications)
-			$aNeededColumns= $this->getIdentifColumns();
+			$aNeededColumns= $this->getIdentifColumns(true);
 		else
 			$aNeededColumns= $this->getSelectedColumns();
 		foreach($aNeededColumns as $columnContent)
@@ -2275,7 +2275,7 @@ class STDbTable extends STBaseTable
 	        //if tableName is null
 	        $tableName= $this->Name;
 	    }else
-	        $aNeededColumns= $this->getIdentifColumns();
+			$aNeededColumns= $this->getIdentifColumns(true);
  	    if(	!$this->asOrder ||
 			empty($this->asOrder))
 	    {

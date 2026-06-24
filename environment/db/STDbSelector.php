@@ -696,6 +696,22 @@ class STDbSelector extends STDbTable implements STContainerTempl
 			$table= $this->getTable($tableName);
 			$table->identifColumn($column, $alias);
 		}
+		public function getIdentif(string $tableName, string $column= "", string $alias= "")
+		{
+			STCheck::param($tableName, 0, "string");
+			STCheck::param($column, 1, "string");
+			$nParams= func_num_args();
+			STCheck::lastParam(3, $nParams);
+            
+			$tableName= $this->getTableName($tableName);
+			if($tableName == $this->getDbTableName())
+			{
+				STDbTable::getIdentif($column, $alias);
+				return;
+			}
+			$table= $this->getTable($tableName);
+			$table->getIdentif($column, $alias);
+		}
 		function select(string $tableName, $column= "", $alias= null, $nextLine= true, $add= false)
 		{
 			if(STCheck::isDebug())

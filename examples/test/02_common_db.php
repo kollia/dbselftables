@@ -36,8 +36,8 @@ $county->setMaxRowSelect(50);
 $person= $db->getTable("Person");
 if($curTableName == $person->getName())
 {
-    $person->identifColumn("first_name", "spouse Forename");
-    $person->identifColumn("last_name", "spouse Surname");
+    $person->identifColumn("first_name", "Spouse");
+    $person->getIdentif("last_name", "spouse_last_name");
 }else
 {
     $person->identifColumn("first_name", "Forename");
