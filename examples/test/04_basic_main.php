@@ -1,6 +1,6 @@
 <?php
 
-require '02_common_db.php';
+require_once '02_common_db.php';
 require_once $_stsitecreator;
 
 //STCheck::debug("query"); // <- to see current query from URL
@@ -16,21 +16,22 @@ $addressee->setFirstTable("Person");
 
 $order= new STObjectContainer("Order", $db);
 $order->needTable("article");
-$order->needTable("Order");
+$orderTable= $order->needTable("Order");
+$orderTable->select("amount", "Amount");
+$orderTable->select("article", "Article");
+$orderTable->align("amount", "center");
 $order->setFirstTable("Order");
-$container= $order->getContainerName();
-$table= $order->getTableName();
-$action= $order->getAction();
-if( $container == "Order" &&
-    $table == "Order" &&
-    $action == STINSERT       )
+/*if( $order->currentContainer() &&
+    $order->getTableName() == "Order" &&
+    $order->getAction() == STINSERT       )
 {
     $query= new STQueryString();
     $bill_id= $query->getParam("stget[from][bill]");
-    $order->preSelect("bill", $bill_id);
-}
+    $order->preSelect("bill", 1);
+}*/
 
 $main= new STObjectContainer("bill", $db);
+$main->setDisplayName("main Container");
 $main->needContainer($addressee);
 $main->needTable("Article");
 $main->setFirstTable("Bill");

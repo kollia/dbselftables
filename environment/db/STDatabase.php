@@ -1378,7 +1378,7 @@ abstract class STDatabase extends STObjectContainer
 		$count= 2;
 		if($bFromIdentifications)
 		{
-			$showList= $oTable->getIdentifColumns();
+			    $showList= $oTable->getIdentifColumns(true);
 			if(Tag::isDebug("db.statements.aliases"))
 			{
 				Tag::echoDebug("db.statements.aliases", "need columns from table ".$sMainTableName." (->getIdentifColumns) where container is ".$oTable->container->getName());

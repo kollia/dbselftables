@@ -48,8 +48,11 @@ SET FOREIGN_KEY_CHECKS=0;
         `person_id` INT AUTO_INCREMENT PRIMARY KEY,
         `first_name` VARCHAR(100) NOT NULL,
         `last_name` VARCHAR(100) NOT NULL,
+           `spouse` INT NULL,
         `address` INT NOT NULL,
+           FOREIGN KEY (`spouse`) REFERENCES `Person`(`person_id`),
         FOREIGN KEY (`address`) REFERENCES `Address`(`address_id`),
+           UNIQUE (`spouse`),
         UNIQUE (`first_name`, `last_name`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -261,10 +264,10 @@ SET FOREIGN_KEY_CHECKS=0;
     (8, '505 Walnut St', 'Fort Worth', 8),
     (9, '606 Chestnut St', 'San Antonio', 9),
     (10, '707 Spruce St', 'Austin', 10),
-    (11, '808 Fir St', 'Chicago', 11),
-    (12, '909 Ash St', 'Naperville', 12),
-    (13, '1010 Poplar St', 'Waukegan', 13),
-    (14, '1111 Redwood St', 'Joliet', 14),
+        (11, '808 Fir St', 'Chicago', 11),
+        (12, '909 Ash St', 'Naperville', 12),
+        (13, '1010 Poplar St', 'Waukegan', 13),
+        (14, '1111 Redwood St', 'Joliet', 14),
     (15, '1212 Cypress St', 'Aurora', 15),
     (16, '1313 Palm St', 'Munich', 16),
     (17, '1414 Olive St', 'Regensburg', 17),
@@ -754,6 +757,49 @@ SET FOREIGN_KEY_CHECKS=0;
     (198, 'Eugene', 'Franklin', 198),
     (199, 'Carlos', 'Lawson', 199),
     (200, 'Russell', 'Fields', 200);
+
+    UPDATE `Person`
+    SET `last_name` = CASE `person_id`
+        WHEN 2 THEN 'Doe'
+        WHEN 4 THEN 'Johnson'
+        WHEN 6 THEN 'Brown'
+        WHEN 8 THEN 'Jones'
+        WHEN 10 THEN 'Martinez'
+        WHEN 13 THEN 'Taylor'
+        WHEN 17 THEN 'Lee'
+        WHEN 19 THEN 'Thompson'
+        WHEN 22 THEN 'White'
+        ELSE `last_name`
+    END
+    WHERE `person_id` IN (2, 4, 6, 8, 10, 13, 17, 19, 22);
+
+    UPDATE `Person`
+    SET `spouse` = CASE `person_id`
+        WHEN 1 THEN 2
+        WHEN 2 THEN 1
+        WHEN 3 THEN 4
+        WHEN 4 THEN 3
+        WHEN 5 THEN 6
+        WHEN 6 THEN 5
+        WHEN 7 THEN 8
+        WHEN 8 THEN 7
+        WHEN 9 THEN 10
+        WHEN 10 THEN 9
+        WHEN 11 THEN 12
+        WHEN 12 THEN 11
+        WHEN 13 THEN 14
+        WHEN 14 THEN 13
+        WHEN 15 THEN 16
+        WHEN 16 THEN 15
+        WHEN 17 THEN 18
+        WHEN 18 THEN 17
+        WHEN 19 THEN 20
+        WHEN 20 THEN 19
+        WHEN 21 THEN 22
+        WHEN 22 THEN 21
+        ELSE `spouse`
+    END
+    WHERE `person_id` IN (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22);
 
     -- Insert Articles
     INSERT INTO `Article` (`article_id`, `title`, `price`, `content`) VALUES

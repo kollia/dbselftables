@@ -10,4 +10,10 @@ STCheck::global_testfile_variables("_test_db_name");
 
 //STCheck::debug("test.file", "04a_basic_main.php");
 STCheck::debug("test.file", "01_first_try.php");
-STCheck::debug("test.file.last", "01_test_allTables.php");
+//STCheck::debug("test.file.last", "01_test_allTables.php");
+STCheck::debug("test.file", "03_basic_display.php");
+STCheck::debug("test.file", "04_basic_main.php");
+//STCheck::debug("test.file", "04a_basic_main.php");
+//STCheck::debug("test.file", "04b_basic_main.php");
+//STCheck::debug("test.file", "04c_basic_main.php");
+STCheck::debug("test.file.last", "04_basic_main.php");

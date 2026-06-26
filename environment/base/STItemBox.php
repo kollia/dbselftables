@@ -2030,8 +2030,8 @@ class STItemBox extends STBaseBox
 					count($this->asDBTable->aAccessClusterColumns))
 				{
     				$_instance= &STUserSession::instance();
-                    $identification= "";
-                    foreach($this->asDBTable->identification as $identifColumn)
+					$identification= "";
+					foreach($this->asDBTable->getIdentifColumns() as $identifColumn)
                     {
                     	$identif= $showpost[$identifColumn["column"]];
                         $identification.= $identif." - ";

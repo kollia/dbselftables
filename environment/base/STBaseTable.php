@@ -664,7 +664,7 @@ class STBaseTable
 	 * @param enum $tableType for which display table - STLIST, STINSERT or STDELETE - alignment should be.
 	 * 							(default: <code>STLIST</code>)
 	 */
-	public function align($aliasName, $value, $tableType= STLIST)
+	public function align(string $aliasName, string $value, $tableType= STLIST)
 	{
 	    $this->tdAttribute("align", $value, $tableType, $aliasName);
 	}
@@ -2977,6 +2977,21 @@ class STBaseTable
 		}
 		public function clearIdentifColumns()
 		{
+			foreach($this->identification as $column)
+			{
+				if( isset($column['type']) &&
+					$column['type'] == "get" )
+				{
+					$alias= $column['alias'];
+					if( isset($this->showTypes[$alias]['get']) &&
+						$this->showTypes[$alias]['get'] == "get" )
+					{
+						unset($this->showTypes[$alias]['get']);
+						if(empty($this->showTypes[$alias]))
+							unset($this->showTypes[$alias]);
+					}
+				}
+			}
 		    $this->abOrigChoice["identif"]= true;
 			$this->aStatement= array();
 			$this->identification= array();
@@ -3009,6 +3024,28 @@ class STBaseTable
 		 */
 		public function identifColumn(string $column, string|null $alias= null, string|null $add= null)
 		{
+			$this->identifColumnA($column, $alias, false);
+		}
+		/**
+		 * select column for identification handling,
+		 * but do not display it in visible identification output.
+		 *
+		 * @param string $column name of column at current table
+		 * @param string $alias alias name of column
+		 * @param string $unknown unknown parameter for compatibility to STDbSelector
+		 */
+		public function getIdentif(string $column, string $alias= "", string $unknown= "")
+		{
+			STCheck::param($column, 0, "string");
+			$nParams= func_num_args();
+			STCheck::lastParam(2, $nParams);
+            
+			if($alias == "")
+				$alias= $column;
+			$this->identifColumnA($column, $alias, true);
+		}
+		protected function identifColumnA(string $column, string|null $alias= null, bool $bHidden= false)
+		{
 			STcheck::alert(!$this->validColumnContent($column), "STBaseTable::identifColumn()", "column '$column' not exist in table ".$this->Name, 1);
 
 			$column= $this->getDbColumnName($column);
@@ -3023,18 +3060,44 @@ class STBaseTable
 			if($alias)
 				$this->identification[$count]["alias"]= $alias;
 			$this->identification[$count]["table"]= $this->getName();
+			if($bHidden)
+			{
+				$this->identification[$count]['type']= "get";
+				$this->showTypes[$alias]['get']= "get";
+			}else
+			{
+				if( isset($this->showTypes[$alias]['get']) &&
+					$this->showTypes[$alias]['get'] == "get" )
+				{
+					unset($this->showTypes[$alias]['get']);
+					if(empty($this->showTypes[$alias]))
+						unset($this->showTypes[$alias]);
+				}
+			}
 			$this->abOrigChoice["identif"]= false;
 		}
-		public function getIdentifColumns()
+		public function getIdentifColumns(bool $bWithHidden= false)
 		{
 			if(!$this->bDisplayIdentifs)
 				return array();
-			if(!count($this->identification))
+			$identification= $this->identification;
+			if(!$bWithHidden)
+			{
+				foreach($identification as $key => $column)
+				{
+					if( isset($column['type']) &&
+						$column['type'] == "get" )
+					{
+						unset($identification[$key]);
+					}
+				}
+			}
+			if(!count($identification))
 			{
 				$ar= array("column"=>$this->getPkColumnName(), "table"=>$this->getName());
 				return array($ar);
 			}
-			return $this->identification;
+			return $identification;
 		}
 		public function displayIdentifs(bool $bDisplay= true)
 		{
@@ -3096,7 +3159,19 @@ class STBaseTable
 	 *		// if define new fresh where clause (without operator)
 	 *		// to create sql statement new
 	 *		if($operator == "")
-	 *			$this->clearWhere();
+			{
+				$this->identification[$count]['type']= "get";
+				$this->showTypes[$alias]['get']= "get";
+			}else
+			{
+				if( isset($this->showTypes[$alias]['get']) &&
+					$this->showTypes[$alias]['get'] == "get" )
+				{
+					unset($this->showTypes[$alias]['get']);
+					if(empty($this->showTypes[$alias]))
+						unset($this->showTypes[$alias]);
+				}
+			}
 	 */
 
 		 	if(	!isset($stwhere) ||
@@ -3114,6 +3189,21 @@ class STBaseTable
 						"where clause, so return only current where Object");
 		 		return $this->oWhere;
 		 	}
+				foreach($this->identification as $column)
+				{
+					if( isset($column['type']) &&
+						$column['type'] == "get" )
+					{
+						$alias= $column['alias'];
+						if( isset($this->showTypes[$alias]['get']) &&
+							$this->showTypes[$alias]['get'] == "get" )
+						{
+							unset($this->showTypes[$alias]['get']);
+							if(empty($this->showTypes[$alias]))
+								unset($this->showTypes[$alias]);
+						}
+					}
+				}
 		 	if($operator != "")
 			{// new added where statement, so clear pre-defined where statement
 		 		$this->clearWhereStatement();
@@ -3765,11 +3855,9 @@ class STBaseTable
 					return false;
 				}
 			}
-			
 			// All checks passed
 			$this->aCallbackFunctions[$functionName] = true;
 			return true;
-			
 		} catch (ReflectionException $e) {
 			STCheck::is_error(true, "STBaseTable::checkCallbackFunctionName()", 
 				"Could not reflect function '$functionName': " . $e->getMessage());
@@ -4442,22 +4530,8 @@ class STBaseTable
 					// read all columns for dynamic clustering
 					// which are set in the table object
 					$bFounded= false;
-					$aktAccess= "";
-					//$accessTo= array();
-    				foreach($this->aAccessClusterColumns as $info)
-    				{
-    				    if($info["cluster"]!=$aktAccess)
-    					{
-    					    if($in)
-    						{
-    					        $in= substr($in, 0, strlen($in)-1).")";
-    						    $where->orWhere($in);
-    						}
-    						$checked= array();
-    						$aktAccess= $info["cluster"];
-    						$in= $aktAccess." in(";
-    					}
-    					$checked[$info["action"]]= 0;
+					function getForeignKeyModification()
+					{
 
 						//echo "info access: ";st_print_r($info["action"]);echo "<br />";
     				    foreach($aAccess[$info["action"]] as $key=>$cluster)

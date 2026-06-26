@@ -195,6 +195,7 @@ class STBaseTable
 		public function clearIdentifColumns();
 		function clearFKs();
 		public function identifColumn(string $column, string $alias= null);
+		public function getIdentif(string $column, string $alias= "", string $unknown= "");
 		public function showNameOverList($show); // maybe HTML - Tag definition
 		public function andWhere($stwhere);
 		function orWhere($stwhere);

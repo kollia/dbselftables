@@ -4,7 +4,7 @@ The goal of this project is that you design your database table and automaticall
 This solution can be useful for research if you write your own specific algorithm that uses data from the database. 
 When first developing, you make your data available via an SQL interface such as phpMyAdmin or with a pure SQL-Client. After that, 
 when your own project is finished and you want to make it usable for other users, 
-you need an interface through which others can also insert data. In this case, you can link from your own project 
+you need an interface through which others can also insert/update data. In this case, you can link from your own project 
 to the DB selfTables generated interface.
 
 Or maybe you just want to collect data for future use, create statistics, or something else. There are many other solutions you can use...
@@ -73,12 +73,12 @@ the first what you should do is to define which column(s) describe the table as 
 In the example db there we have among other tables `Country` and `State`. If you look on the generated website
 clicking on the `[State]` button. You see the table with the columns:
 `state_id`, `name`, `country_id`
-but the table in the database has:
+but the table in the database have:
 `state_id`, `name`, <span style="color:red">`country`</span><br />
-The reason is, that the State table has an foreign key to the Country table and shows the primary key ('`country_id`') of the other table
+The reason is, that the state table have an foreign key to the country table and shows the primary key ('`country_id`') of the other table
 and not the own column ('`country`').<br />
-Pull the table 'Country' from the database object and identify the column as follow. <br />
-There is also the possibility to select only the columns you want and give them an other name, also the table.
+Pull the table 'Country' from the database object and identify the table as follow. <br />
+There is also the possibility to select only the columns you want and give them an other name, also the tables.
 ```php
 $country= $db->getTable("Country");
 $country->setDisplayName("existing Countries");
@@ -88,9 +88,9 @@ $country->select("name", "Name"); // for normal table listing
 $state = $db->getTable("State");
 $state->setDisplayName("States");
 $state->select("name", "Name");
-$state->select("country", "from Country"); // <- FK column to Country table
+$state->select("country", "from Country"); // <- FK column to country table
 ```
-You see now in table State as second position the name of the country as 'Country' (identif-column from table Country), altough you defined
+You see now in table State as second position the name of the country as 'Country' (identif-column from table country), altough you defined
 the FK in table as 'from Country'. This you see by updating row or by insert (clicking on button 'new Entry')
 
 > **Tipp:** for developing, it's a good choice to set after including 'st_pathdef.inc.php' 
@@ -102,7 +102,7 @@ If you want an other order by begin, order the table with the command ->orderBy(
 ```ex. $state->orderBy("name"); ```<br />
 You can also limit the table listing with ->setMaxRowSelect(&lt;row-count&gt;)
 
-Now let us organize the scripts inside two files.<br />
+Now let us organize the script inside two files.<br />
 Inside the common_db php file the primary configurations of database ...<br />
 <b>[ [02_common_db.php](examples/02_common_db.php) ]</b>
 ```php
@@ -115,8 +115,9 @@ require_once $_stdbmariadb;
 
 $db= new STDbMariaDb();
 $db->connect('<host>', '<user>', '<password>');
-$db->database('<your preferred database>');
+$db->database('<database name>');
 
+$curTableName= $db->getTableName(); // get current displayed table name
 
 $country= $db->getTable("Country");
 $country->setDisplayName("existing Countries");
@@ -139,10 +140,18 @@ $county->select("name", "County");
 $county->setMaxRowSelect(50);
 
 $person= $db->getTable("Person");
-$person->identifColumn("first_name", "first Name");
-$person->identifColumn("last_name", "last Name");
+if($curTableName == $person->getName())
+{
+    $person->identifColumn("first_name", "Spouse");
+    $person->getIdentif("last_name", "spouse_last_name");
+}else
+{
+    $person->identifColumn("first_name", "Forename");
+    $person->identifColumn("last_name", "Surname");
+}
 $person->select("first_name", "first Name");
 $person->select("last_name", "last Name");
+$person->select("spouse", "Spouse");
 $person->select("address", "Address");
 $person->setMaxRowSelect(50);
 
@@ -159,12 +168,14 @@ $bill= $db->getTable("Bill");
 $bill->identifColumn("bill_id", "Bill");
 $bill->select("bill_id", "Bill");
 $bill->select("person", "for Person");
+$bill->select("address", "on Address");
+$bill->preSelect("date", "CURRENT_TIME()");
 $bill->setMaxRowSelect(50);
 
 $order= $db->getTable("Order");
 $order->select("order_id", "Order ID");
 $order->select("bill", "Bill");
-$order->select("count", "Count");
+$order->select("amount", "Amount");
 $order->select("article", "Article");
 $order->setMaxRowSelect(50);
 
@@ -178,7 +189,22 @@ $article->setMaxRowSelect(50);
 
 ```
 
-... and we want to execute and display the database-object in a second file, for later changes.
+You see here in the script for table Person that we choose the identification columns dependent
+of current displaying table on the screen. The reason of this behavior is the spouse of the person.
+This is an self foreign key of the table and should display other names for clarity when showen own table.<br />
+For the own table there is an identifColumn() and an ```->getIdentif()``` column which will be selected from the database,
+but not schowen by listing. Sometime they are not marryed and have an other surname, but when we display in an seond column
+the headline description will blow up the table. ( It should only be an example ;-) ) <br />
+To show the surname inside the Spouse column will be described later by ``` [chage content with callbacks](#change-content-with-callbacks)``` <br />
+(A pendant for the direct selection of table with select() will be the ```->getColumn()``` method)
+> **additional basic knowledge:** the variable $curTableName is selected from the database and will be compared
+>                                 with the name from the table. This name is selected from the table object,
+>                                 because if you ask only from an own defined string ("Person"), the table name
+>                                 inside the database, it works only for the linux OS. On Windows, the table names
+>                                 are not case sensetive and the  ```->getTableName()``` method return the table
+>                                 name only in small letters.
+
+Now we want to execute and display the database-object in a second file, for later changes.
 
 **[ [03_basic_display.php](examples/03_basic_display.php) ]**
 ```php
@@ -195,7 +221,7 @@ $creator->display();
 ```
 If you look now on the generated web-site
 you see all seven tables in an logical content of foreign-keys 
-with limitation of row displaying
+with limitation of row displaying.
 
 <br /><br />
 ### structuring Website
@@ -226,6 +252,9 @@ The database (STDbMariaDb) which you configured first is also a container.
 
 For an second website create a new `STObjectContainer` from an existing container. The tables you have configured before are the same. Only you want other columns (identifColumns), you need to select the new colums.
 The definition from the container before are the default config.
+
+> **basic config:** When you first select a table from the database, all columns are configured by default. If you then select a column, only that column will be displayed. The same applies to a second container. The selection from the previous container is always the default. Only when you make a new selection there will only the columns you selected be displayed. The same is also true for `->identifColumns()` or selecting tables `->needTable()` within the container.
+
 ```php
 $addressee= new STObjectContainer("addressee", $db);
 $addressee->needTable("Country");
@@ -267,16 +296,10 @@ $addressee->setFirstTable("Person");
 $orderContainer= new STObjectContainer("Order", $db);
 $orderContainer->needTable("article");
 $orderTable= $orderContainer->needTable("Order");
+$orderTable->select("amount", "Amount");
+$orderTable->select("article", "Article");
+$orderTable->align("amount", "center");
 $orderContainer->setFirstTable("Order");
-if( $orderContainer->getContainerName() == "Order" &&
-    $orderContainer->getTableName() == "Order" &&
-    $orderContainer->getAction() == STINSERT       )
-{
-    $query= new STQueryString();
-    $limitation= $query->getLimitation("bill");
-    $bill_id= $limitation['bill_id'];
-    $orderTable->preSelect("bill", $bill_id);
-}
 
 $main= new STObjectContainer("bill", $db);
 $main->needContainer($addressee);
@@ -292,32 +315,10 @@ $creator->execute();
 $creator->display();
 
 ```
-When you test this scripts, you can see as first a listing of all bills, where every
+When you test this script, you can see as first a listing of all bills, where every
 bill has an ID which you link to all exist orders of the bill.<br />
 The reason is, because by creating the main container (<code>$main</code>) the Bill table defined as need
 and the column `bill_id` defined with the <code>$orderContainer</code> as <nobr>`->namedLink()`</nobr>.
-
-After organising the container <code>$orderContainer</code>, you can see an request of the current container, table and action.
-This you can do for every table if you want better performance. Because tables and containers not always need to organise when not displayed.
-> If you want developing object oriented, it's also possible to overload class `STObjectContainer`.
-> You can organize container inside the method create() and init().
-> ```php
-> class MyNewContainer extends STObjectContainer
-> {
->      protected function create()
->      {
->           // definition of which tables and
->           // other containers need from this container
->           // and maybe an other display-name if you want
->      }
->
->      protected function init(string $action, string $table)
->      {
->           // all other definitions
->           // which need for current container
->      }
-> }
-> ```
 
 
 <br /><br />
@@ -325,29 +326,29 @@ This you can do for every table if you want better performance. Because tables a
 
 Sometime you don't want to display exactly what filled in database.<br />
 For this case you can define a callback method for the table. Like <nobr>`->listCallback(<callback funtion>)`</nobr><br />
-You can define this &lt;callback function&gt; as follow for the bill table:
+You can define this &lt;callback function&gt; as follow for the spouse column inside the person table:
 ```php
-function billRequest(STCallbackClass &$callbackObject, string $columnName, int $rownum)
+function spouseColumn(STCallbackClass &$callbackObject, string $columnName, int $rownum)
 {
     if(	!$callbackObject->display ||
         !$callbackObject->before     )
     {
         return;
     }
-    if($columnName == "bill_id")
+    if($columnName == "Spouse")
     {
-        $billContent= $callbackObject->getValue();
-        $billContent= "Bill ".$billContent;
-        $callbackObject->setValue($billContent);
+        $spouse= $callbackObject->getValue();
+        $spouse= " ".$callbackObject->getValue("spouse_last_name");
+        $callbackObject->setValue($spouse);
     }
 }
 
-$bill->listCallback("billRequest");
+$bill->listCallback("spouseColumn");
 
 ```
 
-This behavior can also be assigned with the same callback-function for insertCallback(&lt;function&gt;), updateCallback(&lt;function&gt;) and/or deleteCallback(&lt;function&gt;).
-The display flag for the callback-object is for listing mostly true and for deliting always false. This flag means that if True it is for display (listing/insert/update) and if False the database will be manipulated.
+This behavior can also be assigned with the same callback-function for insertCallback(&lt;function&gt;), updateCallback(&lt;function&gt;), deleteCallback(&lt;function&gt;) and/or joinCallback(&lt;function&gt;).
+The display flag for the callback-object is for listing mostly true and for deliting always false. This flag means that if True it is for display (listing/insert/update box) and if False the database will be manipulated.
 The before flag is true if the function was called before display the content or before manipulate the database, otherwise false. 
 
 The function will be called for every column and row seperatly. 
@@ -416,6 +417,75 @@ and then, if you want to make the project more beautiful later because you know 
 how to improve the containers with additional HTML tags.
 
 ### Functionality
+**[ [05_basic_main.php](examples/04_basic_main.php) ]**
+```php
+<?php
+
+require_once '02_common_db.php';
+require_once $_stsitecreator;
+
+//STCheck::debug("query"); // <- to see current query from URL
+
+$addressee= new STObjectContainer("addressee", $db);
+$addressee->setDisplayName("Addressee");
+$addressee->needTable("Country");
+$addressee->needTable("State");
+$addressee->needTable("County");
+$addressee->needTable("Person");
+$addressee->needTable("Address");
+$addressee->setFirstTable("Person");
+
+$orderContainer= new STObjectContainer("Order", $db);
+$orderContainer->needTable("article");
+$orderTable= $orderContainer->needTable("Order");
+$orderContainer->setFirstTable("Order");
+if( $orderContainer->currentContainer() &&
+    $orderContainer->getTableName() == "Order" &&
+    $orderContainer->getAction() == STINSERT       )
+{
+    $query= new STQueryString();
+    $limitation= $query->getLimitation("bill");
+    $bill_id= $limitation['bill_id'];
+    $orderTable->preSelect("bill", $bill_id);
+}
+
+$main= new STObjectContainer("bill", $db);
+$main->needContainer($addressee);
+$main->needTable("Article");
+$bill= $main->needTable("Bill");
+$bill->namedLink("bill_id", $orderContainer);
+$main->setFirstTable("Bill");
+
+
+$creator= new STSiteCreator($main);
+$creator->addCssLink('dbselftables/design/websitecolors.css');
+$creator->execute();
+$creator->display();
+
+```
+
+After organising the container <code>$orderContainer</code>, you can see an request of the current container, table and action.
+This you can do for every table if you want better performance. Because tables and containers not always need to organise when not displayed.
+> If you want developing object oriented, it's also possible to overload class `STObjectContainer`.
+> You can organize container inside the method create() and init().
+> ```php
+> class MyNewContainer extends STObjectContainer
+> {
+>      protected function create()
+>      {
+>           // definition of which tables and
+>           // other containers need from this container
+>           // and maybe an other display-name if you want
+>      }
+>
+>      protected function init(string $action, string $table)
+>      {
+>           // all other definitions
+>           // which need for current container
+>      }
+> }
+> ```
+
 #### Tables
 #### Containers
 

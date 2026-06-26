@@ -1016,9 +1016,9 @@ class STSiteCreator extends HtmlTag
 				$testdebug= null; // testdebug must be array or null
 			$status= $query->getParameterValue("testdebug", "status");
 
+			$sorted_selftable_test_links= $this->sortTestLinks();
 			if($this->canContinueTesting($status))
 			{
-				$sorted_selftable_test_links= $this->sortTestLinks();
 				$bFinished= false;
 				$link= "";
 
@@ -1047,10 +1047,17 @@ class STSiteCreator extends HtmlTag
 				$this->buildTestNavigation($testdebug, $link, $query, $bFinished);
 			}else
 			{
+				$report.= $this->initializeOrContinueTest($testdebug, $sorted_selftable_test_links);
+				$this->createContainerReport($testdebug['step']);
+				$report.= $this->collectTestStepReport($testdebug);
 				$report.= $this->handleNonTestableResult($testdebug, $status);
 			}
 		
-		} catch (\Throwable $e) {
+		} catch (\Throwable $e) 
+		{
+			$report.= $this->initializeOrContinueTest($testdebug, $sorted_selftable_test_links);
+			$report.= $this->collectTestStepReport($testdebug);
+			$report.= $this->handleNonTestableResult($testdebug, $status);
 			$report.= $this->buildTestExceptionReport($e, $testdebug);
 		}
 
@@ -2497,10 +2504,20 @@ class STSiteCreator extends HtmlTag
 				$subTotal= count($subTested);
 				$subFaultCount= count($subFaults);
 				$subCorrect= $subTotal - $subFaultCount;
+				$containerName= $sub['container'];
+				$containerObj= $this->getContainer($containerName);
+				if($containerObj) 
+					$containerName= $containerObj->getDisplayName();
+				if(trim($containerName) != "")
+				{
+					if($containerName != $sub['container'])
+						$containerName.= " (".$sub['container'].")";
+				}else
+					$containerName.= $sub['container'];
 				if($sub['faults'])
-					$report.= " ***  Sub-Container finished with errors: ".$sub['container']."\n";
+					$report.= " ***  Sub-Container finished with errors: ".$containerName."\n";
 				else
-					$report.= " ***  Sub-Container finished: ".$sub['container']."\n";
+					$report.= " ***  Sub-Container finished: ".$containerName."\n";
 				$report.= " ***  Tables tested: $subTotal of {$sub['tables']}\n";
 				if($subTotal > 0) {
 					$subOK= array_diff($subTested, $subFaults);
@@ -2512,10 +2529,31 @@ class STSiteCreator extends HtmlTag
 				$report.= " ***\n";
 			}
 		}
-		$report.= " ***  Container: ".$testdebug['container']."\n";
+		$report.= " ***  Container: ";
+		$containerObj= $this->getContainer();
+		if($containerObj) 
+			$containerName= $containerObj->getDisplayName();
+		if(trim($containerName) != "")
+		{
+			$report.= $containerName;
+			if($containerName != $testdebug['container'])
+				$report.= " (".$testdebug['container'].")\n";
+			else
+				$report.= "\n";
+		}else
+			$report.= $testdebug['container']."\n";
 		
 		// Calculate correctly tested tables
-		$testedTables= isset($testdebug['progress']['testedTables']) ? $testdebug['progress']['testedTables'] : array();
+		$testedTablesSet= isset($testdebug['progress']['testedTables']) ? $testdebug['progress']['testedTables'] : array();
+		$testedTables= array();
+		foreach($testedTablesSet as $table)
+		{
+			if(	isset($table) &&
+				trim($table) != ""	)
+			{
+				$testedTables[] = trim($table);
+			}
+		}
 		$tablesWithFaults= isset($testdebug['progress']['tablesWithFaults']) ? $testdebug['progress']['tablesWithFaults'] : array();
 		$totalTested= count($testedTables);
 		$faultCount= count($tablesWithFaults);

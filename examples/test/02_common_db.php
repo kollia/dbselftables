@@ -1,14 +1,17 @@
 <?php
 
 $dbselftables= '../..';
-require "$dbselftables/st_pathdef.inc.php";
+require_once "$dbselftables/st_pathdef.inc.php";
 require_once $_stdbmariadb;
+require_once "test_db_account.php";
 
 //STCheck::debug(true); // <- a good choice for developing
 
 $db= new STDbMariaDb();
 $db->connect($_test_db_host, $_test_db_user, $_test_db_password);
 $db->database($_test_db_name);
+
+$curTableName= $db->getTableName(); // get current displayed table name
 
 $country= $db->getTable("Country");
 $country->setDisplayName("existing Countries");
@@ -31,10 +34,18 @@ $county->select("name", "County");
 $county->setMaxRowSelect(50);
 
 $person= $db->getTable("Person");
-$person->identifColumn("first_name", "first Name");
-$person->identifColumn("last_name", "last Name");
+if($curTableName == $person->getName())
+{
+    $person->identifColumn("first_name", "Spouse");
+    $person->getIdentif("last_name", "spouse_last_name");
+}else
+{
+    $person->identifColumn("first_name", "Forename");
+    $person->identifColumn("last_name", "Surname");
+}
 $person->select("first_name", "first Name");
 $person->select("last_name", "last Name");
+$person->select("spouse", "Spouse");
 $person->select("address", "Address");
 $person->setMaxRowSelect(50);
 
@@ -51,10 +62,13 @@ $bill= $db->getTable("Bill");
 $bill->identifColumn("bill_id", "Bill");
 $bill->select("bill_id", "Bill");
 $bill->select("person", "for Person");
+$bill->select("address", "on Address");
+$bill->preSelect("date", "CURRENT_TIME()");
 $bill->setMaxRowSelect(50);
 
 $order= $db->getTable("Order");
-$order->select("amount", "Count");
+$order->select("bill", "for Bill");
+$order->select("amount", "Amount");
 $order->select("article", "Article");
 $order->setMaxRowSelect(50);
 

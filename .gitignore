@@ -4,6 +4,8 @@
 .vscode/
 *.kate-swp
 org.eclipse.*
+*.local
+*.LOCAL
 extensions.json
 plugins/email/st_email.inc.json
 plugins/editors/tinymce/

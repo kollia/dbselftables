@@ -7,8 +7,8 @@ STBaseTable::allowQueryLimitationByOwn(bool $bModify= true)
 
 STListBox manipulation:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-::aligen()
-::valigen()
+STBaseTable::align(string $aliasName, string $value, $tableType= STLIST)
+STBaseTable::valigen()
 
 STItemBox manipulation:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

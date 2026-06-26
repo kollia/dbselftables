@@ -345,7 +345,7 @@ class STListBox extends STBaseBox
 				$oTable->orderBy($oTable->getPkColumnName());
 					
 			// alex 09/06/2005:	abchecken welche Rows selectiert werden
-			$firstRow= 0;
+			$firstRow= $from;
 			$this->nShowFirstRow= 0;
 			$nMaxSelect= $oTable->getMaxRowSelect();
 			if(0)//$nMaxSelect)
@@ -1111,7 +1111,9 @@ class STListBox extends STBaseBox
 				$firstRow= $this->sqlResult[0];
 	            foreach($firstRow as $key=>$value)
     	        {
-					if(	!in_array($key, $aGetColumns) )
+						if(	!in_array($key, $aGetColumns) &&
+							(   !isset($this->showTypes[$key]) ||
+								$this->showTypes[$key] != "get" ) )
 					{// only if column no getColumn
 						$th= new ColumnTag(TH);
 							$this->insertAttributes($th, "th");
