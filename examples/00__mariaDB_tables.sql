@@ -10,11 +10,15 @@ SET CHARACTER_SET_CLIENT = utf8mb4;
 SET CHARACTER_SET_CONNECTION = utf8mb4;
 SET CHARACTER_SET_RESULTS = utf8mb4;
 
+SET FOREIGN_KEY_CHECKS=0;
+
+    DROP TABLE IF EXISTS `Country`;
     CREATE TABLE `Country` (
         `country_id` INT AUTO_INCREMENT PRIMARY KEY,
         `name` VARCHAR(100) NOT NULL
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+    DROP TABLE IF EXISTS `State`;
     CREATE TABLE `State` (
         `state_id` INT AUTO_INCREMENT PRIMARY KEY,
         `name` VARCHAR(100) NOT NULL,
@@ -22,6 +26,7 @@ SET CHARACTER_SET_RESULTS = utf8mb4;
         FOREIGN KEY (`country`) REFERENCES `Country`(`country_id`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+    DROP TABLE IF EXISTS `County`;
     CREATE TABLE `County` (
         `county_id` INT AUTO_INCREMENT PRIMARY KEY,
         `name` VARCHAR(100) NOT NULL,
@@ -29,6 +34,7 @@ SET CHARACTER_SET_RESULTS = utf8mb4;
         FOREIGN KEY (`state`) REFERENCES `State`(`state_id`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+    DROP TABLE IF EXISTS `Address`;
     CREATE TABLE `Address` (
         `address_id` INT AUTO_INCREMENT PRIMARY KEY,
         `street` VARCHAR(255) NOT NULL,
@@ -37,6 +43,7 @@ SET CHARACTER_SET_RESULTS = utf8mb4;
         FOREIGN KEY (`county`) REFERENCES `County`(`county_id`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+    DROP TABLE IF EXISTS `Person`;
     CREATE TABLE `Person` (
         `person_id` INT AUTO_INCREMENT PRIMARY KEY,
         `first_name` VARCHAR(100) NOT NULL,
@@ -46,6 +53,7 @@ SET CHARACTER_SET_RESULTS = utf8mb4;
         UNIQUE (`first_name`, `last_name`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+    DROP TABLE IF EXISTS `Article`;
     CREATE TABLE `Article` (
         `article_id` INT AUTO_INCREMENT PRIMARY KEY,
         `title` VARCHAR(255) NOT NULL,
@@ -53,8 +61,9 @@ SET CHARACTER_SET_RESULTS = utf8mb4;
         `content` TEXT
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-   -- Create new Bill table
-    CREATE TABLE `Bill` (
+    -- Create new Bill table
+     DROP TABLE IF EXISTS `Bill`;
+     CREATE TABLE `Bill` (
         `bill_id` INT AUTO_INCREMENT PRIMARY KEY,
         `person` INT NOT NULL,
         `address` INT NOT NULL,
@@ -64,6 +73,7 @@ SET CHARACTER_SET_RESULTS = utf8mb4;
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
     -- Create new Order table
+    DROP TABLE IF EXISTS `Order`;
     CREATE TABLE `Order` (
         `order_id` INT AUTO_INCREMENT PRIMARY KEY,
         `bill` INT NOT NULL,
@@ -72,6 +82,8 @@ SET CHARACTER_SET_RESULTS = utf8mb4;
         FOREIGN KEY (`bill`) REFERENCES `Bill`(`bill_id`),
         FOREIGN KEY (`article`) REFERENCES `Article`(`article_id`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+    SET FOREIGN_KEY_CHECKS=1;
 
     -- Insert Countries
     INSERT INTO `Country` (`country_id`, `name`) VALUES
@@ -744,7 +756,7 @@ SET CHARACTER_SET_RESULTS = utf8mb4;
     (200, 'Russell', 'Fields', 200);
 
     -- Insert Articles
-    INSERT INTO `article` (`article_id`, `title`, `price`, `content`) VALUES
+    INSERT INTO `Article` (`article_id`, `title`, `price`, `content`) VALUES
     (1, 'Gloves', 2.10, 'High-quality winter gloves to keep your hands warm'),
     (2, 'Socks', 2.20, 'Comfortable cotton socks for everyday use'),
     (3, 'Pants', 2.30, 'Stylish and durable pants for all occasions'),
