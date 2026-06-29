@@ -2903,8 +2903,11 @@ class STBaseTable
 			$this->aStatement= array();
 		    foreach($this->show as $key=>$column)
 		    {
-		        if($column['type'] == "select")
+		        if(	!isset($column['type']) || // if 'type' is not set, then it is a select column
+					$column['type'] != "select"	)
+				{
 		            unset($this->show[$key]);
+				}
 		    }
 		}
 		function clearNoFkSelects()

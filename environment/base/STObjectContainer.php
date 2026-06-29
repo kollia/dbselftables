@@ -507,7 +507,10 @@ class STObjectContainer extends STBaseContainer
     			//					getTable() created from the database object.
     			foreach($tableNames as $name)
     			{
-    			    $keyTableName= strtolower($name); 
+					if($this->db->hasLowerCaseTableNames())
+    			    	$keyTableName= strtolower($name);
+					else
+						$keyTableName= $name;
     			    $table= clone $this->db->getTable($name);//, $bAllByNone);
 					if($this->name != $this->db->name)
 					{// new cloned table should now be inside this container
