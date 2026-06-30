@@ -196,6 +196,11 @@ class STItemBox extends STBaseBox
     			 		if(!isset($joinTable))
     						$joinTable= &$this->tableContainer->getTable($otherTableName);*/
 						$joinTable= $oTable->getFkTable($joinColumns["own"], false);
+						if($joinTable === $oTable)
+						{
+							$joinTable= clone $joinTable;
+							$joinTable->clearWhere();
+						}
 						$joinTable->clearIndexSelect();
 
     					// alex 09/05/2005:	boolean $bInside auf string $sPkInside ge�ndert

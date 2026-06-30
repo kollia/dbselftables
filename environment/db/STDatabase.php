@@ -2149,7 +2149,9 @@ abstract class STDatabase extends STObjectContainer
 				$fkTable= $table;
 			$table->foreignKey($fk["own"], $fkTable, $fk["other"]);
 		}
-		$this->oGetTables[strtolower($tableName)]= &$table;
+		if($this->db->hasLowerCaseTableNames())
+			$tableName= strtolower($tableName);
+		$this->oGetTables[$tableName]= &$table;
 		// alex 12/04/2005: entf. $this->tables[$tableName]= &$table;
 		// alex 18/11/2005:	wieder eingef�gt, da sonst alles im kreis l�uft
 		//					erkl�rung f�r ausdokumentieren nicht vorhanden
