@@ -153,12 +153,12 @@ class STItemBox extends STBaseBox
 		function getJoinArray($aJoins, $post)
 		{
 			global $HTTP_POST_VARS;
-			
-	 		$aRv= array();
-	 		// toDo: use this time only from column names
-	 		//       but in the future should also use alias columns
-	 		//       when the join is over more tables
-	 		$bFromColumnAlias= true;
+
+			$aRv= array();
+			// toDo: use this time only from column names
+			//       but in the future should also use alias columns
+			//       when the join is over more tables
+			$bFromColumnAlias= true;
 			$oTable= $this->asDBTable;
 			Tag::echoDebug("form.join", "make joins for table ".$oTable->getName());
 			$fks= &$oTable->getForeignKeys();
@@ -192,14 +192,42 @@ class STItemBox extends STBaseBox
 					foreach($content as $joinColumns)
 					{
     					Tag::echoDebug("form.join", "to table ".$otherTableName);
+						$currentValue= null;
+						$bHasCurrentValue= false;
+						$aPostKeys= array($joinColumns["own"]);
+						$field= null;
+						foreach($this->asDBTable->getSelectedColumns() as $selectedColumn)
+						{
+							if($selectedColumn["column"] == $joinColumns["own"])
+							{
+								$field= $selectedColumn;
+								break;
+							}
+						}
+						if( isset($field['alias']) &&
+							$field['alias'] != $joinColumns["own"] )
+						{
+							$aPostKeys[]= $field['alias'];
+							$aPostKeys[]= $this->asDBTable->defineDocumentItemBoxName($field['alias']);
+						}
+						foreach($aPostKeys as $postKey)
+						{
+							if(array_key_exists($postKey, $post))
+							{
+								$currentValue= $post[$postKey];
+								$bHasCurrentValue= true;
+								break;
+							}
+						}
     				 	/*$joinTable= &$joinColumns["table"];// table ist angegeben wenn auf eine andere DB referenziert wird
     			 		if(!isset($joinTable))
     						$joinTable= &$this->tableContainer->getTable($otherTableName);*/
 						$joinTable= $oTable->getFkTable($joinColumns["own"], false);
-						if($joinTable === $oTable)
+						if( typeof($joinTable, "STDbTable") &&
+							strtolower($joinTable->getDbTableName()) == strtolower($oTable->getDbTableName()) )
 						{
-							$joinTable= clone $joinTable;
-							$joinTable->clearWhere();
+							$joinTable= clone $oTable;
+							$joinTable->clearQueryLimitation(false, false);
 						}
 						$joinTable->clearIndexSelect();
 
@@ -232,7 +260,7 @@ class STItemBox extends STBaseBox
     					//					f�r den PK im rowResult ben�tigt wird
     					if($sPkInside == "unknown")
     					{// if the column not as identification column defined, add it
-    					    $joinTable->identifColumn($joinColumns["other"]);
+	    				    $joinTable->getIdentif($joinColumns["other"]);
     						$sPkInside= $joinColumns["other"];
     					}
 
@@ -251,8 +279,14 @@ class STItemBox extends STBaseBox
         						// alex 09/05/2005: PK definition now from sPkInside
         						$rowResult["PK"]= $row[$sPkInside];
         						$string= "";
-								$bSelected= true;
+								$bSelected= false;
 								$bAnyset= false;
+								if( $bHasCurrentValue &&
+									$currentValue !== "" &&
+									$currentValue !== null )
+								{
+									$bSelected= ((string)$currentValue === (string)$rowResult["PK"]);
+								}
         						foreach($row as $columnKey=>$columnValue)
         						{
         							$rowResult["columns"][$columnKey]= $columnValue;
@@ -261,9 +295,11 @@ class STItemBox extends STBaseBox
         							{
         								$string.= $columnValue." - ";
         							}
-									if(isset($post[$columnKey]))
+									if(!$bHasCurrentValue && isset($post[$columnKey]))
 									{
 										$bAnyset= true;
+										if(!$bSelected)
+											$bSelected= true;
 										if($post[$columnKey] != $columnValue)
 										{
 											$bSelected= false;
@@ -271,7 +307,7 @@ class STItemBox extends STBaseBox
 									}
 								}
 								$string= substr($string, 0, strlen($string)-3);
-								if(!$bAnyset)
+								if(!$bHasCurrentValue && !$bAnyset)
 									$bSelected= false;
 								$rowResult['Name']= $string;
 								$rowResult['selected']= $bSelected;

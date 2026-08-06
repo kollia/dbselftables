@@ -186,12 +186,40 @@
       "createdAt": "2026-03-13",
       "updatedAt": "2026-03-13",
       "resolvedAt": "2026-03-13"
+    },
+    {
+      "id": "ISSUE-008",
+      "priority": "high",
+      "category": "bug",
+      "title": "Person update form does not preselect stored self-FK spouse entry",
+      "description": "In examples/test/03_basic_display.php, opening the Person table in UPDATE mode can show the spouse field with only the default 'entry can be null' option selected although the row contains a non-null spouse foreign key. The same failure makes the update box appear to fall back to the first dropdown entry instead of the stored relation.",
+      "file": "environment/base/STBaseTable.php and environment/base/STItemBox.php",
+      "function": "modifyQueryLimitation(), clearQueryLimitation(), getJoinArray()",
+      "lineReference": "environment/base/STBaseTable.php:3270-3290, 4118-4245; environment/base/STItemBox.php:153-310",
+      "analysis": {
+        "expectedBehavior": "When updating a Person row such as Jane Doe, the spouse select field should preselect the stored Person reference. Other FK dropdowns should continue to use the current row value rather than the browser's first fallback entry.",
+        "actualBehavior": "The Person update form first failed with 'no where-clausel defined to display' although the update URL contained a valid Person limitation. After that, the spouse dropdown stayed on the default null placeholder and in some cases displayed only the current Person row or visible numeric IDs instead of the configured identification columns.",
+        "rootCause": "The problem had three cooperating causes. First, own-table query limitation lookup in STBaseTable::modifyQueryLimitation() used the current table name with case-sensitive matching, while the request on macOS/MariaDB carried lowercase table keys such as 'person'. That prevented the update box from rebuilding its where clause. Second, STItemBox::getJoinArray() tried to preselect FK options by comparing displayed aliases from the join rows with aliases from the update row, which does not work for the self-referential Person spouse field because the dropdown rows use identification aliases while the update row stores the FK value under the selected alias. Third, the self-FK dropdown could be built from a limited helper table object, and when the PK column had to be added for internal matching it was added as a visible identification column instead of hidden metadata.",
+        "implementedFix": "STBaseTable::modifyQueryLimitation() now resolves query limitations using the database case-sensitivity rule from hasLowerCaseTableNames() and only falls back to lowercase matching when the database is not case-sensitive. STBaseTable::clearQueryLimitation() was added so derived helper tables can explicitly drop inherited query limitation state. STItemBox::getJoinArray() now detects self-referential FKs by table name, clones the current table configuration for the spouse dropdown, clears inherited query limitation state on that helper table, keeps the PK as hidden identification data with getIdentif(), and determines the selected spouse option from the stored FK value using the selected alias path and HTML field name.",
+        "validationStatus": "Editor diagnostics report no errors in STBaseTable.php, STItemBox.php, and STQueryString.php. Manual browser validation on examples/test/03_basic_display.php confirmed that the update form now opens correctly, the spouse dropdown lists Person entries by the configured identification columns, and the stored spouse entry is preselected. PHP CLI validation could not be executed in this environment because the 'php' command is unavailable."
+      },
+      "stepsToReproduce": [
+        "1. Open examples/test/03_basic_display.php with the sample database from examples/00__mariaDB_tables.sql",
+        "2. Navigate to the Person table and open Jane Doe in UPDATE mode",
+        "3. Observe that Address can still resolve correctly but the spouse dropdown stays on the null placeholder instead of the stored spouse entry",
+        "4. Observe that the update box appears to use the first available dropdown entry when no option is marked selected"
+      ],
+      "resolution": "Resolved by combining a database-aware query-limitation lookup in STBaseTable::modifyQueryLimitation() with a self-FK-specific dropdown fix in STItemBox::getJoinArray(). The update form now rebuilds its Person where clause correctly on macOS/MariaDB, the spouse dropdown shows all Person entries by identification columns, and the stored spouse value is preselected.",
+      "status": "resolved",
+      "createdAt": "2026-08-06",
+      "updatedAt": "2026-08-06",
+      "resolvedAt": "2026-08-06"
     }
   ],
   "metadata": {
     "generatedBy": "GitHub Copilot",
-    "lastUpdated": "2026-03-13",
-    "totalIssues": 7,
+    "lastUpdated": "2026-08-06",
+    "totalIssues": 8,
     "openIssues": 1
   }
 }

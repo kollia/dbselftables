@@ -3271,6 +3271,21 @@ class STBaseTable
 			$this->clearWhereStatement();
 		}
 		/**
+		 * remove currently applied query limitation state from the table instance.
+		 * This is useful for derived helper tables that should not inherit the
+		 * active page limitation from the main table, e.g. self-referential FK lists.
+		 *
+		 * @param bool $bAllowOwn whether own-table query limitation may be applied again later
+		 * @param bool $bAllowFk whether FK query limitation may be applied again later
+		 */
+		public function clearQueryLimitation(bool $bAllowOwn= true, bool $bAllowFk= true)
+		{
+			$this->clearWhere();
+			$this->bModifiedByQuery= false;
+			$this->bLimitOwn= $bAllowOwn;
+			$this->bModifyFk= $bAllowFk;
+		}
+		/**
 		 * clear pre-defined where statements
 		 * to rebuild the sql statement by the next call
 		 */
@@ -4118,6 +4133,21 @@ class STBaseTable
 	    }
 	    $query= new STQueryString();
 	    $where= new STDbWhere();
+		$getLimitation= function(string $tableName) use ($query)
+		{
+			$limitation= $query->getLimitation($tableName);
+			if( isset($limitation) ||
+				$this->db->hasLowerCaseTableNames() == 0 )
+			{
+				return $limitation;
+			}
+			foreach($query->getCurrentLimitations() as $queryTableName => $queryLimitation)
+			{
+				if(strtolower($queryTableName) == strtolower($tableName))
+					return $queryLimitation;
+			}
+			return null;
+		};
 	    if($this->bModifyFk)
 	    {
     	    STCheck::echoDebug("db.statements.where", "create <b>foreign Key</b> modification $tableMsg");
@@ -4150,7 +4180,7 @@ class STBaseTable
             {
                 foreach($fields as $aColumnType)
                 {
-                    $limitation= $query->getLimitation($table);
+	                    $limitation= $getLimitation($table);
                     foreach($limitation as $column=>$value)
                     {
                         if($aColumnType["other"]==$column)
@@ -4182,7 +4212,7 @@ class STBaseTable
 	    if(STCheck::isDebug("db.statements.where"))
 	    {
             $tableName= $this->getName();
-            $limitation= $query->getLimitation($tableName);
+	            $limitation= $getLimitation($tableName);
             if( !$this->bLimitOwn ||
                 empty($limitation)  )
             {
@@ -4207,7 +4237,7 @@ class STBaseTable
         if($this->bLimitOwn)
         {
             $tableName= $this->getName();
-            $limitation= $query->getLimitation($tableName);
+	            $limitation= $getLimitation($tableName);
 			if(typeof($this, "STDbSelector")) // if own table is a selector
 				$tableName= $this->getDbTableName(); // maybe object-name differs from table name
             if(	isset($limitation) &&
