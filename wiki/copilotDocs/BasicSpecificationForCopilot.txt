@@ -1,39 +1,82 @@
 
-Das Framework dbselftables siehe development branch auf https://github.com/kollia/dbselftables/tree/development
-erzeugt für das Objekt STProjectUserSiteCreator einen Titel. (Bitte auch README vom Projekt berücksichtigen)
-In meinem Beispiel File im workspace unter /html/index_mug.php den Titel "Kinderradiologie"
-dieses File greift auf das Framework von dbselftables zu welches im workspace auf /php_includes/selftables0.0.5.12-SNAPSHOT_linux_local/ liegt. Der Titel wird korrekt im Browser angezeit und wird über getTitle() aus dem STBaseContainer objekt erzeugt.
-STProjectUserSiteCreator bietet ein Projekt-Management in dem ich verschiedene Projekte eintragen kann auf die es dann Verlinkt.
-Da dieses Management das andere Projekt in einem  Frameset anzeigt, welcher zuerst den Container STProjectUserFrame mit dem default Titel ProjectFrame verwendet, wird der Titel "Kinderradiologie" mit dem Titel "ProjectFrame" verwendet. Obwohl eigentlich der Projektname zb. "Stationsplan" aus der Datenbank verfügbar wäre.
-
-Frage: kannst Du mir das Framework so ändern dass er dann den Projekt Namen aus der Datenbank nimmt und "Kinderradiologie - Stationsplan" schreibt und nicht "Kinderradiologie - ProjectFrame"!?
 
 
-Die externen Projekte können unabhängig vom Framework sein, oder so wie in meinem fall der Stationsplan aus dem Repository
-https://github.com/kollia/hospital_stationplan liegt im workspace unter /html/stationplan_linux/ welches ebenfalls auf das Framework zugreift.
-Dieses Projekt erzeugt ebenfalls korrekt den Titel Stationsplan
-
-
-
-PURE FRAMEWORK ANWEISUNG:
+PURE FRAMEWORK BASIC STATEMENT  -  create <new title> for new task xx.xx.2026
 ----------------------------------------------------------------------------------------------------------------------
-The dbselftables framework (see development branch at https://github.com/kollia/dbselftables/tree/development)
-creates an interface for inserting, modifying, and deleting data from existing SQL tables.
+The dbselftables framework
+(development branch: https://github.com/kollia/dbselftables/tree/development)
+provides a PHP-based interface for viewing, inserting, updating, and deleting data
+from existing SQL tables.
 
-Please analyze the project and read/generate the JSON files located at dbselftables/wiki/copilotDocs/ 
-only in the current project folder test_windows
-to see what still needs to be done. Documentation for any changes to the source code should 
-always be written in English. Please check also the last commits to see what we have done last time.
+Project working context
+----------------------------------------------------------------------------------------------------------------------
+Please work only in the locally cloned project folder
+.../dbselftables/development/
+and treat the development branch as the current source of truth.
 
-please can you now refactoring the STSiteCreator::testing() method!?
+Language and communication rules
+----------------------------------------------------------------------------------------------------------------------
+Please keep the chat conversation in German when possible, because the user is a native German speaker.
+All documentation, JSON content, code comments, and change notes must still be written in English.
 
+Before starting a new task
+----------------------------------------------------------------------------------------------------------------------
+- Analyze the current project state.
+- Read the files in <project folder>/wiki/copilotDocs/, especially the JSON files.
+- Update or generate these JSON files when new findings, open issues, or completed work should be documented.
+- Check the most recent commits to understand what was changed last.
+- Write all new documentation and code-change notes in English.
 
-In my example file 04_basic_main.php the framework take tables from the database and I organiced them
-with containers where all bills inside and also see addressees.
-There is a testing framework inside STSiteCreator::testing() to test all tables and containers
-to insert/update and delete entries. For every container you can see all tables for list/insert/update/delete position
-as testreport inside selftable_test_report.txt
-On the current report you see an endmessage with container bill with all tables have done.
-But it have also done the container order and addressee. Where are they?
+Current documentation to review
+----------------------------------------------------------------------------------------------------------------------
+- wiki/copilotDocs/project_overview.json
+- wiki/copilotDocs/todo_issues.json
+- wiki/copilotDocs/BasicSpecificationForCopilot.txt
+
+Recommended task workflow
+----------------------------------------------------------------------------------------------------------------------
+- For each new task, create a copy of this file in wiki/copilotDocs/.
+- Use a name such as BasicSpecificationForCopilot.taskYYYYMMDD.txt.
+- Keep the copied structure unchanged as far as possible.
+- Only fill in the placeholders for the current task.
+- Then open that task file and ask Copilot to use the currently opened file as the task brief.
+
+Expected assistant workflow
+----------------------------------------------------------------------------------------------------------------------
+- Start with a short analysis of the relevant code area.
+- Identify what is already implemented and what is still missing.
+- Prefer small, focused changes instead of broad refactoring unless refactoring is the task.
+- After code changes, validate the result with the narrowest useful check.
+- Document important findings or completed work in the copilotDocs JSON files when appropriate.
+- If assumptions are necessary, state them clearly.
+
+Task template for the current issue
+----------------------------------------------------------------------------------------------------------------------
+What I want to do right now:
+<Short title of the current task>
+
+Goal:
+<What should be improved, fixed, or implemented?>
+
+Reason / problem:
+<What is wrong today, or what is missing?>
+
+Expected result:
+<What should work after the change?>
+
+Scope:
+<Which files, classes, methods, examples, or docs are probably affected?>
+
+Validation:
+<How should the result be checked? Example: run a test case, open an example page, compare output, inspect debug mode>
+
+Documentation updates:
+<Which JSON file or wiki note should be updated after the work is done?>
+
+Open questions or constraints:
+<Known risks, assumptions, limitations, or decisions that still need clarification>
+
+Expected answer format from Copilot:
+<Short analysis -> proposed implementation -> validation result -> documentation updates>
 
 
