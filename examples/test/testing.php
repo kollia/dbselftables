@@ -1,4 +1,7 @@
 <?php
+/**
+ *  testing all written php files
+ **/
 
 require_once "../../st_pathdef.inc.php";
 require_once "test_db_account.php";
