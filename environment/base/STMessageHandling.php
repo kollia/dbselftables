@@ -317,7 +317,13 @@ class STMessageHandling // implements STMessageHandlingInterface <- ab version 5
 			{
 				echo $this->sObject." execute result <b>".$messageId;
 				if($string)
-					echo ":</b> ".$string;
+				{
+					// 07/10/2026 kollia: string prepared for alert script, so remove backslashes before displaying
+					$displayString= preg_replace("/\\\\'/", "'", $string);
+					$displayString= preg_replace("/\\\\\"/", '"', $displayString);
+					$displayString= htmlspecialchars($displayString);
+					echo ":</b> ".$displayString;
+				}
 				else
 					echo "</b>";
 				echo "<br />";
