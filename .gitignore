@@ -1,6 +1,7 @@
 .buildpath
 .project
 .runtime
+.DS_Store
 .vscode/
 *.kate-swp
 org.eclipse.*

@@ -397,7 +397,7 @@ class STProjectUserSiteCreator extends STUserSiteCreator
      * 
      * @param string|bool $dbg_str debug string to add, if true add only main debug information
      */
-    public static function debug(bool|string $dbg_str= true, int $from= null, int $to= null, string|null $file= null, int|null $line= null)
+    public static function debug(bool|string $dbg_str= true, int|string|null $from= null, ?int $to= null, ?string $file= null, ?int $line= null)
     {
         global $__global_stprojectusersitecreator_dbgStrings;
 
