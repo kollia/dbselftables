@@ -214,12 +214,39 @@
       "createdAt": "2026-08-06",
       "updatedAt": "2026-08-06",
       "resolvedAt": "2026-08-06"
+    },
+    {
+      "id": "ISSUE-009",
+      "priority": "high",
+      "category": "bug",
+      "title": "Duplicate select warning when re-selecting columns in a new STObjectContainer",
+      "description": "When a table is preconfigured with select columns in a shared database setup (examples/test/02_common_db.php) and then selected again in a second container (examples/test/04_basic_main.php), debug mode reports false duplicate warnings for the same alias/column pair.",
+      "file": "environment/base/STBaseTable.php",
+      "function": "clearSelectColumns()",
+      "lineReference": "2905-2912",
+      "analysis": {
+        "expectedBehavior": "A fresh explicit select() call sequence in a new container should replace inherited selected columns and should not warn about duplicates for the first explicit select of that sequence.",
+        "actualBehavior": "In some container reuse paths the duplicate warning was still emitted although the repeated select call used the same column+alias pair and should be treated as a no-op.",
+        "rootCause": "Two cooperating causes: (1) clearSelectColumns() previously removed the wrong entries (fixed), and (2) selectA() warned on any existing alias match, even when the existing entry represented the exact same column+alias definition.",
+        "fix": "Final fix is two-part: clearSelectColumns() now removes select entries correctly, and selectA() now handles repeated identical column+alias selections idempotently (update existing entry and return without warning or duplicate append)."
+      },
+      "stepsToReproduce": [
+        "1. In examples/test/02_common_db.php define select('amount','Amount') and select('article','Article') for table Order",
+        "2. In examples/test/04_basic_main.php create a new STObjectContainer and call needTable('Order')",
+        "3. Call select('amount','Amount') and select('article','Article') again on the container table",
+        "4. Enable debug mode and observe duplicate select warnings before the fix"
+      ],
+      "resolution": "Resolved by combining the clearSelectColumns() correction with an idempotent duplicate guard in selectA() for identical column+alias pairs.",
+      "status": "resolved",
+      "createdAt": "2026-10-28",
+      "updatedAt": "2026-10-28",
+      "resolvedAt": "2026-10-28"
     }
   ],
   "metadata": {
     "generatedBy": "GitHub Copilot",
-    "lastUpdated": "2026-08-06",
-    "totalIssues": 8,
+    "lastUpdated": "2026-10-28",
+    "totalIssues": 9,
     "openIssues": 1
   }
 }
