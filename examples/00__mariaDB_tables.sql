@@ -56,6 +56,15 @@ SET FOREIGN_KEY_CHECKS=0;
         UNIQUE (`first_name`, `last_name`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+    DROP TABLE IF EXISTS `Children`;
+    CREATE TABLE `Children` (
+        `child_id` INT AUTO_INCREMENT PRIMARY KEY,
+        `parent` INT NOT NULL,
+        `child` INT NOT NULL,
+        FOREIGN KEY (`parent`) REFERENCES `Person`(`person_id`),
+        FOREIGN KEY (`child`) REFERENCES `Person`(`person_id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+    
     DROP TABLE IF EXISTS `Article`;
     CREATE TABLE `Article` (
         `article_id` INT AUTO_INCREMENT PRIMARY KEY,
@@ -800,6 +809,69 @@ SET FOREIGN_KEY_CHECKS=0;
         ELSE `spouse`
     END
     WHERE `person_id` IN (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22);
+
+    -- Insert Children
+    -- Couples with mutual spouse entries can have 0 to 3 children.
+    -- Some persons without spouse also have a child.
+    INSERT INTO `Children` (`parent`, `child`) VALUES
+    -- Doe family (2 children)
+    (1, 121),
+    (2, 121),
+    (1, 147),
+    (2, 147),
+
+    -- Johnson family (1 child)
+    (3, 122),
+    (4, 122),
+
+    -- Brown family (0 children)
+
+    -- Jones family (3 children)
+    (7, 123),
+    (8, 123),
+    (7, 148),
+    (8, 148),
+    (7, 175),
+    (8, 175),
+
+    -- Martinez family (2 children)
+    (9, 124),
+    (10, 124),
+    (9, 149),
+    (10, 149),
+
+    -- Wilson/Anderson family (1 child)
+    (11, 125),
+    (12, 125),
+
+    -- Taylor family (0 children)
+
+    -- Moore/Jackson family (2 children)
+    (15, 126),
+    (16, 126),
+    (15, 150),
+    (16, 150),
+
+    -- Lee family (1 child)
+    (17, 127),
+    (18, 127),
+
+    -- Thompson family (3 children)
+    (19, 128),
+    (20, 128),
+    (19, 151),
+    (20, 151),
+    (19, 176),
+    (20, 176),
+
+    -- White family (1 child)
+    (21, 129),
+    (22, 129),
+
+    -- Single parents
+    (33, 130),
+    (57, 131),
+    (88, 132);
 
     -- Insert Articles
     INSERT INTO `Article` (`article_id`, `title`, `price`, `content`) VALUES
