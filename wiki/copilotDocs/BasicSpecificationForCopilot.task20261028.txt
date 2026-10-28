@@ -1,0 +1,74 @@
+
+
+
+PURE FRAMEWORK BASIC STATEMENT  -  create <new title> for new task xx.xx.2026
+----------------------------------------------------------------------------------------------------------------------
+The dbselftables framework
+(development branch: https://github.com/kollia/dbselftables/tree/development)
+provides a PHP-based interface for viewing, inserting, updating, and deleting data
+from existing SQL tables.
+
+Project working context
+----------------------------------------------------------------------------------------------------------------------
+Please work only in the locally cloned project folder
+.../dbselftables/development/
+and treat the development branch as the current source of truth.
+
+Language and communication rules
+----------------------------------------------------------------------------------------------------------------------
+Please keep the chat conversation in German when possible, because the user is a native German speaker.
+All documentation, JSON content, code comments, and change notes must still be written in English.
+
+Before starting a new task
+----------------------------------------------------------------------------------------------------------------------
+- Analyze the current project state.
+- Read the files in <project folder>/wiki/copilotDocs/, especially the JSON files.
+- Update or generate these JSON files when new findings, open issues, or completed work should be documented.
+- Check the most recent commits to understand what was changed last.
+- Write all new documentation and code-change notes in English.
+
+Current documentation to review
+----------------------------------------------------------------------------------------------------------------------
++ wiki/copilotDocs/ copilot review order
++ wiki/copilotDocs/project_overview.json
++ wiki/copilotDocs/todo_issues.json
+- wiki/copilotDocs/BasicSpecificationForCopilot.txt (don´t touch basic specifiction file)
+
+Recommended task workflow
+----------------------------------------------------------------------------------------------------------------------
+- For each new task, create a copy of this file in wiki/copilotDocs/.
+- Use a name such as BasicSpecificationForCopilot.taskYYYYMMDD.txt.
+- Keep the copied structure unchanged as far as possible.
+- Only fill in the placeholders for the current task.
+- Then open that task file and ask Copilot to use the currently opened file as the task brief.
+
+Expected assistant workflow
+----------------------------------------------------------------------------------------------------------------------
+- Start with a short analysis of the relevant code area.
+- Identify what is already implemented and what is still missing.
+- Prefer small, focused changes instead of broad refactoring unless refactoring is the task.
+- Before you begin modifying the code, ask for clarification if anything in the task description or the prompt is not clearly defined.
+- After code changes, validate the result with the narrowest useful check.
+- Document important findings or completed work in the copilotDocs JSON files when appropriate.
+- If assumptions are necessary, state them clearly.
+
+Task template for the current issue
+----------------------------------------------------------------------------------------------------------------------
+bug by select column article and amount from second new STObjectContainer as twice
+
+Warning:  column 'amount' with alias 'Amount' in table 'Order' selected in two times
+in      method STBaseTable->select("amount", "Amount") file .../development/environment/db/STDbTable.php line:289
+
+Warning:  column 'article' with alias 'Article' in table 'Order' selected in two times
+in      method STBaseTable->select("article", "Article") file .../development/environment/db/STDbTable.php line:289
+
+Reason:
+at file example/test/02_common_db.php columns selected from table Order inside primary container STDbMariaDb
+at file examples/test/04_basic_main.php will be created an new Container STObjectContainer where there from the
+same Order table select columns twice at row 20 and 21. This should be OK (see dokumentation)
+maybe there lost an Flag which should be set as new when new container be created
+
+Task status
+----------------------------------------------------------------------------------------------------------------------
+Resolved task finished (2026-10-28)
+

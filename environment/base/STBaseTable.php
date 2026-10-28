@@ -2016,6 +2016,26 @@ class STBaseTable
 			}
 			if($alias===null)
 			    $alias= $column;
+			$existingSelectKey= null;
+			foreach($this->show as $key=>$content)
+			{
+				if( isset($content["alias"]) &&
+					$content["alias"] == $alias &&
+					isset($content["column"]) &&
+					$content["column"] == $column	)
+				{
+					$existingSelectKey= $key;
+					break;
+				}
+			}
+			if(isset($existingSelectKey))
+			{
+				// same select definition already exists (can happen when table setup is reused across containers)
+				$this->show[$existingSelectKey]["table"]= $table;
+				$this->show[$existingSelectKey]["nextLine"]= $nextLine;
+				$this->show[$existingSelectKey]['type']= "select";
+				return;
+			}
 			if(STCheck::isDebug())
 			{
     			foreach($this->show as $count=>$content)
@@ -2904,7 +2924,7 @@ class STBaseTable
 		    foreach($this->show as $key=>$column)
 		    {
 		        if(	!isset($column['type']) || // if 'type' is not set, then it is a select column
-					$column['type'] != "select"	)
+					$column['type'] == "select"	)
 				{
 		            unset($this->show[$key]);
 				}
