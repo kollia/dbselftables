@@ -29,9 +29,10 @@ Before starting a new task
 
 Current documentation to review
 ----------------------------------------------------------------------------------------------------------------------
-- wiki/copilotDocs/project_overview.json
-- wiki/copilotDocs/todo_issues.json
-- wiki/copilotDocs/BasicSpecificationForCopilot.txt
++ wiki/copilotDocs/ copilot review order
++ wiki/copilotDocs/project_overview.json
++ wiki/copilotDocs/todo_issues.json
+- wiki/copilotDocs/BasicSpecificationForCopilot.txt (don´t touch basic specifiction file)
 
 Recommended task workflow
 ----------------------------------------------------------------------------------------------------------------------
@@ -45,6 +46,7 @@ Expected assistant workflow
 ----------------------------------------------------------------------------------------------------------------------
 - Start with a short analysis of the relevant code area.
 - Identify what is already implemented and what is still missing.
+- Before you begin modifying the code, ask for clarification if anything in the task description or the prompt is not clearly defined.
 - Prefer small, focused changes instead of broad refactoring unless refactoring is the task.
 - After code changes, validate the result with the narrowest useful check.
 - Document important findings or completed work in the copilotDocs JSON files when appropriate.
@@ -80,3 +82,7 @@ Expected answer format from Copilot:
 <Short analysis -> proposed implementation -> validation result -> documentation updates>
 
 
+Task status
+----------------------------------------------------------------------------------------------------------------------
+<implement here the current status of the task with date>
+<write finish message only after developer (prompter) allow>
